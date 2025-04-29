@@ -22,6 +22,9 @@ const Index = () => {
           <Link to="/income-expenses" className="block text-blue-600 hover:text-blue-800 text-sm">
             Income & Expenses (Demo)
           </Link>
+          <Link to="/goals-budget" className="block text-blue-600 hover:text-blue-800 text-sm">
+            Goals & Budget (Demo)
+          </Link>
         </div>
       </motion.div>
     </div>
