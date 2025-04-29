@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useTransactions } from "@/hooks/useTransactions";
 import TransactionTabs from "@/components/income-expenses/TransactionTabs";
 import TransactionHistory from "@/components/income-expenses/TransactionHistory";
+import TransactionFilter from "@/components/income-expenses/TransactionFilter";
 
 const IncomeExpenses = () => {
   const {
@@ -12,10 +13,13 @@ const IncomeExpenses = () => {
     setActiveTab,
     incomeForm,
     expenseForm,
+    filter,
     handleIncomeChange,
     handleExpenseChange,
     handleAddIncome,
-    handleAddExpense
+    handleAddExpense,
+    handleFilterChange,
+    handleResetFilters
   } = useTransactions();
 
   return (
@@ -39,7 +43,15 @@ const IncomeExpenses = () => {
             handleAddExpense={handleAddExpense}
           />
           
-          <h3 className="text-xl font-semibold mt-8 mb-4 text-gray-800">Transaction History</h3>
+          <h3 className="text-xl font-semibold mt-8 mb-4 text-gray-800">Transactions</h3>
+          
+          <TransactionFilter
+            filter={filter}
+            onFilterChange={handleFilterChange}
+            onResetFilters={handleResetFilters}
+          />
+          
+          <h4 className="text-lg font-medium mb-3 text-gray-700">Transaction History</h4>
           
           <TransactionHistory transactions={transactions} />
         </motion.div>

@@ -23,8 +23,8 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transactions })
       <ScrollArea className="h-64">
         {transactions.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-500">
-            <p>No transactions yet.</p>
-            <p className="text-sm">Add your first transaction above.</p>
+            <p>No transactions found.</p>
+            <p className="text-sm">Try adjusting your filters or add new transactions.</p>
           </div>
         ) : (
           <div className="space-y-3">
