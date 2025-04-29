@@ -16,43 +16,75 @@ export const useBudgetTracker = () => {
   const [income, setIncome] = useState(0);
   const [expenses, setExpenses] = useState(0);
   const [budgetLimit, setBudgetLimit] = useState(100000);
+  const [error, setError] = useState<string | null>(null);
 
   // Load data from localStorage on initial render
   useEffect(() => {
-    const storedTransactions = localStorage.getItem("budget-transactions");
-    const storedBudgetLimit = localStorage.getItem("budget-limit");
-    
-    if (storedTransactions) {
-      const parsedTransactions = JSON.parse(storedTransactions);
-      setTransactions(parsedTransactions);
+    try {
+      const storedTransactions = localStorage.getItem("budget-transactions");
+      const storedBudgetLimit = localStorage.getItem("budget-limit");
       
-      // Calculate totals from stored transactions
-      const calculatedIncome = parsedTransactions
-        .filter((t: Transaction) => t.type === "income")
-        .reduce((sum: number, t: Transaction) => sum + t.amount, 0);
+      if (storedTransactions) {
+        const parsedTransactions = JSON.parse(storedTransactions);
+        setTransactions(parsedTransactions);
+        
+        // Calculate totals from stored transactions
+        const calculatedIncome = parsedTransactions
+          .filter((t: Transaction) => t.type === "income")
+          .reduce((sum: number, t: Transaction) => sum + t.amount, 0);
+        
+        const calculatedExpenses = parsedTransactions
+          .filter((t: Transaction) => t.type === "expense")
+          .reduce((sum: number, t: Transaction) => sum + t.amount, 0);
+        
+        setIncome(calculatedIncome);
+        setExpenses(calculatedExpenses);
+      }
       
-      const calculatedExpenses = parsedTransactions
-        .filter((t: Transaction) => t.type === "expense")
-        .reduce((sum: number, t: Transaction) => sum + t.amount, 0);
-      
-      setIncome(calculatedIncome);
-      setExpenses(calculatedExpenses);
+      if (storedBudgetLimit) {
+        const parsedLimit = Number(storedBudgetLimit);
+        if (!isNaN(parsedLimit) && parsedLimit > 0) {
+          setBudgetLimit(parsedLimit);
+        }
+      }
+    } catch (err) {
+      console.error("Error loading budget data:", err);
+      setError("Failed to load saved budget data");
+      toast({
+        title: "Error",
+        description: "Failed to load saved budget data",
+        variant: "destructive",
+      });
     }
-    
-    if (storedBudgetLimit) {
-      setBudgetLimit(Number(storedBudgetLimit));
-    }
-  }, []);
+  }, [toast]);
 
   // Save data to localStorage when transactions change
   useEffect(() => {
-    localStorage.setItem("budget-transactions", JSON.stringify(transactions));
-  }, [transactions]);
+    try {
+      localStorage.setItem("budget-transactions", JSON.stringify(transactions));
+    } catch (err) {
+      console.error("Error saving transaction data:", err);
+      toast({
+        title: "Error",
+        description: "Failed to save transaction data",
+        variant: "destructive",
+      });
+    }
+  }, [transactions, toast]);
 
   // Save budget limit to localStorage when it changes
   useEffect(() => {
-    localStorage.setItem("budget-limit", budgetLimit.toString());
-  }, [budgetLimit]);
+    try {
+      localStorage.setItem("budget-limit", budgetLimit.toString());
+    } catch (err) {
+      console.error("Error saving budget limit:", err);
+      toast({
+        title: "Error",
+        description: "Failed to save budget limit",
+        variant: "destructive",
+      });
+    }
+  }, [budgetLimit, toast]);
 
   // Check for budget alerts
   useEffect(() => {
@@ -72,13 +104,42 @@ export const useBudgetTracker = () => {
   }, [expenses, budgetLimit, toast]);
 
   const handleBudgetLimitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setBudgetLimit(Number(e.target.value));
+    const value = Number(e.target.value);
+    if (isNaN(value)) {
+      toast({
+        title: "Error",
+        description: "Budget limit must be a valid number",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setBudgetLimit(value);
   };
 
   const handleAddTransaction = (category: string, amount: number, type: "income" | "expense") => {
+    // Validate inputs
+    if (!category.trim()) {
+      toast({
+        title: "Error",
+        description: "Category cannot be empty",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (isNaN(amount) || amount <= 0) {
+      toast({
+        title: "Error",
+        description: "Amount must be a positive number",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const newEntry: Transaction = {
       id: Date.now().toString(),
-      category,
+      category: category.trim(),
       amount,
       type,
       date: new Date().toLocaleDateString(),
@@ -118,6 +179,7 @@ export const useBudgetTracker = () => {
     remaining,
     overBudget,
     closeToLimit,
+    error,
     categoryTotalsArray,
     handleBudgetLimitChange,
     handleAddTransaction
