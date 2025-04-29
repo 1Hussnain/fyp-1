@@ -14,10 +14,13 @@ const Index = () => {
         transition={{ duration: 0.5 }}
       >
         <LoginForm />
-        {/* Link to Dashboard for demo purposes */}
-        <div className="text-center mt-4">
-          <Link to="/dashboard" className="text-blue-600 hover:text-blue-800 text-sm">
+        {/* Links for demo purposes */}
+        <div className="text-center mt-4 space-y-2">
+          <Link to="/dashboard" className="block text-blue-600 hover:text-blue-800 text-sm">
             Go to Dashboard (Demo)
+          </Link>
+          <Link to="/income-expenses" className="block text-blue-600 hover:text-blue-800 text-sm">
+            Income & Expenses (Demo)
           </Link>
         </div>
       </motion.div>
