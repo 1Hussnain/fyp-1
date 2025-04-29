@@ -1,7 +1,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { ArrowUp, ArrowDown } from "lucide-react";
+import { ArrowUp, ArrowDown, Filter } from "lucide-react";
 
 interface Transaction {
   id: string;
@@ -18,7 +18,16 @@ interface TransactionListProps {
 const TransactionList: React.FC<TransactionListProps> = ({ transactions }) => {
   return (
     <div className="bg-white p-6 rounded-xl shadow">
-      <h3 className="text-lg font-semibold mb-4">Transaction History</h3>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold">Transaction History</h3>
+        
+        {/* TO-DO Placeholder for filtering functionality */}
+        <div className="border border-red-500 bg-red-50 p-2 rounded-md flex items-center gap-2 text-xs text-red-600 cursor-pointer">
+          <Filter size={16} />
+          <span>Filter Transactions (Coming Soon)</span>
+        </div>
+      </div>
+      
       {transactions.length === 0 ? (
         <p className="text-center text-gray-500 my-6">No transactions yet. Add your first one above!</p>
       ) : (
