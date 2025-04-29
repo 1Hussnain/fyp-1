@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Goal } from "@/hooks/useGoals";
 import { 
-  Award, Calendar, Trash, PlusCircle, Target, Circle
+  Award, Calendar, Trash, PlusCircle, Target, Circle, Tag, Clock
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -50,6 +50,16 @@ const GoalCard: React.FC<GoalCardProps> = ({
     if (progress < 75) return "bg-yellow-500";
     if (progress < 100) return "bg-blue-500";
     return "bg-green-500";
+  };
+  
+  const isOverdue = typeof daysLeft === 'string' && daysLeft.includes('Overdue');
+  const isCompleted = progress >= 100;
+  
+  // Determine card style based on status
+  const getCardStyle = () => {
+    if (isCompleted) return "border-green-200 bg-green-50";
+    if (isOverdue) return "border-red-200 bg-red-50";
+    return "border-gray-200 bg-white";
   };
   
   const renderBadge = (progress: number) => {
@@ -147,7 +157,7 @@ const GoalCard: React.FC<GoalCardProps> = ({
   
   return (
     <motion.div variants={item}>
-      <Card className="p-5 shadow-md h-full flex flex-col">
+      <Card className={`p-5 shadow-md h-full flex flex-col ${getCardStyle()}`}>
         <div className="flex justify-between items-start mb-2">
           <h3 className="font-semibold text-lg text-gray-800">{goal.name}</h3>
           <Button
@@ -167,6 +177,11 @@ const GoalCard: React.FC<GoalCardProps> = ({
           </div>
           
           <div className="flex items-center gap-1">
+            <Tag className="h-3.5 w-3.5" />
+            <span>Type: {goal.type || "Short-term"}</span>
+          </div>
+          
+          <div className="flex items-center gap-1">
             <Calendar className="h-3.5 w-3.5" />
             <span>Deadline: {formatDate(goal.deadline)}</span>
           </div>
@@ -179,11 +194,11 @@ const GoalCard: React.FC<GoalCardProps> = ({
         <div className="mt-1 mb-3">
           <Progress 
             value={progress} 
-            className={`h-2.5 [&>div]:${renderProgressColor(progress)}`}
+            className={`h-2.5`}
           />
           <div className="flex justify-between text-xs mt-1">
             <span className="font-medium">{Math.floor(progress)}%</span>
-            <span className="font-medium">
+            <span className={`font-medium ${isOverdue ? 'text-red-600' : ''}`}>
               {typeof daysLeft === "number" 
                 ? `${daysLeft} day${daysLeft !== 1 ? 's' : ''} left` 
                 : daysLeft}
@@ -200,7 +215,7 @@ const GoalCard: React.FC<GoalCardProps> = ({
         </div>
         
         <div className="mt-auto pt-3">
-          {showQuickAdd ? (
+          {!isCompleted && showQuickAdd ? (
             <div className="grid grid-cols-2 gap-2">
               {quickAddAmounts.map(amount => (
                 <Button 
@@ -236,8 +251,17 @@ const GoalCard: React.FC<GoalCardProps> = ({
               onClick={() => setShowQuickAdd(true)}
               disabled={progress >= 100}
             >
-              <PlusCircle className="h-4 w-4 mr-1" />
-              Add Savings
+              {isCompleted ? (
+                <>
+                  <Award className="h-4 w-4 mr-1" />
+                  Goal Achieved
+                </>
+              ) : (
+                <>
+                  <PlusCircle className="h-4 w-4 mr-1" />
+                  Add Savings
+                </>
+              )}
             </Button>
           )}
         </div>

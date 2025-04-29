@@ -4,12 +4,14 @@ import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface GoalFormData {
   name: string;
   target: string;
   initialSaved: string;
   deadline: string;
+  type: string;
 }
 
 interface GoalCreationFormProps {
@@ -26,6 +28,14 @@ const GoalCreationForm: React.FC<GoalCreationFormProps> = ({
   // Calculate minimum date for the deadline (today)
   const today = new Date().toISOString().split("T")[0];
 
+  const handleTypeChange = (value: string) => {
+    const event = {
+      target: { name: "type", value }
+    } as React.ChangeEvent<HTMLInputElement>;
+    
+    handleFormChange(event);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -35,8 +45,8 @@ const GoalCreationForm: React.FC<GoalCreationFormProps> = ({
       <Card className="p-6 shadow-md">
         <h3 className="text-lg font-semibold mb-4 text-gray-800">Create a New Financial Goal</h3>
         <form onSubmit={handleAddGoal} className="space-y-4">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="lg:col-span-2">
               <label htmlFor="name" className="text-sm font-medium block mb-1 text-gray-700">
                 Goal Name
               </label>
@@ -98,6 +108,25 @@ const GoalCreationForm: React.FC<GoalCreationFormProps> = ({
                 className="w-full"
               />
             </div>
+          </div>
+          
+          <div>
+            <label htmlFor="type" className="text-sm font-medium block mb-1 text-gray-700">
+              Goal Type
+            </label>
+            <Select 
+              name="type" 
+              value={formData.type} 
+              onValueChange={handleTypeChange}
+            >
+              <SelectTrigger className="w-full md:w-[200px]">
+                <SelectValue placeholder="Select goal type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="short-term">Short-Term</SelectItem>
+                <SelectItem value="long-term">Long-Term</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           
           <Button type="submit" className="bg-green-600 hover:bg-green-700">

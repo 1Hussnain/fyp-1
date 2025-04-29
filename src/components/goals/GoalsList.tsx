@@ -8,10 +8,11 @@ import { Goal } from "@/hooks/useGoals";
 interface GoalsListProps {
   goals: Goal[];
   handleAddSavings: (goalId: string, amount?: number) => void;
+  handleDeleteGoal: (goalId: string) => void;
 }
 
-const GoalsList: React.FC<GoalsListProps> = ({ goals, handleAddSavings }) => {
-  const { getProgress, daysLeft, handleDeleteGoal } = useGoals();
+const GoalsList: React.FC<GoalsListProps> = ({ goals, handleAddSavings, handleDeleteGoal }) => {
+  const { getProgress, daysLeft } = useGoals();
   
   const container = {
     hidden: { opacity: 0 },
@@ -25,7 +26,7 @@ const GoalsList: React.FC<GoalsListProps> = ({ goals, handleAddSavings }) => {
   
   return (
     <motion.div 
-      className="grid grid-cols-1 md:grid-cols-2 gap-6"
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
       variants={container}
       initial="hidden"
       animate="show"

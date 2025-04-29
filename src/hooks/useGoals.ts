@@ -10,6 +10,7 @@ export interface Goal {
   saved: number;
   deadline: string;
   createdAt: number;
+  type: string;
 }
 
 interface GoalFormData {
@@ -17,16 +18,19 @@ interface GoalFormData {
   target: string;
   initialSaved: string;
   deadline: string;
+  type: string;
 }
 
 export const useGoals = () => {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [deletedGoalName, setDeletedGoalName] = useState<string | null>(null);
+  const [goalTypeFilter, setGoalTypeFilter] = useState<string>("all");
   const [formData, setFormData] = useState<GoalFormData>({
     name: "",
     target: "",
     initialSaved: "0",
     deadline: "",
+    type: "short-term",
   });
 
   // Load goals from localStorage on component mount
@@ -35,7 +39,16 @@ export const useGoals = () => {
     if (savedGoals) {
       try {
         const parsedGoals = JSON.parse(savedGoals);
-        setGoals(parsedGoals);
+        
+        // If old goals don't have type, add default type
+        const updatedGoals = parsedGoals.map((goal: Goal) => {
+          if (!goal.hasOwnProperty('type')) {
+            return { ...goal, type: "short-term" };
+          }
+          return goal;
+        });
+        
+        setGoals(updatedGoals);
       } catch (error) {
         console.error("Failed to parse saved goals:", error);
       }
@@ -136,6 +149,15 @@ export const useGoals = () => {
       });
       return;
     }
+    
+    if (!formData.type) {
+      toast({
+        title: "Error",
+        description: "Please select a goal type",
+        variant: "destructive",
+      });
+      return;
+    }
 
     // Create the new goal
     const newGoal: Goal = {
@@ -145,6 +167,7 @@ export const useGoals = () => {
       saved: parseFloat(formData.initialSaved) || 0,
       deadline: formData.deadline,
       createdAt: Date.now(),
+      type: formData.type,
     };
     
     setGoals(prev => [...prev, newGoal]);
@@ -155,11 +178,12 @@ export const useGoals = () => {
       target: "",
       initialSaved: "0",
       deadline: "",
+      type: "short-term",
     });
     
     toast({
       title: "Goal Created",
-      description: `Your goal "${newGoal.name}" has been created successfully.`,
+      description: `Your ${formData.type} goal "${newGoal.name}" has been created successfully.`,
     });
   };
 
@@ -253,6 +277,14 @@ export const useGoals = () => {
     
     return diff;
   };
+  
+  const getFilteredGoals = () => {
+    if (goalTypeFilter === "all") {
+      return goals;
+    }
+    
+    return goals.filter(goal => goal.type === goalTypeFilter);
+  };
 
   // Array of motivational tips
   const motivationalTips = [
@@ -284,5 +316,8 @@ export const useGoals = () => {
     getRandomMotivationalTip,
     deletedGoalName,
     setDeletedGoalName,
+    goalTypeFilter,
+    setGoalTypeFilter,
+    getFilteredGoals,
   };
 };
