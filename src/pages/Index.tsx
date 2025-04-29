@@ -28,6 +28,9 @@ const Index = () => {
           <Link to="/documents" className="block text-blue-600 hover:text-blue-800 text-sm">
             Document Viewer (Demo)
           </Link>
+          <Link to="/finance-chat" className="block text-blue-600 hover:text-blue-800 text-sm">
+            Finance Chat Assistant (Demo)
+          </Link>
         </div>
       </motion.div>
     </div>
