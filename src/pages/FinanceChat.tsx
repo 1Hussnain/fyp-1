@@ -1,17 +1,35 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
+import { MessageCircle, HelpCircle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import ChatBubble from "../components/chat/ChatBubble";
 import ChatInput from "../components/chat/ChatInput";
 import SuggestedPrompts from "../components/chat/SuggestedPrompts";
 
+type MessageType = {
+  id: string;
+  sender: string;
+  text: string;
+  timestamp: Date;
+  messageType?: "tip" | "warning" | "suggestion" | "motivation";
+};
+
 const FinanceChat = () => {
-  const [messages, setMessages] = useState([
-    { sender: "ai", text: "Hi! I'm FinBuddy 👋 Ask me anything about your money." },
+  const [messages, setMessages] = useState<MessageType[]>([
+    {
+      id: "welcome-message",
+      sender: "ai",
+      text: "Hi! I'm your AI Financial Assistant 👋 Ask me anything about budgets, savings, or financial goals.",
+      timestamp: new Date(),
+    },
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const [showHelp, setShowHelp] = useState(false);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -24,7 +42,13 @@ const FinanceChat = () => {
     e.preventDefault();
     if (!input.trim()) return;
 
-    const newMsg = { sender: "user", text: input.trim() };
+    const newMsg = { 
+      id: crypto.randomUUID(),
+      sender: "user", 
+      text: input.trim(),
+      timestamp: new Date()
+    };
+    
     setMessages([...messages, newMsg]);
     setInput("");
     
@@ -39,72 +63,164 @@ const FinanceChat = () => {
       handleSend({ preventDefault: () => {} } as React.FormEvent);
     }, 10);
   };
+  
+  const clearChat = () => {
+    setMessages([
+      {
+        id: crypto.randomUUID(),
+        sender: "ai",
+        text: "New conversation started. How can I help with your finances today?",
+        timestamp: new Date(),
+      },
+    ]);
+  };
 
   const simulateAIResponse = (query: string) => {
     const lowercase = query.toLowerCase();
-    let response = "";
+    let response: { text: string; type?: "tip" | "warning" | "suggestion" | "motivation" } = 
+      { text: "I'm still learning about finance. Could you clarify your question?" };
 
-    if (lowercase.includes("save") || lowercase.includes("spending")) {
-      response = "You can start by saving 20% of your income. Let's create a budget together. 🎯";
-    } else if (lowercase.includes("budget")) {
-      response = "Sure! What's your monthly income and average expenses? With that information, I can help you build a solid monthly budget.";
-    } else if (lowercase.includes("goal")) {
-      response = "You're doing great! You've already saved 65% towards your travel goal 🌍. Keep up the good work!";
-    } else if (lowercase.includes("invest")) {
-      response = "Consider starting with mutual funds or ETFs if you're new to investing 📈. These provide diversification and lower risk compared to individual stocks.";
+    // Analyze the query to determine the response and type
+    if (lowercase.includes("save") || lowercase.includes("saving")) {
+      response = { 
+        text: "The 50/30/20 rule is a great starting point: 50% for needs, 30% for wants, and 20% for savings. Try automating transfers to your savings account on payday.",
+        type: "tip" 
+      };
+    } else if (lowercase.includes("budget") || lowercase.includes("spending")) {
+      response = {
+        text: "Track your expenses for a month to understand your spending patterns. I recommend categorizing them into fixed costs, variable expenses, and discretionary spending.",
+        type: "suggestion"
+      };
     } else if (lowercase.includes("debt") || lowercase.includes("loan")) {
-      response = "Focus on paying high-interest debt first, like credit cards. Then move to lower interest loans like student debt or mortgages. Want to create a debt payment plan?";
-    } else if (lowercase.includes("emergency fund")) {
-      response = "An emergency fund should cover 3-6 months of essential expenses. Based on your profile, I'd recommend aiming for about $12,000.";
-    } else {
-      response = "Let me look into that… Could you give me a bit more detail about your financial situation?";
+      response = {
+        text: "High-interest debts like credit cards should be paid first. Focus on the debt avalanche method: pay minimums on all debts, then put extra money toward the highest-interest debt.",
+        type: "warning"
+      };
+    } else if (lowercase.includes("goal") || lowercase.includes("plan")) {
+      response = {
+        text: "Setting SMART financial goals is key to success. Make them Specific, Measurable, Achievable, Relevant, and Time-bound. Would you like to set one today?",
+        type: "motivation"
+      };
+    } else if (lowercase.includes("invest") || lowercase.includes("return")) {
+      response = {
+        text: "For beginners, index funds offer diversification with lower risk than individual stocks. Remember that investments should align with your risk tolerance and time horizon.",
+        type: "suggestion"
+      };
+    } else if (lowercase.includes("emergency") || lowercase.includes("fund")) {
+      response = {
+        text: "An emergency fund should cover 3-6 months of essential expenses. Keep it in a high-yield savings account for easy access while earning some interest.",
+        type: "tip"
+      };
     }
 
+    // Simulate thinking time based on query complexity
+    const responseDelay = 1000 + (query.length * 10);
+    
     setTimeout(() => {
       setIsTyping(false);
-      setMessages((prev) => [...prev, { sender: "ai", text: response }]);
-    }, 1500); // Simulate thinking time
+      setMessages((prev) => [
+        ...prev, 
+        { 
+          id: crypto.randomUUID(),
+          sender: "ai", 
+          text: response.text,
+          timestamp: new Date(),
+          messageType: response.type
+        }
+      ]);
+    }, responseDelay);
   };
 
   return (
-    <motion.div
-      className="max-w-5xl mx-auto p-4 h-[90vh] flex flex-col"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Finance Assistant</h2>
-      
-      <div 
-        ref={chatContainerRef}
-        className="flex-1 overflow-y-auto space-y-4 p-4 bg-gray-50 rounded-xl border border-gray-200 shadow-inner"
+    <div className="container px-4 py-6 max-w-4xl mx-auto">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex flex-col h-[80vh] bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden"
       >
-        {messages.map((msg, index) => (
-          <ChatBubble key={index} msg={msg} />
-        ))}
-        
-        {isTyping && (
-          <div className="flex justify-start">
-            <div className="bg-white border border-gray-300 p-3 rounded-xl text-sm max-w-[70%]">
-              <div className="flex space-x-2">
-                <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "150ms" }}></div>
-                <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "300ms" }}></div>
-              </div>
+        <CardHeader className="border-b bg-gray-50 px-4 py-3">
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <MessageCircle className="h-5 w-5 text-purple-600" />
+                <span>Financial Assistant</span>
+              </CardTitle>
+              <CardDescription className="text-sm">
+                Ask about budgets, investments, savings goals, or debt management
+              </CardDescription>
             </div>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setShowHelp(!showHelp)}
+              className="text-gray-500"
+            >
+              <HelpCircle className="h-5 w-5" />
+            </Button>
           </div>
-        )}
-      </div>
-      
-      <SuggestedPrompts onSelectPrompt={handleQuickPrompt} />
-      
-      <ChatInput 
-        input={input}
-        setInput={setInput}
-        handleSend={handleSend}
-        isTyping={isTyping}
-      />
-    </motion.div>
+          
+          {showHelp && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-2 bg-purple-50 text-purple-800 text-xs p-2 rounded-md"
+            >
+              <p className="font-medium">Quick Tips:</p>
+              <ul className="list-disc list-inside">
+                <li>Be specific with your questions</li>
+                <li>Try the suggested prompts below</li>
+                <li>Ask for explanations if answers aren't clear</li>
+                <li>Start a new chat for different topics</li>
+              </ul>
+            </motion.div>
+          )}
+        </CardHeader>
+        
+        <ScrollArea className="flex-1 p-4" ref={chatContainerRef}>
+          <div className="space-y-4">
+            {messages.map((msg) => (
+              <ChatBubble key={msg.id} msg={msg} />
+            ))}
+            
+            {isTyping && (
+              <div className="flex justify-start">
+                <div className="bg-white border border-gray-300 p-3 rounded-xl text-sm">
+                  <div className="flex space-x-2">
+                    <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "0ms" }}></div>
+                    <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "150ms" }}></div>
+                    <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+        
+        <CardFooter className="flex flex-col border-t bg-gray-50 p-4">
+          <SuggestedPrompts onSelectPrompt={handleQuickPrompt} />
+          
+          <div className="flex items-center w-full gap-2">
+            <ChatInput 
+              input={input}
+              setInput={setInput}
+              handleSend={handleSend}
+              isTyping={isTyping}
+            />
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={clearChat} 
+              className="shrink-0 text-xs"
+              disabled={isTyping || messages.length <= 1}
+            >
+              Clear Chat
+            </Button>
+          </div>
+        </CardFooter>
+      </motion.div>
+    </div>
   );
 };
 
