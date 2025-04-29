@@ -1,6 +1,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import LoginForm from "../components/LoginForm";
 
 const Index = () => {
@@ -13,6 +14,12 @@ const Index = () => {
         transition={{ duration: 0.5 }}
       >
         <LoginForm />
+        {/* Link to Dashboard for demo purposes */}
+        <div className="text-center mt-4">
+          <Link to="/dashboard" className="text-blue-600 hover:text-blue-800 text-sm">
+            Go to Dashboard (Demo)
+          </Link>
+        </div>
       </motion.div>
     </div>
   );
