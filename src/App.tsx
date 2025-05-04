@@ -7,7 +7,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import IncomeExpenses from "./pages/IncomeExpenses";
-import GoalsBudget from "./pages/GoalsBudget";
 import FinanceChat from "./pages/FinanceChat";
 import BudgetTracker from "./pages/BudgetTracker";
 import GoalsTracker from "./pages/GoalsTracker";
@@ -27,7 +26,6 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/income-expenses" element={<IncomeExpenses />} />
-          <Route path="/goals-budget" element={<GoalsBudget />} />
           <Route path="/finance-chat" element={<FinanceChat />} />
           <Route path="/budget-tracker" element={<BudgetTracker />} />
           <Route path="/goals-tracker" element={<GoalsTracker />} />
