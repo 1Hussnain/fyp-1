@@ -1,14 +1,17 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
+import { toast } from "@/components/ui/sonner";
 import GoogleButton from "./GoogleButton";
 
 const LoginForm = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
   
   const toggleView = () => {
     setIsLogin(!isLogin);
@@ -18,13 +21,19 @@ const LoginForm = () => {
     setShowPassword(!showPassword);
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    toast.success(`${isLogin ? "Login" : "Sign up"} successful`);
+    navigate("/dashboard");
+  };
+
   return (
     <>
       <h2 className="text-2xl font-semibold mb-6 text-center">
         {isLogin ? "Welcome Back" : "Create Account"}
       </h2>
       
-      <form className="space-y-4">
+      <form className="space-y-4" onSubmit={handleSubmit}>
         <div className="space-y-2">
           <div className="relative">
             <Input 

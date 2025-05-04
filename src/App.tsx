@@ -12,6 +12,7 @@ import FinanceChat from "./pages/FinanceChat";
 import BudgetTracker from "./pages/BudgetTracker";
 import GoalsTracker from "./pages/GoalsTracker";
 import BudgetSummary from "./pages/BudgetSummary";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/budget-tracker" element={<BudgetTracker />} />
           <Route path="/goals-tracker" element={<GoalsTracker />} />
           <Route path="/budget-summary" element={<BudgetSummary />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
