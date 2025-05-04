@@ -1,7 +1,6 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
 import Sidebar from "../components/Dashboard/Sidebar";
 import TopNav from "../components/Dashboard/TopNav";
 import SummaryCards from "../components/Dashboard/SummaryCards";
@@ -22,29 +21,6 @@ const Dashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="mb-6 flex flex-wrap gap-3">
-              <Link to="/income-expenses">
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                  Income & Expenses
-                </button>
-              </Link>
-              <Link to="/budget-tracker">
-                <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                  Budget Tracker
-                </button>
-              </Link>
-              <Link to="/goals-tracker">
-                <button className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors">
-                  Goals Tracker
-                </button>
-              </Link>
-              <Link to="/budget-summary">
-                <button className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors">
-                  Budget Summary
-                </button>
-              </Link>
-            </div>
-            
             <SummaryCards />
             <RecentTransactions />
             <BudgetChart />
