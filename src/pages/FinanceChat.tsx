@@ -1,16 +1,30 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { MessageCircle, HelpCircle, FileText, FileImage, Download, Trash2, X, Eye, Upload, Paperclip } from "lucide-react";
+import { MessageCircle, HelpCircle, FileText, Paperclip, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/sonner";
 import ChatBubble from "../components/chat/ChatBubble";
 import ChatInput from "../components/chat/ChatInput";
 import SuggestedPrompts from "../components/chat/SuggestedPrompts";
+import DocumentUpload from "../components/chat/DocumentUpload";
+import DocumentList from "../components/chat/DocumentList";
+import DocumentPreview from "../components/chat/DocumentPreview";
+import HelpSection from "../components/chat/HelpSection";
+import { useDocumentManagement } from "../hooks/useDocumentManagement";
+
+// Document type options
+const documentTypes = [
+  "Bank Statement",
+  "Invoice",
+  "Bill",
+  "Tax Document",
+  "Receipt",
+  "Other"
+];
 
 type MessageType = {
   id: string;
@@ -33,16 +47,6 @@ interface Document {
   fileType: "pdf" | "image" | "other";
 }
 
-// Document type options
-const documentTypes = [
-  "Bank Statement",
-  "Invoice",
-  "Bill",
-  "Tax Document",
-  "Receipt",
-  "Other"
-];
-
 const FinanceChat = () => {
   const [messages, setMessages] = useState<MessageType[]>([
     {
@@ -56,18 +60,61 @@ const FinanceChat = () => {
   const [isTyping, setIsTyping] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [showHelp, setShowHelp] = useState(false);
+
+  // Handler for when a document is uploaded
+  const handleDocumentUploaded = (newDoc: Document, userMessage: string) => {
+    // Add document message to chat
+    setMessages([
+      ...messages,
+      {
+        id: crypto.randomUUID(),
+        sender: "user",
+        text: userMessage,
+        timestamp: new Date(),
+        isDocument: true,
+        documentId: newDoc.id
+      },
+      {
+        id: crypto.randomUUID(),
+        sender: "ai",
+        text: `I've received your ${newDoc.type.toLowerCase()}. If you have any questions about it, feel free to ask!`,
+        timestamp: new Date()
+      }
+    ]);
+  };
   
-  // Document management state
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
-  const [showDocumentUpload, setShowDocumentUpload] = useState(false);
-  const [showDocumentList, setShowDocumentList] = useState(false);
-  const [fileInputKey, setFileInputKey] = useState<number>(0);
-  const [documentForm, setDocumentForm] = useState({
-    file: null as File | null,
-    docType: "Bank Statement",
-    note: "",
-  });
+  // Use the document management hook
+  const {
+    documents,
+    selectedDoc,
+    showDocumentUpload,
+    showDocumentList,
+    fileInputKey,
+    documentForm,
+    setShowDocumentList,
+    setShowDocumentUpload,
+    handleDocumentChange,
+    handleDocumentUpload: uploadDocument,
+    deleteDocument: deleteDocumentHandler,
+    openPreview,
+    closePreview
+  } = useDocumentManagement(handleDocumentUploaded);
+
+  const handleDocumentUpload = () => {
+    uploadDocument();
+  };
+
+  const deleteDocument = (id: number) => {
+    const success = deleteDocumentHandler(id);
+    if (success) {
+      // Remove document messages from chat
+      const updatedMessages = messages.filter(msg => 
+        !(msg.isDocument && msg.documentId === id)
+      );
+      
+      setMessages(updatedMessages);
+    }
+  };
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -174,103 +221,6 @@ const FinanceChat = () => {
     }, responseDelay);
   };
 
-  // Handle document input changes
-  const handleDocumentChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    if (e.target.name === "file" && e.target instanceof HTMLInputElement && e.target.files?.[0]) {
-      setDocumentForm({ ...documentForm, file: e.target.files[0] });
-    } else {
-      setDocumentForm({ ...documentForm, [e.target.name]: e.target.value });
-    }
-  };
-
-  // Determine file type icon
-  const getFileTypeInfo = (fileName: string) => {
-    const ext = fileName.split('.').pop()?.toLowerCase();
-    if (ext === 'pdf') {
-      return { type: "pdf", icon: <FileText className="text-red-500" /> };
-    } else if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext || '')) {
-      return { type: "image", icon: <FileImage className="text-blue-500" /> };
-    }
-    return { type: "other", icon: <FileText className="text-gray-500" /> };
-  };
-
-  // Handle document upload
-  const handleDocumentUpload = () => {
-    if (!documentForm.file) {
-      toast.error("Please select a file");
-      return;
-    }
-
-    // Get file type info
-    const { type: fileType } = getFileTypeInfo(documentForm.file.name);
-
-    // Create new document
-    const newDoc: Document = {
-      id: Date.now(),
-      fileName: documentForm.file.name,
-      type: documentForm.docType,
-      note: documentForm.note,
-      uploadedAt: new Date().toLocaleDateString(),
-      preview: documentForm.note || "This document contains financial information that has been automatically processed. Click 'View' to see more details.",
-      url: URL.createObjectURL(documentForm.file),
-      fileType: fileType as "pdf" | "image" | "other",
-    };
-
-    // Add to documents array
-    setDocuments([newDoc, ...documents]);
-    
-    // Add document message to chat
-    setMessages([
-      ...messages,
-      {
-        id: crypto.randomUUID(),
-        sender: "user",
-        text: `Uploaded document: ${documentForm.file.name}`,
-        timestamp: new Date(),
-        isDocument: true,
-        documentId: newDoc.id
-      },
-      {
-        id: crypto.randomUUID(),
-        sender: "ai",
-        text: `I've received your ${documentForm.docType.toLowerCase()}. If you have any questions about it, feel free to ask!`,
-        timestamp: new Date()
-      }
-    ]);
-    
-    // Reset form
-    setDocumentForm({ file: null, docType: "Bank Statement", note: "" });
-    setFileInputKey(prev => prev + 1);
-    setShowDocumentUpload(false);
-    toast.success("Document uploaded successfully");
-  };
-
-  // Delete document
-  const deleteDocument = (id: number) => {
-    if (confirm("Are you sure you want to delete this document?")) {
-      const updated = documents.filter((doc) => doc.id !== id);
-      setDocuments(updated);
-      
-      // If deleted document was selected in preview, close preview
-      if (selectedDoc?.id === id) {
-        setSelectedDoc(null);
-      }
-      
-      // Remove document messages from chat
-      const updatedMessages = messages.filter(msg => 
-        !(msg.isDocument && msg.documentId === id)
-      );
-      
-      setMessages(updatedMessages);
-      
-      toast.success("Document deleted");
-    }
-  };
-
-  // Open and close preview
-  const openPreview = (doc: Document) => setSelectedDoc(doc);
-  const closePreview = () => setSelectedDoc(null);
-
   return (
     <div className="container px-4 py-6 max-w-4xl mx-auto">
       <motion.div
@@ -314,72 +264,16 @@ const FinanceChat = () => {
             </div>
           </div>
           
-          {showHelp && (
-            <motion.div 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mt-2 bg-purple-50 text-purple-800 text-xs p-2 rounded-md"
-            >
-              <p className="font-medium">Quick Tips:</p>
-              <ul className="list-disc list-inside">
-                <li>Be specific with your questions</li>
-                <li>Try the suggested prompts below</li>
-                <li>Ask for explanations if answers aren't clear</li>
-                <li>Upload documents for analysis</li>
-                <li>Start a new chat for different topics</li>
-              </ul>
-            </motion.div>
-          )}
+          <HelpSection isVisible={showHelp} />
           
           {/* Document List Dropdown */}
-          {showDocumentList && documents.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mt-2 bg-white border rounded-md shadow-md p-2 max-h-[250px] overflow-y-auto"
-            >
-              <div className="flex justify-between items-center mb-2 p-1">
-                <h3 className="font-medium text-sm">Your Documents</h3>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-6 text-xs" 
-                  onClick={() => setShowDocumentList(false)}
-                >
-                  <X size={14} />
-                </Button>
-              </div>
-              <div className="space-y-2">
-                {documents.map((doc) => (
-                  <div key={doc.id} className="flex justify-between items-center border-b pb-2">
-                    <div className="flex items-center gap-2">
-                      {getFileTypeInfo(doc.fileName).icon}
-                      <span className="text-sm font-medium truncate max-w-[150px]">{doc.fileName}</span>
-                    </div>
-                    <div className="flex gap-1">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-7 w-7 p-0" 
-                        onClick={() => openPreview(doc)}
-                      >
-                        <Eye size={14} />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-7 w-7 p-0 text-red-500" 
-                        onClick={() => deleteDocument(doc.id)}
-                      >
-                        <Trash2 size={14} />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
+          {showDocumentList && (
+            <DocumentList 
+              documents={documents} 
+              onClose={() => setShowDocumentList(false)}
+              onPreview={openPreview}
+              onDelete={deleteDocument}
+            />
           )}
         </CardHeader>
         
@@ -405,77 +299,14 @@ const FinanceChat = () => {
         
         {/* Document Upload Form */}
         {showDocumentUpload && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="border-t border-gray-200 bg-gray-50 p-3"
-          >
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="text-sm font-medium text-gray-700">Upload Document</h3>
-              <Button 
-                variant="ghost" 
-                size="sm"  
-                className="h-7 w-7 p-0"
-                onClick={() => setShowDocumentUpload(false)}
-              >
-                <X size={16} />
-              </Button>
-            </div>
-            <div className="grid gap-3">
-              <div>
-                <Input
-                  id="file"
-                  key={fileInputKey}
-                  type="file"
-                  name="file"
-                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.csv"
-                  onChange={handleDocumentChange}
-                  className="text-xs cursor-pointer"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Max size: 5MB. Accepted: PDF, images, office docs
-                </p>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <select
-                    id="docType"
-                    name="docType"
-                    value={documentForm.docType}
-                    onChange={handleDocumentChange}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {documentTypes.map((type) => (
-                      <option key={type} value={type}>
-                        {type}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <Input
-                    id="note"
-                    name="note"
-                    value={documentForm.note}
-                    onChange={handleDocumentChange}
-                    placeholder="Add a note (optional)"
-                    className="text-xs"
-                  />
-                </div>
-              </div>
-              
-              <Button 
-                onClick={handleDocumentUpload} 
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-                size="sm"
-                disabled={!documentForm.file}
-              >
-                <Upload size={16} className="mr-1" /> Upload Document
-              </Button>
-            </div>
-          </motion.div>
+          <DocumentUpload
+            documentForm={documentForm}
+            handleDocumentChange={handleDocumentChange}
+            handleDocumentUpload={handleDocumentUpload}
+            documentTypes={documentTypes}
+            fileInputKey={fileInputKey}
+            onClose={() => setShowDocumentUpload(false)}
+          />
         )}
         
         <CardFooter className="flex flex-col border-t bg-gray-50 p-4">
@@ -512,73 +343,11 @@ const FinanceChat = () => {
       
       {/* Document Preview Modal */}
       {selectedDoc && (
-        <motion.div
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-end"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={closePreview}
-        >
-          <motion.div
-            className="w-full md:w-1/3 bg-white h-full overflow-y-auto"
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "tween" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold">{selectedDoc.fileName}</h2>
-                <Button variant="ghost" size="icon" onClick={closePreview}>
-                  <X size={20} />
-                </Button>
-              </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm text-gray-500">Type: {selectedDoc.type}</p>
-                  <p className="text-sm text-gray-500">Uploaded: {selectedDoc.uploadedAt}</p>
-                </div>
-                
-                {selectedDoc.fileType === "image" && (
-                  <div className="border rounded-lg overflow-hidden">
-                    <img
-                      src={selectedDoc.url}
-                      alt={selectedDoc.fileName}
-                      className="w-full h-auto"
-                    />
-                  </div>
-                )}
-                
-                <div className="bg-gray-50 p-4 rounded-xl">
-                  <h3 className="font-medium mb-2">Document Content</h3>
-                  <p className="text-sm">{selectedDoc.preview}</p>
-                </div>
-                
-                <div className="mt-4 flex gap-2">
-                  <a
-                    href={selectedDoc.url}
-                    download={selectedDoc.fileName}
-                    className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700"
-                  >
-                    <Download size={16} /> Download
-                  </a>
-                  <Button
-                    variant="outline"
-                    className="border-red-500 text-red-500 hover:bg-red-50"
-                    onClick={() => {
-                      deleteDocument(selectedDoc.id);
-                      closePreview();
-                    }}
-                  >
-                    <Trash2 size={16} className="mr-1" /> Delete
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
+        <DocumentPreview
+          document={selectedDoc}
+          onClose={closePreview}
+          onDelete={deleteDocument}
+        />
       )}
     </div>
   );
