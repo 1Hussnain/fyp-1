@@ -2,7 +2,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { LayoutDashboard, Wallet, Target, FileText, MessageSquare, Settings } from "lucide-react";
+import { LayoutDashboard, MessageSquare, Settings } from "lucide-react";
 import LoginForm from "../components/LoginForm";
 
 const Index = () => {
@@ -18,13 +18,10 @@ const Index = () => {
         
         <div className="mt-8 pt-6 border-t border-gray-200">
           <h3 className="text-sm font-medium text-gray-700 mb-3">Quick Access:</h3>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3">
             <QuickLink to="/dashboard" icon={<LayoutDashboard size={18} />} label="Dashboard" />
-            <QuickLink to="/budget-tracker" icon={<Wallet size={18} />} label="Budget Tracker" />
-            <QuickLink to="/goals-tracker" icon={<Target size={18} />} label="Goals Tracker" />
-            <QuickLink to="/budget-summary" icon={<FileText size={18} />} label="Budget Summary" />
-            <QuickLink to="/finance-chat" icon={<MessageSquare size={18} />} label="Finance Chat" />
-            <QuickLink to="/income-expenses" icon={<Wallet size={18} />} label="Income & Expenses" />
+            <QuickLink to="/finance-chat" icon={<MessageSquare size={18} />} label="Finance Assistant" />
+            <QuickLink to="/settings" icon={<Settings size={18} />} label="Settings" />
           </div>
         </div>
       </motion.div>

@@ -1,58 +1,78 @@
 
-import React from "react";
-import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import { BarChart3, Wallet, Target, FileText, PieChart, Settings, MessageSquare, Home } from "lucide-react";
+import React, { useState } from "react";
+import { NavLink, useLocation } from "react-router-dom";
+import { LayoutDashboard, MessageSquare, Settings } from "lucide-react";
 
 const Sidebar = () => {
-  const navigate = useNavigate();
-  const [activeItem, setActiveItem] = React.useState("Dashboard");
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const location = useLocation();
 
   const navItems = [
-    { name: "Home", icon: Home, path: "/" },
-    { name: "Dashboard", icon: BarChart3, path: "/dashboard" },
-    { name: "Budget Tracker", icon: Wallet, path: "/budget-tracker" },
-    { name: "Goals Tracker", icon: Target, path: "/goals-tracker" },
-    { name: "Budget Summary", icon: PieChart, path: "/budget-summary" },
-    { name: "Income & Expenses", icon: Wallet, path: "/income-expenses" },
-    { name: "Documents", icon: FileText, path: "/documents" },
-    { name: "Finance Chat", icon: MessageSquare, path: "/finance-chat" },
-    { name: "Settings", icon: Settings, path: "/settings" }
+    { 
+      path: "/dashboard", 
+      label: "Dashboard", 
+      icon: <LayoutDashboard size={20} /> 
+    },
+    {
+      path: "/finance-chat",
+      label: "Finance Assistant",
+      icon: <MessageSquare size={20} />
+    },
+    {
+      path: "/settings",
+      label: "Settings",
+      icon: <Settings size={20} />
+    }
   ];
 
-  const handleNavigation = (item: string, path: string) => {
-    setActiveItem(item);
-    navigate(path);
-  };
-
   return (
-    <motion.div
-      initial={{ x: -50, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      transition={{ duration: 0.3 }}
-      className="w-64 bg-white shadow h-screen fixed md:relative z-10 overflow-y-auto"
+    <div 
+      className={`bg-slate-800 text-white h-screen transition-all duration-300 flex flex-col ${
+        isCollapsed ? "w-16" : "w-64"
+      }`}
     >
-      <div className="p-4 border-b">
-        <h1 className="text-xl font-bold text-blue-600">FinanceAI</h1>
+      <div className="p-4 flex items-center justify-between border-b border-slate-700">
+        {!isCollapsed && (
+          <h1 className="text-xl font-bold">FinTrack</h1>
+        )}
+        <button 
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="p-1 rounded-md hover:bg-slate-700 transition-colors"
+        >
+          {isCollapsed ? "→" : "←"}
+        </button>
       </div>
-      <div className="p-4">
-        <ul className="space-y-2">
+      
+      <nav className="flex-1 overflow-y-auto py-6">
+        <ul className="space-y-2 px-2">
           {navItems.map((item) => (
-            <li key={item.name}>
-              <div
-                className={`flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors ${
-                  activeItem === item.name ? "bg-blue-100 text-blue-600" : ""
-                }`}
-                onClick={() => handleNavigation(item.name, item.path)}
+            <li key={item.path}>
+              <NavLink
+                to={item.path}
+                className={({ isActive }) => `
+                  flex items-center gap-3 px-3 py-2 rounded-md transition-colors
+                  ${isActive 
+                    ? "bg-blue-600 text-white" 
+                    : "text-gray-300 hover:bg-slate-700"
+                  }
+                `}
               >
-                <item.icon size={20} />
-                <span>{item.name}</span>
-              </div>
+                <span>{item.icon}</span>
+                {!isCollapsed && <span>{item.label}</span>}
+              </NavLink>
             </li>
           ))}
         </ul>
+      </nav>
+      
+      <div className="p-4 border-t border-slate-700">
+        {!isCollapsed && (
+          <div className="text-xs text-gray-400">
+            FinTrack App v1.0.0
+          </div>
+        )}
       </div>
-    </motion.div>
+    </div>
   );
 };
 
