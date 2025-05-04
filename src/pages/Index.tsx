@@ -15,22 +15,31 @@ const Index = () => {
       >
         <LoginForm />
         {/* Links for demo purposes */}
-        <div className="text-center mt-4 space-y-2">
-          <Link to="/dashboard" className="block text-blue-600 hover:text-blue-800 text-sm">
-            Go to Dashboard (Demo)
-          </Link>
-          <Link to="/income-expenses" className="block text-blue-600 hover:text-blue-800 text-sm">
-            Income & Expenses (Demo)
-          </Link>
-          <Link to="/goals-budget" className="block text-blue-600 hover:text-blue-800 text-sm">
-            Goals & Budget (Demo)
-          </Link>
-          <Link to="/documents" className="block text-blue-600 hover:text-blue-800 text-sm">
-            Document Viewer (Demo)
-          </Link>
-          <Link to="/finance-chat" className="block text-blue-600 hover:text-blue-800 text-sm">
-            Finance Chat Assistant (Demo)
-          </Link>
+        <div className="text-center mt-6">
+          <h3 className="font-medium mb-2">Financial Planning App Demo</h3>
+          <div className="grid grid-cols-1 gap-2 mt-4">
+            <Link to="/dashboard" className="block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+              Dashboard
+            </Link>
+            <Link to="/income-expenses" className="block bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+              Income & Expenses
+            </Link>
+            <Link to="/budget-tracker" className="block bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+              Budget Tracker
+            </Link>
+            <Link to="/goals-tracker" className="block bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors">
+              Goals Tracker
+            </Link>
+            <Link to="/budget-summary" className="block bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors">
+              Budget Summary
+            </Link>
+            <Link to="/documents" className="block bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+              Document Viewer
+            </Link>
+            <Link to="/finance-chat" className="block bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors">
+              Finance Chat
+            </Link>
+          </div>
         </div>
       </motion.div>
     </div>

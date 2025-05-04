@@ -1,12 +1,14 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { useBudgetTracker } from "@/hooks/useBudgetTracker";
 import BudgetLimit from "@/components/budget-tracker/BudgetLimit";
 import SummaryCards from "@/components/budget-tracker/SummaryCards";
 import TransactionForm from "@/components/budget-tracker/TransactionForm";
 import CategoryBreakdown from "@/components/budget-tracker/CategoryBreakdown";
 import TransactionList from "@/components/budget-tracker/TransactionList";
+import { Button } from "@/components/ui/button";
 
 const BudgetTracker = () => {
   const {
@@ -29,7 +31,17 @@ const BudgetTracker = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h2 className="text-3xl font-bold mb-6 text-gray-800">Budget Tracker</h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-3xl font-bold text-gray-800">Budget Tracker</h2>
+          <div className="flex gap-3">
+            <Link to="/dashboard">
+              <Button variant="outline">Dashboard</Button>
+            </Link>
+            <Link to="/budget-summary">
+              <Button variant="outline">Budget Summary</Button>
+            </Link>
+          </div>
+        </div>
 
         {/* Budget Limit Setting */}
         <BudgetLimit 

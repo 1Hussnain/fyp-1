@@ -33,7 +33,6 @@ const App = () => (
           <Route path="/budget-tracker" element={<BudgetTracker />} />
           <Route path="/goals-tracker" element={<GoalsTracker />} />
           <Route path="/budget-summary" element={<BudgetSummary />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

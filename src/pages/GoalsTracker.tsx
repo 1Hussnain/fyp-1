@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { Clock, Target, Award } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Link } from "react-router-dom";
 
 const GoalsTracker = () => {
   const {
@@ -49,7 +50,7 @@ const GoalsTracker = () => {
           <h1 className="text-3xl font-bold mb-2 text-gray-800">🎯 Financial Goals Tracker</h1>
           <p className="text-gray-600">Set, track, and achieve your financial dreams one milestone at a time.</p>
           
-          <div className="mt-4 flex justify-center">
+          <div className="mt-4 flex justify-center space-x-4">
             <select 
               className="px-4 py-2 border rounded-lg text-sm"
               value={goalTypeFilter}
@@ -59,6 +60,10 @@ const GoalsTracker = () => {
               <option value="short-term">Short-Term</option>
               <option value="long-term">Long-Term</option>
             </select>
+            
+            <Link to="/dashboard">
+              <Button variant="outline">Back to Dashboard</Button>
+            </Link>
           </div>
         </header>
 
@@ -181,10 +186,10 @@ const GoalsTracker = () => {
                 <ul className="space-y-3">
                   {goals.map(goal => {
                     const pct = goal.saved / goal.target;
-                    const daysRemaining = typeof daysLeft(goal.deadline) === 'number' ? daysLeft(goal.deadline) : 0;
+                    const remainingDays = daysLeft(goal.deadline);
                     const amountRemaining = goal.target - goal.saved;
                     const progress = getProgress(goal);
-                    const isOverdue = typeof daysLeft(goal.deadline) === 'string' && daysLeft(goal.deadline).includes('Overdue');
+                    const isOverdue = typeof remainingDays === 'string';
                     
                     if (progress >= 100) {
                       return (
@@ -202,17 +207,17 @@ const GoalsTracker = () => {
                       );
                     }
                     
-                    if (pct < 0.5 && daysRemaining < 30 && daysRemaining > 0) {
-                      const dailySavingsNeeded = Math.round(amountRemaining / daysRemaining);
+                    if (pct < 0.5 && typeof remainingDays === 'number' && remainingDays < 30 && remainingDays > 0) {
+                      const dailySavingsNeeded = Math.round(amountRemaining / remainingDays);
                       return (
                         <li key={goal.id} className="p-3 bg-yellow-50 rounded-lg text-sm text-gray-700">
-                          ⚠️ You're behind on "{goal.name}". To catch up, try saving ${dailySavingsNeeded} daily for the next {daysRemaining} days.
+                          ⚠️ You're behind on "{goal.name}". To catch up, try saving ${dailySavingsNeeded} daily for the next {remainingDays} days.
                         </li>
                       );
                     }
                     
-                    if (pct >= 0.5 && pct < 1 && daysRemaining > 0) {
-                      const dailySavingsNeeded = Math.round(amountRemaining / daysRemaining);
+                    if (pct >= 0.5 && pct < 1 && typeof remainingDays === 'number' && remainingDays > 0) {
+                      const dailySavingsNeeded = Math.round(amountRemaining / remainingDays);
                       return (
                         <li key={goal.id} className="p-3 bg-blue-50 rounded-lg text-sm text-gray-700">
                           🔄 You're halfway through "{goal.name}"! Stay consistent with savings of ${dailySavingsNeeded} per day to finish by {new Date(goal.deadline).toLocaleDateString()}.
@@ -220,8 +225,8 @@ const GoalsTracker = () => {
                       );
                     }
                     
-                    if (daysRemaining > 0) {
-                      const dailySavingsNeeded = Math.round(amountRemaining / daysRemaining);
+                    if (typeof remainingDays === 'number' && remainingDays > 0) {
+                      const dailySavingsNeeded = Math.round(amountRemaining / remainingDays);
                       return (
                         <li key={goal.id} className="p-3 bg-blue-50 rounded-lg text-sm text-gray-700">
                           📌 You're on track with "{goal.name}". Keep saving ${dailySavingsNeeded} per day to reach your goal on time.

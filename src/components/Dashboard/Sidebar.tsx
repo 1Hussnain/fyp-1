@@ -2,18 +2,21 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { BarChart3, Wallet, Target, FileText, PieChart, Settings } from "lucide-react";
+import { BarChart3, Wallet, Target, FileText, PieChart, Settings, MessageSquare, Home } from "lucide-react";
 
 const Sidebar = () => {
   const navigate = useNavigate();
   const [activeItem, setActiveItem] = React.useState("Dashboard");
 
   const navItems = [
+    { name: "Home", icon: Home, path: "/" },
     { name: "Dashboard", icon: BarChart3, path: "/dashboard" },
-    { name: "Budgets", icon: Wallet, path: "/budgets" },
-    { name: "Goals", icon: Target, path: "/goals" },
+    { name: "Budget Tracker", icon: Wallet, path: "/budget-tracker" },
+    { name: "Goals Tracker", icon: Target, path: "/goals-tracker" },
+    { name: "Budget Summary", icon: PieChart, path: "/budget-summary" },
+    { name: "Income & Expenses", icon: Wallet, path: "/income-expenses" },
     { name: "Documents", icon: FileText, path: "/documents" },
-    { name: "Reports", icon: PieChart, path: "/reports" },
+    { name: "Finance Chat", icon: MessageSquare, path: "/finance-chat" },
     { name: "Settings", icon: Settings, path: "/settings" }
   ];
 

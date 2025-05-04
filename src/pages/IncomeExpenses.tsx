@@ -1,10 +1,12 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { useTransactions } from "@/hooks/useTransactions";
 import TransactionTabs from "@/components/income-expenses/TransactionTabs";
 import TransactionHistory from "@/components/income-expenses/TransactionHistory";
 import TransactionFilter from "@/components/income-expenses/TransactionFilter";
+import { Button } from "@/components/ui/button";
 
 const IncomeExpenses = () => {
   const {
@@ -30,7 +32,17 @@ const IncomeExpenses = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <h2 className="text-3xl font-bold mb-6 text-gray-800">Income & Expenses</h2>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-3xl font-bold text-gray-800">Income & Expenses</h2>
+            <div className="flex gap-3">
+              <Link to="/dashboard">
+                <Button variant="outline">Dashboard</Button>
+              </Link>
+              <Link to="/budget-tracker">
+                <Button variant="outline">Budget Tracker</Button>
+              </Link>
+            </div>
+          </div>
           
           <TransactionTabs
             activeTab={activeTab}
