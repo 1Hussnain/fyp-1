@@ -8,7 +8,6 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import IncomeExpenses from "./pages/IncomeExpenses";
 import GoalsBudget from "./pages/GoalsBudget";
-import DocumentViewer from "./pages/DocumentViewer";
 import FinanceChat from "./pages/FinanceChat";
 import BudgetTracker from "./pages/BudgetTracker";
 import GoalsTracker from "./pages/GoalsTracker";
@@ -28,7 +27,6 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/income-expenses" element={<IncomeExpenses />} />
           <Route path="/goals-budget" element={<GoalsBudget />} />
-          <Route path="/documents" element={<DocumentViewer />} />
           <Route path="/finance-chat" element={<FinanceChat />} />
           <Route path="/budget-tracker" element={<BudgetTracker />} />
           <Route path="/goals-tracker" element={<GoalsTracker />} />
