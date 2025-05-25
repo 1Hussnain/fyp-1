@@ -31,14 +31,12 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Auth state cleanup utility
 const cleanupAuthState = () => {
-  // Remove all Supabase auth keys from localStorage
   Object.keys(localStorage).forEach((key) => {
     if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
       localStorage.removeItem(key);
     }
   });
   
-  // Remove from sessionStorage if in use
   Object.keys(sessionStorage || {}).forEach((key) => {
     if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
       sessionStorage.removeItem(key);
@@ -117,7 +115,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, metadata?: any) => {
     try {
-      // Clean up any existing auth state
       cleanupAuthState();
       
       const { data, error } = await supabase.auth.signUp({
@@ -128,6 +125,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       });
       
+      // Check if email confirmation is required
+      if (data.user && !data.session) {
+        return { 
+          data, 
+          error: null,
+          needsConfirmation: true,
+          message: "Please check your email and click the confirmation link to activate your account."
+        };
+      }
+      
       return { data, error };
     } catch (error) {
       return { data: null, error };
@@ -136,14 +143,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     try {
-      // Clean up existing state
       cleanupAuthState();
       
-      // Attempt global sign out first
       try {
         await supabase.auth.signOut({ scope: 'global' });
       } catch (err) {
-        // Continue even if this fails
         console.log('Global signout failed, continuing:', err);
       }
       
@@ -151,6 +155,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email,
         password
       });
+      
+      // Provide more specific error messages
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) {
+          return { 
+            data: null, 
+            error: { 
+              ...error, 
+              message: "Invalid email or password. If you just signed up, please check your email for a confirmation link first." 
+            }
+          };
+        }
+        if (error.message.includes('Email not confirmed')) {
+          return { 
+            data: null, 
+            error: { 
+              ...error, 
+              message: "Please confirm your email address before signing in. Check your inbox for the confirmation link." 
+            }
+          };
+        }
+      }
       
       return { data, error };
     } catch (error) {
@@ -160,27 +186,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
-      // Clean up auth state
       cleanupAuthState();
       
-      // Attempt global sign out
       try {
         await supabase.auth.signOut({ scope: 'global' });
       } catch (err) {
-        // Ignore errors
         console.log('Signout error:', err);
       }
       
-      // Clear local state
       setUser(null);
       setProfile(null);
       setSession(null);
       
-      // Force page reload for a clean state
       window.location.href = '/';
     } catch (error) {
       console.error('Error signing out:', error);
-      // Force reload anyway
       window.location.href = '/';
     }
   };

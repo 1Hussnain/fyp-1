@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, CheckCircle } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import GoogleButton from "./GoogleButton";
@@ -17,11 +17,13 @@ const LoginForm = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [confirmationSent, setConfirmationSent] = useState(false);
   const navigate = useNavigate();
   const { signIn, signUp } = useAuth();
   
   const toggleView = () => {
     setIsLogin(!isLogin);
+    setConfirmationSent(false);
     // Clear form when switching
     setEmail("");
     setPassword("");
@@ -50,20 +52,15 @@ const LoginForm = () => {
 
     try {
       if (isLogin) {
-        const { error } = await signIn(email, password);
+        const { data, error } = await signIn(email, password);
         if (error) {
-          if (error.message.includes('Invalid login credentials')) {
-            toast.error("Invalid email or password. Please check your credentials.");
-          } else {
-            toast.error(error.message);
-          }
-        } else {
+          toast.error(error.message);
+        } else if (data.user) {
           toast.success("Login successful!");
-          // Force page reload to ensure clean state
-          window.location.href = "/dashboard";
+          navigate("/dashboard");
         }
       } else {
-        const { error } = await signUp(email, password, {
+        const { data, error, needsConfirmation, message } = await signUp(email, password, {
           first_name: firstName,
           last_name: lastName,
           full_name: `${firstName} ${lastName}`
@@ -77,9 +74,12 @@ const LoginForm = () => {
           } else {
             toast.error(error.message);
           }
+        } else if (needsConfirmation) {
+          setConfirmationSent(true);
+          toast.success(message || "Please check your email for verification.");
         } else {
-          toast.success("Account created successfully! Please check your email for verification.");
-          setIsLogin(true); // Switch to login view
+          toast.success("Account created successfully!");
+          navigate("/dashboard");
         }
       }
     } catch (error) {
@@ -89,6 +89,35 @@ const LoginForm = () => {
       setLoading(false);
     }
   };
+
+  if (confirmationSent) {
+    return (
+      <div className="text-center space-y-4">
+        <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
+        <h2 className="text-2xl font-semibold text-gray-900">Check Your Email</h2>
+        <div className="space-y-3">
+          <p className="text-gray-600">
+            We've sent a confirmation link to <strong>{email}</strong>
+          </p>
+          <p className="text-sm text-gray-500">
+            Click the link in your email to activate your account, then come back here to sign in.
+          </p>
+        </div>
+        <div className="pt-4">
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              setConfirmationSent(false);
+              setIsLogin(true);
+            }}
+            className="w-full"
+          >
+            Back to Sign In
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -160,6 +189,14 @@ const LoginForm = () => {
             </button>
           </div>
         </div>
+        
+        {isLogin && (
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+            <p className="text-sm text-blue-800">
+              <strong>Note:</strong> If you just signed up, please check your email and click the confirmation link before trying to sign in.
+            </p>
+          </div>
+        )}
         
         <motion.div
           whileHover={{ scale: 1.01 }}
