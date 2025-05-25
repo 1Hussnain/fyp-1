@@ -4,12 +4,10 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/ui/sonner";
-import { useNavigate } from "react-router-dom";
 
 const GoogleButton = () => {
   const [loading, setLoading] = useState(false);
   const { signInWithGoogle } = useAuth();
-  const navigate = useNavigate();
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
@@ -18,8 +16,7 @@ const GoogleButton = () => {
       if (error) {
         toast.error(error.message);
       } else {
-        toast.success("Signing in with Google...");
-        navigate("/dashboard");
+        toast.success("Redirecting to Google...");
       }
     } catch (error) {
       toast.error("Failed to sign in with Google");

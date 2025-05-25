@@ -14,12 +14,19 @@ const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { signIn, signUp } = useAuth();
   
   const toggleView = () => {
     setIsLogin(!isLogin);
+    // Clear form when switching
+    setEmail("");
+    setPassword("");
+    setFirstName("");
+    setLastName("");
   };
 
   const togglePasswordVisibility = () => {
@@ -28,26 +35,55 @@ const LoginForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    if (!isLogin && (!firstName || !lastName)) {
+      toast.error("Please fill in your first and last name");
+      return;
+    }
+
     setLoading(true);
 
     try {
       if (isLogin) {
         const { error } = await signIn(email, password);
         if (error) {
-          toast.error(error.message);
+          if (error.message.includes('Invalid login credentials')) {
+            toast.error("Invalid email or password. Please check your credentials.");
+          } else {
+            toast.error(error.message);
+          }
         } else {
           toast.success("Login successful!");
-          navigate("/dashboard");
+          // Force page reload to ensure clean state
+          window.location.href = "/dashboard";
         }
       } else {
-        const { error } = await signUp(email, password);
+        const { error } = await signUp(email, password, {
+          first_name: firstName,
+          last_name: lastName,
+          full_name: `${firstName} ${lastName}`
+        });
+        
         if (error) {
-          toast.error(error.message);
+          if (error.message.includes('User already registered')) {
+            toast.error("An account with this email already exists. Please sign in instead.");
+          } else if (error.message.includes('Password should be at least')) {
+            toast.error("Password should be at least 6 characters long.");
+          } else {
+            toast.error(error.message);
+          }
         } else {
-          toast.success("Account created! Please check your email for verification.");
+          toast.success("Account created successfully! Please check your email for verification.");
+          setIsLogin(true); // Switch to login view
         }
       }
     } catch (error) {
+      console.error('Auth error:', error);
       toast.error("An unexpected error occurred");
     } finally {
       setLoading(false);
@@ -62,6 +98,29 @@ const LoginForm = () => {
       
       <form className="space-y-4" onSubmit={handleSubmit}>
         <div className="space-y-2">
+          {!isLogin && (
+            <div className="grid grid-cols-2 gap-2">
+              <Input 
+                placeholder="First Name" 
+                type="text" 
+                required={!isLogin}
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                aria-label="First name"
+                disabled={loading}
+              />
+              <Input 
+                placeholder="Last Name" 
+                type="text" 
+                required={!isLogin}
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                aria-label="Last name"
+                disabled={loading}
+              />
+            </div>
+          )}
+          
           <div className="relative">
             <Input 
               placeholder="Email" 
@@ -85,6 +144,7 @@ const LoginForm = () => {
               aria-label="Password"
               className="pr-10"
               disabled={loading}
+              minLength={6}
             />
             <button 
               type="button"
@@ -110,7 +170,7 @@ const LoginForm = () => {
             type="submit"
             disabled={loading}
           >
-            {loading ? "Loading..." : (isLogin ? "Login" : "Sign Up")}
+            {loading ? "Loading..." : (isLogin ? "Sign In" : "Create Account")}
           </Button>
         </motion.div>
         
@@ -131,7 +191,7 @@ const LoginForm = () => {
             }}
             className="text-blue-600 hover:text-blue-800 font-medium"
           >
-            {isLogin ? "Sign up" : "Log in"}
+            {isLogin ? "Sign up" : "Sign in"}
           </a>
         </p>
         

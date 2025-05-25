@@ -13,27 +13,6 @@ export type Milestone = Database['public']['Tables']['milestones']['Row'];
 export type AuditLog = Database['public']['Tables']['audit_logs']['Row'];
 
 // Authentication functions
-export const signupUser = async (email: string, password: string) => {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-  });
-  return { data, error };
-};
-
-export const loginUser = async (email: string, password: string) => {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-  return { data, error };
-};
-
-export const logoutUser = async () => {
-  const { error } = await supabase.auth.signOut();
-  return { error };
-};
-
 export const getCurrentUser = async () => {
   const { data: { user } } = await supabase.auth.getUser();
   return user;
@@ -47,11 +26,27 @@ export const getUserProfile = async () => {
   return { data, error };
 };
 
+export const updateUserProfile = async (updates: Partial<Profile>) => {
+  const user = await getCurrentUser();
+  if (!user) return { data: null, error: 'User not authenticated' };
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('id', user.id)
+    .select()
+    .single();
+  return { data, error };
+};
+
 // Folder functions
 export const createFolder = async (name: string) => {
+  const user = await getCurrentUser();
+  if (!user) return { data: null, error: 'User not authenticated' };
+
   const { data, error } = await supabase
     .from('folders')
-    .insert({ name, user_id: (await getCurrentUser())?.id })
+    .insert({ name, user_id: user.id })
     .select()
     .single();
   return { data, error };
@@ -76,10 +71,13 @@ export const deleteFolder = async (folderId: string) => {
 // Document functions
 export const uploadDocument = async (file: File, folderId?: string) => {
   try {
+    const user = await getCurrentUser();
+    if (!user) return { data: null, error: 'User not authenticated' };
+
     // Upload file to storage
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}.${fileExt}`;
-    const filePath = `${(await getCurrentUser())?.id}/${fileName}`;
+    const filePath = `${user.id}/${fileName}`;
 
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('documents')
@@ -99,7 +97,7 @@ export const uploadDocument = async (file: File, folderId?: string) => {
         name: file.name,
         file_url: publicUrl,
         folder_id: folderId,
-        user_id: (await getCurrentUser())?.id,
+        user_id: user.id,
         size_bytes: file.size,
         file_type: file.type,
       })
@@ -193,10 +191,13 @@ export const fetchChatHistory = async () => {
 };
 
 export const saveChatMessage = async (sender: 'user' | 'ai', message: string, metadata?: any) => {
+  const user = await getCurrentUser();
+  if (!user) return { data: null, error: 'User not authenticated' };
+
   const { data, error } = await supabase
     .from('chat_history')
     .insert({
-      user_id: (await getCurrentUser())?.id,
+      user_id: user.id,
       sender,
       message,
       metadata,
@@ -207,10 +208,13 @@ export const saveChatMessage = async (sender: 'user' | 'ai', message: string, me
 };
 
 export const clearChatHistory = async () => {
+  const user = await getCurrentUser();
+  if (!user) return { error: 'User not authenticated' };
+
   const { error } = await supabase
     .from('chat_history')
     .delete()
-    .eq('user_id', (await getCurrentUser())?.id);
+    .eq('user_id', user.id);
   return { error };
 };
 
@@ -240,10 +244,13 @@ export const saveUserPreferences = async (preferences: Partial<Preferences>) => 
 
 // Milestone functions
 export const logMilestone = async (type: string, detail?: any) => {
+  const user = await getCurrentUser();
+  if (!user) return { data: null, error: 'User not authenticated' };
+
   const { data, error } = await supabase
     .from('milestones')
     .insert({
-      user_id: (await getCurrentUser())?.id,
+      user_id: user.id,
       type,
       detail,
     })
@@ -262,10 +269,13 @@ export const getUserMilestones = async () => {
 
 // Audit log functions
 export const logAuditEvent = async (action: string, description?: string) => {
+  const user = await getCurrentUser();
+  if (!user) return { data: null, error: 'User not authenticated' };
+
   const { data, error } = await supabase
     .from('audit_logs')
     .insert({
-      user_id: (await getCurrentUser())?.id,
+      user_id: user.id,
       action,
       description,
     })
