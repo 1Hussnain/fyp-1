@@ -31,6 +31,18 @@ const TopNav = () => {
     return email.slice(0, 2).toUpperCase();
   };
 
+  const getUserDisplayName = () => {
+    // Try to get name from user metadata, fallback to email
+    const fullName = user?.user_metadata?.full_name || user?.user_metadata?.name;
+    const firstName = user?.user_metadata?.first_name;
+    const lastName = user?.user_metadata?.last_name;
+    
+    if (fullName) return fullName;
+    if (firstName && lastName) return `${firstName} ${lastName}`;
+    if (firstName) return firstName;
+    return user?.email || "User";
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
@@ -50,11 +62,13 @@ const TopNav = () => {
           <DropdownMenuTrigger asChild>
             <div className="flex items-center gap-2 cursor-pointer">
               <Avatar>
-                <AvatarImage src="" alt="User" />
-                <AvatarFallback>{user?.email ? getInitials(user.email) : "U"}</AvatarFallback>
+                <AvatarImage src={user?.user_metadata?.avatar_url || ""} alt="User" />
+                <AvatarFallback>
+                  {user?.email ? getInitials(user.email) : "U"}
+                </AvatarFallback>
               </Avatar>
               <span className="hidden sm:inline-block">
-                {user?.email || "User"}
+                {getUserDisplayName()}
               </span>
               <ChevronDown size={16} />
             </div>

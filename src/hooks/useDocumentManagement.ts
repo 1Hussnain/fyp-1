@@ -1,17 +1,8 @@
 
 import { useState } from "react";
 import { toast } from "@/components/ui/sonner";
-
-interface Document {
-  id: number;
-  fileName: string;
-  type: string;
-  note: string;
-  uploadedAt: string;
-  preview: string;
-  url: string;
-  fileType: "pdf" | "image" | "other";
-}
+import { useDocuments } from "./useDocuments";
+import { Document } from "@/services/database";
 
 interface DocumentForm {
   file: File | null;
@@ -22,7 +13,7 @@ interface DocumentForm {
 export const useDocumentManagement = (
   onDocumentUpload: (document: Document, documentMessage: string) => void
 ) => {
-  const [documents, setDocuments] = useState<Document[]>([]);
+  const { documents, uploadDocument, deleteDocument } = useDocuments();
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
   const [showDocumentUpload, setShowDocumentUpload] = useState(false);
   const [showDocumentList, setShowDocumentList] = useState(false);
@@ -54,56 +45,41 @@ export const useDocumentManagement = (
   };
 
   // Handle document upload
-  const handleDocumentUpload = () => {
+  const handleDocumentUpload = async () => {
     if (!documentForm.file) {
       toast.error("Please select a file");
       return;
     }
 
-    // Get file type info
-    const { type: fileType } = getFileTypeInfo(documentForm.file.name);
-
-    // Create new document
-    const newDoc: Document = {
-      id: Date.now(),
-      fileName: documentForm.file.name,
-      type: documentForm.docType,
-      note: documentForm.note,
-      uploadedAt: new Date().toLocaleDateString(),
-      preview: documentForm.note || "This document contains financial information that has been automatically processed. Click 'View' to see more details.",
-      url: URL.createObjectURL(documentForm.file),
-      fileType: fileType as "pdf" | "image" | "other",
-    };
-
-    // Add to documents array
-    setDocuments([newDoc, ...documents]);
+    const result = await uploadDocument(documentForm.file);
     
-    // Call the callback to add document message to chat
-    onDocumentUpload(
-      newDoc,
-      `Uploaded document: ${documentForm.file.name}`
-    );
-    
-    // Reset form
-    setDocumentForm({ file: null, docType: "Bank Statement", note: "" });
-    setFileInputKey(prev => prev + 1);
-    setShowDocumentUpload(false);
-    toast.success("Document uploaded successfully");
+    if (result.success && result.data) {
+      // Call the callback to add document message to chat
+      onDocumentUpload(
+        result.data,
+        `Uploaded document: ${documentForm.file.name}`
+      );
+      
+      // Reset form
+      setDocumentForm({ file: null, docType: "Bank Statement", note: "" });
+      setFileInputKey(prev => prev + 1);
+      setShowDocumentUpload(false);
+    }
   };
 
   // Delete document
-  const deleteDocument = (id: number) => {
+  const handleDeleteDocument = async (id: string) => {
     if (confirm("Are you sure you want to delete this document?")) {
-      const updated = documents.filter((doc) => doc.id !== id);
-      setDocuments(updated);
+      const result = await deleteDocument(id);
       
-      // If deleted document was selected in preview, close preview
-      if (selectedDoc?.id === id) {
-        setSelectedDoc(null);
+      if (result.success) {
+        // If deleted document was selected in preview, close preview
+        if (selectedDoc?.id === id) {
+          setSelectedDoc(null);
+        }
+        return true;
       }
-      
-      toast.success("Document deleted");
-      return true;
+      return false;
     }
     return false;
   };
@@ -123,7 +99,7 @@ export const useDocumentManagement = (
     setShowDocumentUpload,
     handleDocumentChange,
     handleDocumentUpload,
-    deleteDocument,
+    deleteDocument: handleDeleteDocument,
     openPreview,
     closePreview
   };
