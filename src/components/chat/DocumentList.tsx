@@ -4,23 +4,13 @@ import { motion } from "framer-motion";
 import { X, FileText, FileImage, Eye, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-
-interface Document {
-  id: number;
-  fileName: string;
-  type: string;
-  note: string;
-  uploadedAt: string;
-  preview: string;
-  url: string;
-  fileType: "pdf" | "image" | "other";
-}
+import { Document } from "@/services/database";
 
 interface DocumentListProps {
   documents: Document[];
   onClose: () => void;
   onPreview: (document: Document) => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
 }
 
 const DocumentList: React.FC<DocumentListProps> = ({
@@ -30,7 +20,9 @@ const DocumentList: React.FC<DocumentListProps> = ({
   onDelete,
 }) => {
   // Determine file type icon
-  const getFileTypeInfo = (fileName: string) => {
+  const getFileTypeInfo = (fileName: string | null) => {
+    if (!fileName) return { type: "other", icon: <FileText className="text-gray-500" /> };
+    
     const ext = fileName.split('.').pop()?.toLowerCase();
     if (ext === 'pdf') {
       return { type: "pdf", icon: <FileText className="text-red-500" /> };
@@ -64,8 +56,8 @@ const DocumentList: React.FC<DocumentListProps> = ({
         {documents.map((doc) => (
           <div key={doc.id} className="flex justify-between items-center border-b pb-2">
             <div className="flex items-center gap-2">
-              {getFileTypeInfo(doc.fileName).icon}
-              <span className="text-sm font-medium truncate max-w-[150px]">{doc.fileName}</span>
+              {getFileTypeInfo(doc.name).icon}
+              <span className="text-sm font-medium truncate max-w-[150px]">{doc.name || 'Untitled'}</span>
             </div>
             <div className="flex gap-1">
               <Button 

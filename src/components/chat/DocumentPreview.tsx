@@ -3,22 +3,12 @@ import React from "react";
 import { motion } from "framer-motion";
 import { X, Download, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-interface Document {
-  id: number;
-  fileName: string;
-  type: string;
-  note: string;
-  uploadedAt: string;
-  preview: string;
-  url: string;
-  fileType: "pdf" | "image" | "other";
-}
+import { Document } from "@/services/database";
 
 interface DocumentPreviewProps {
   document: Document;
   onClose: () => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
 }
 
 const DocumentPreview: React.FC<DocumentPreviewProps> = ({
@@ -26,6 +16,9 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
   onClose,
   onDelete,
 }) => {
+  const isImage = document.file_type?.startsWith('image/') || false;
+  const formattedDate = new Date(document.uploaded_at).toLocaleDateString();
+
   return (
     <motion.div
       className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-end"
@@ -44,7 +37,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
       >
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">{document.fileName}</h2>
+            <h2 className="text-2xl font-bold">{document.name || 'Untitled Document'}</h2>
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X size={20} />
             </Button>
@@ -52,33 +45,40 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
           
           <div className="space-y-4">
             <div>
-              <p className="text-sm text-gray-500">Type: {document.type}</p>
-              <p className="text-sm text-gray-500">Uploaded: {document.uploadedAt}</p>
+              <p className="text-sm text-gray-500">Type: {document.file_type || 'Unknown'}</p>
+              <p className="text-sm text-gray-500">Uploaded: {formattedDate}</p>
+              {document.size_bytes && (
+                <p className="text-sm text-gray-500">Size: {(document.size_bytes / 1024 / 1024).toFixed(2)} MB</p>
+              )}
             </div>
             
-            {document.fileType === "image" && (
+            {isImage && document.file_url && (
               <div className="border rounded-lg overflow-hidden">
                 <img
-                  src={document.url}
-                  alt={document.fileName}
+                  src={document.file_url}
+                  alt={document.name || 'Document'}
                   className="w-full h-auto"
                 />
               </div>
             )}
             
-            <div className="bg-gray-50 p-4 rounded-xl">
-              <h3 className="font-medium mb-2">Document Content</h3>
-              <p className="text-sm">{document.preview}</p>
-            </div>
+            {document.ai_parsed_data && (
+              <div className="bg-gray-50 p-4 rounded-xl">
+                <h3 className="font-medium mb-2">AI Analysis</h3>
+                <pre className="text-sm whitespace-pre-wrap">{JSON.stringify(document.ai_parsed_data, null, 2)}</pre>
+              </div>
+            )}
             
             <div className="mt-4 flex gap-2">
-              <a
-                href={document.url}
-                download={document.fileName}
-                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700"
-              >
-                <Download size={16} /> Download
-              </a>
+              {document.file_url && (
+                <a
+                  href={document.file_url}
+                  download={document.name || 'document'}
+                  className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700"
+                >
+                  <Download size={16} /> Download
+                </a>
+              )}
               <Button
                 variant="outline"
                 className="border-red-500 text-red-500 hover:bg-red-50"

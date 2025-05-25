@@ -15,6 +15,7 @@ import DocumentList from "../components/chat/DocumentList";
 import DocumentPreview from "../components/chat/DocumentPreview";
 import HelpSection from "../components/chat/HelpSection";
 import { useDocumentManagement } from "../hooks/useDocumentManagement";
+import { Document } from "@/services/database";
 
 // Document type options
 const documentTypes = [
@@ -33,19 +34,8 @@ type MessageType = {
   timestamp: Date;
   messageType?: "tip" | "warning" | "suggestion" | "motivation";
   isDocument?: boolean;
-  documentId?: number;
+  documentId?: string;
 };
-
-interface Document {
-  id: number;
-  fileName: string;
-  type: string;
-  note: string;
-  uploadedAt: string;
-  preview: string;
-  url: string;
-  fileType: "pdf" | "image" | "other";
-}
 
 const FinanceChat = () => {
   const [messages, setMessages] = useState<MessageType[]>([
@@ -77,7 +67,7 @@ const FinanceChat = () => {
       {
         id: crypto.randomUUID(),
         sender: "ai",
-        text: `I've received your ${newDoc.type.toLowerCase()}. If you have any questions about it, feel free to ask!`,
+        text: `I've received your ${newDoc.file_type?.toLowerCase() || 'document'}. If you have any questions about it, feel free to ask!`,
         timestamp: new Date()
       }
     ]);
@@ -104,7 +94,7 @@ const FinanceChat = () => {
     uploadDocument();
   };
 
-  const deleteDocument = (id: number) => {
+  const deleteDocument = (id: string) => {
     const success = deleteDocumentHandler(id);
     if (success) {
       // Remove document messages from chat
