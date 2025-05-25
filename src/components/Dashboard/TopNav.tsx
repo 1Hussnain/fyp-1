@@ -1,10 +1,36 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Bell, ChevronDown } from "lucide-react";
+import { Bell, ChevronDown, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/components/ui/sonner";
+import { useNavigate } from "react-router-dom";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const TopNav = () => {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast.success("Logged out successfully");
+      navigate("/");
+    } catch (error) {
+      toast.error("Failed to log out");
+    }
+  };
+
+  const getInitials = (email: string) => {
+    return email.slice(0, 2).toUpperCase();
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
@@ -20,14 +46,26 @@ const TopNav = () => {
             3
           </span>
         </div>
-        <div className="flex items-center gap-2 cursor-pointer">
-          <Avatar>
-            <AvatarImage src="https://github.com/shadcn.png" alt="User" />
-            <AvatarFallback>JD</AvatarFallback>
-          </Avatar>
-          <span className="hidden sm:inline-block">John Doe</span>
-          <ChevronDown size={16} />
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div className="flex items-center gap-2 cursor-pointer">
+              <Avatar>
+                <AvatarImage src="" alt="User" />
+                <AvatarFallback>{user?.email ? getInitials(user.email) : "U"}</AvatarFallback>
+              </Avatar>
+              <span className="hidden sm:inline-block">
+                {user?.email || "User"}
+              </span>
+              <ChevronDown size={16} />
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleSignOut}>
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Log out</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </motion.div>
   );

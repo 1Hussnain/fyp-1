@@ -1,9 +1,33 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/components/ui/sonner";
+import { useNavigate } from "react-router-dom";
 
 const GoogleButton = () => {
+  const [loading, setLoading] = useState(false);
+  const { signInWithGoogle } = useAuth();
+  const navigate = useNavigate();
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    try {
+      const { error } = await signInWithGoogle();
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("Signing in with Google...");
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      toast.error("Failed to sign in with Google");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <motion.div
       whileHover={{ scale: 1.01 }}
@@ -13,6 +37,8 @@ const GoogleButton = () => {
         variant="outline" 
         className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 hover:bg-gray-50"
         type="button"
+        onClick={handleGoogleSignIn}
+        disabled={loading}
       >
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
@@ -28,7 +54,7 @@ const GoogleButton = () => {
             <path fill="#EA4335" d="M -14.754 43.989 C -12.984 43.989 -11.404 44.599 -10.154 45.789 L -6.734 42.369 C -8.804 40.429 -11.514 39.239 -14.754 39.239 C -19.444 39.239 -23.494 41.939 -25.464 45.859 L -21.484 48.949 C -20.534 46.099 -17.884 43.989 -14.754 43.989 Z"/>
           </g>
         </svg>
-        <span>Continue with Google</span>
+        <span>{loading ? "Signing in..." : "Continue with Google"}</span>
       </Button>
     </motion.div>
   );

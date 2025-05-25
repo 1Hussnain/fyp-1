@@ -6,12 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
+import { useAuth } from "@/contexts/AuthContext";
 import GoogleButton from "./GoogleButton";
 
 const LoginForm = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { signIn, signUp } = useAuth();
   
   const toggleView = () => {
     setIsLogin(!isLogin);
@@ -21,10 +26,32 @@ const LoginForm = () => {
     setShowPassword(!showPassword);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success(`${isLogin ? "Login" : "Sign up"} successful`);
-    navigate("/dashboard");
+    setLoading(true);
+
+    try {
+      if (isLogin) {
+        const { error } = await signIn(email, password);
+        if (error) {
+          toast.error(error.message);
+        } else {
+          toast.success("Login successful!");
+          navigate("/dashboard");
+        }
+      } else {
+        const { error } = await signUp(email, password);
+        if (error) {
+          toast.error(error.message);
+        } else {
+          toast.success("Account created! Please check your email for verification.");
+        }
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -40,8 +67,11 @@ const LoginForm = () => {
               placeholder="Email" 
               type="email" 
               required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               aria-label="Email address"
               className="pr-4"
+              disabled={loading}
             />
           </div>
           
@@ -50,8 +80,11 @@ const LoginForm = () => {
               placeholder="Password" 
               type={showPassword ? "text" : "password"} 
               required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               aria-label="Password"
               className="pr-10"
+              disabled={loading}
             />
             <button 
               type="button"
@@ -75,8 +108,9 @@ const LoginForm = () => {
           <Button 
             className="w-full bg-blue-600 hover:bg-blue-700 transition-colors"
             type="submit"
+            disabled={loading}
           >
-            {isLogin ? "Login" : "Sign Up"}
+            {loading ? "Loading..." : (isLogin ? "Login" : "Sign Up")}
           </Button>
         </motion.div>
         
