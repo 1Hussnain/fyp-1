@@ -320,6 +320,33 @@ export type Database = {
           },
         ]
       }
+      password_reset_otps: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          is_used: boolean
+          otp_code: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          is_used?: boolean
+          otp_code: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          is_used?: boolean
+          otp_code?: string
+        }
+        Relationships: []
+      }
       preferences: {
         Row: {
           currency: string | null
@@ -453,6 +480,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_otps: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       is_admin: {
         Args: { user_id: string }
         Returns: boolean

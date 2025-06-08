@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -8,9 +7,11 @@ import { Eye, EyeOff, CheckCircle } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import GoogleButton from "./GoogleButton";
+import PasswordResetForm from "./PasswordResetForm";
 
 const LoginForm = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,6 +25,7 @@ const LoginForm = () => {
   const toggleView = () => {
     setIsLogin(!isLogin);
     setConfirmationSent(false);
+    setShowPasswordReset(false);
     // Clear form when switching
     setEmail("");
     setPassword("");
@@ -33,6 +35,14 @@ const LoginForm = () => {
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+
+  const handleForgotPassword = () => {
+    setShowPasswordReset(true);
+  };
+
+  const handleBackFromPasswordReset = () => {
+    setShowPasswordReset(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -89,6 +99,10 @@ const LoginForm = () => {
       setLoading(false);
     }
   };
+
+  if (showPasswordReset) {
+    return <PasswordResetForm onBack={handleBackFromPasswordReset} />;
+  }
 
   if (confirmationSent) {
     return (
@@ -234,7 +248,16 @@ const LoginForm = () => {
         
         {isLogin && (
           <p className="text-xs text-center text-gray-500">
-            <a href="#" className="hover:text-blue-600">Forgot password?</a>
+            <a 
+              href="#" 
+              onClick={(e) => {
+                e.preventDefault();
+                handleForgotPassword();
+              }}
+              className="hover:text-blue-600"
+            >
+              Forgot password?
+            </a>
           </p>
         )}
       </form>
