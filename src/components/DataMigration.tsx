@@ -56,6 +56,7 @@ const DataMigration = () => {
   };
 
   const hasLocalData = checkForLocalStorageData();
+  const isLoading = migrationStatus === 'migrating';
 
   if (!hasLocalData && migrationStatus === 'pending') {
     return null;
@@ -67,7 +68,7 @@ const DataMigration = () => {
         <CardTitle className="flex items-center gap-2">
           {migrationStatus === 'success' && <CheckCircle className="h-5 w-5 text-green-500" />}
           {migrationStatus === 'error' && <AlertTriangle className="h-5 w-5 text-red-500" />}
-          {migrationStatus === 'migrating' && <Loader2 className="h-5 w-5 animate-spin" />}
+          {isLoading && <Loader2 className="h-5 w-5 animate-spin" />}
           Data Migration
         </CardTitle>
         <CardDescription>
@@ -91,8 +92,8 @@ const DataMigration = () => {
                 <li>Better performance and reliability</li>
               </ul>
             </div>
-            <Button onClick={handleMigration} disabled={migrationStatus === 'migrating'}>
-              {migrationStatus === 'migrating' ? (
+            <Button onClick={handleMigration} disabled={isLoading}>
+              {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Migrating...
