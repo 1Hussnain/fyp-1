@@ -1,0 +1,112 @@
+
+import React from "react";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { useFinancialDataDB } from "@/hooks/useFinancialDataDB";
+import BudgetLimit from "@/components/budget-tracker/BudgetLimit";
+import SummaryCards from "@/components/budget-tracker/SummaryCards";
+import UnifiedTransactionForm from "@/components/financial/UnifiedTransactionForm";
+import CategoryBreakdown from "@/components/budget-tracker/CategoryBreakdown";
+import TransactionFilter from "@/components/financial/TransactionFilter";
+import TransactionHistory from "@/components/financial/TransactionHistory";
+import DataMigration from "@/components/DataMigration";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
+
+const FinancialManagement = () => {
+  const {
+    transactions,
+    income,
+    expenses,
+    budgetLimit,
+    remaining,
+    overBudget,
+    closeToLimit,
+    categoryTotalsArray,
+    filter,
+    loading,
+    handleBudgetLimitChange,
+    handleAddTransaction,
+    handleFilterChange,
+    handleResetFilters
+  } = useFinancialDataDB();
+
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto px-6 py-8 space-y-8 flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading your financial data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto px-6 py-8 space-y-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-3xl font-bold text-gray-800">Financial Management</h2>
+          <div className="flex gap-3">
+            <Link to="/dashboard">
+              <Button variant="outline">Dashboard</Button>
+            </Link>
+            <Link to="/goals-tracker">
+              <Button variant="outline">Goals</Button>
+            </Link>
+            <Link to="/budget-summary">
+              <Button variant="outline">Summary</Button>
+            </Link>
+          </div>
+        </div>
+
+        <DataMigration />
+
+        {/* Budget Limit Setting */}
+        <BudgetLimit 
+          budgetLimit={budgetLimit}
+          onBudgetLimitChange={handleBudgetLimitChange}
+        />
+
+        {/* Summary Cards */}
+        <SummaryCards
+          income={income}
+          expenses={expenses}
+          remaining={remaining}
+          overBudget={overBudget}
+          closeToLimit={closeToLimit}
+        />
+
+        {/* Unified Transaction Form */}
+        <UnifiedTransactionForm onAddTransaction={handleAddTransaction} />
+
+        <div className="grid lg:grid-cols-2 gap-8">
+          {/* Category Breakdown */}
+          <CategoryBreakdown 
+            categoryTotalsArray={categoryTotalsArray}
+            expenses={expenses}
+          />
+
+          {/* Transaction Management Section */}
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold text-gray-800">Transaction History</h3>
+            
+            <TransactionFilter
+              filter={filter}
+              onFilterChange={handleFilterChange}
+              onResetFilters={handleResetFilters}
+            />
+            
+            <TransactionHistory transactions={transactions} />
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+export default FinancialManagement;
