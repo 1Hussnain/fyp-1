@@ -2,11 +2,13 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { useTransactions } from "@/hooks/useTransactions";
+import { useTransactionsDB } from "@/hooks/useTransactionsDB";
 import TransactionTabs from "@/components/income-expenses/TransactionTabs";
 import TransactionHistory from "@/components/income-expenses/TransactionHistory";
 import TransactionFilter from "@/components/income-expenses/TransactionFilter";
+import DataMigration from "@/components/DataMigration";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 
 const IncomeExpenses = () => {
   const {
@@ -16,13 +18,25 @@ const IncomeExpenses = () => {
     incomeForm,
     expenseForm,
     filter,
+    loading,
     handleIncomeChange,
     handleExpenseChange,
     handleAddIncome,
     handleAddExpense,
     handleFilterChange,
     handleResetFilters
-  } = useTransactions();
+  } = useTransactionsDB();
+
+  if (loading) {
+    return (
+      <div className="p-6 min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading your transactions...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 min-h-screen bg-white">
@@ -43,6 +57,8 @@ const IncomeExpenses = () => {
               </Link>
             </div>
           </div>
+          
+          <DataMigration />
           
           <TransactionTabs
             activeTab={activeTab}

@@ -41,6 +41,69 @@ export type Database = {
           },
         ]
       }
+      budgets: {
+        Row: {
+          created_at: string
+          current_spent: number
+          id: string
+          month: number
+          monthly_limit: number
+          updated_at: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          current_spent?: number
+          id?: string
+          month: number
+          monthly_limit: number
+          updated_at?: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          current_spent?: number
+          id?: string
+          month?: number
+          monthly_limit?: number
+          updated_at?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          is_system: boolean
+          name: string
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          is_system?: boolean
+          name: string
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          is_system?: boolean
+          name?: string
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       chat_history: {
         Row: {
           created_at: string
@@ -159,6 +222,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      financial_goals: {
+        Row: {
+          created_at: string
+          deadline: string
+          goal_type: string
+          id: string
+          name: string
+          saved_amount: number
+          target_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          deadline: string
+          goal_type: string
+          id?: string
+          name: string
+          saved_amount?: number
+          target_amount: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          deadline?: string
+          goal_type?: string
+          id?: string
+          name?: string
+          saved_amount?: number
+          target_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       folders: {
         Row: {
@@ -307,6 +406,45 @@ export type Database = {
         Update: {
           id?: string
           name?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          date: string
+          description: string | null
+          id: string
+          source: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          date?: string
+          description?: string | null
+          id?: string
+          source?: string | null
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          date?: string
+          description?: string | null
+          id?: string
+          source?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
