@@ -1,8 +1,12 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowUp, ArrowDown } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import TransactionActions from "./TransactionActions";
+import EditTransactionDialog from "./EditTransactionDialog";
+import BulkTransactionActions from "./BulkTransactionActions";
+import RecurringTransactionDialog from "./RecurringTransactionDialog";
 
 interface Transaction {
   id: string;
@@ -14,14 +18,64 @@ interface Transaction {
 
 interface TransactionHistoryProps {
   transactions: Transaction[];
+  onEditTransaction?: (id: string, updates: Partial<Transaction>) => void;
+  onDeleteTransaction?: (id: string) => void;
+  onBulkImport?: (transactions: Omit<Transaction, 'id'>[]) => void;
+  onAddRecurring?: (recurringTransaction: any) => void;
 }
 
-const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transactions }) => {
+const TransactionHistory: React.FC<TransactionHistoryProps> = ({ 
+  transactions, 
+  onEditTransaction,
+  onDeleteTransaction,
+  onBulkImport,
+  onAddRecurring,
+}) => {
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+
+  const handleEdit = (transaction: Transaction) => {
+    setEditingTransaction(transaction);
+  };
+
+  const handleSaveEdit = (id: string, updates: Partial<Transaction>) => {
+    if (onEditTransaction) {
+      onEditTransaction(id, updates);
+    }
+    setEditingTransaction(null);
+  };
+
+  const handleDelete = (id: string) => {
+    if (onDeleteTransaction) {
+      onDeleteTransaction(id);
+    }
+  };
+
+  const handleBulkImport = (importedTransactions: Omit<Transaction, 'id'>[]) => {
+    if (onBulkImport) {
+      onBulkImport(importedTransactions);
+    }
+  };
+
+  const handleAddRecurring = (recurringTransaction: any) => {
+    if (onAddRecurring) {
+      onAddRecurring(recurringTransaction);
+    }
+  };
+
   return (
     <div className="bg-white p-4 rounded-xl shadow border">
       <div className="flex justify-between items-center mb-4">
         <h4 className="text-md font-semibold">Recent Transactions</h4>
-        <span className="text-sm text-gray-500">{transactions.length} transactions</span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-500">{transactions.length} transactions</span>
+          <div className="flex gap-2">
+            <BulkTransactionActions 
+              transactions={transactions}
+              onBulkImport={handleBulkImport}
+            />
+            <RecurringTransactionDialog onSave={handleAddRecurring} />
+          </div>
+        </div>
       </div>
       
       <ScrollArea className="h-80">
@@ -37,7 +91,7 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transactions })
                 key={transaction.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex justify-between items-center p-3 rounded-lg border bg-gray-50"
+                className="flex justify-between items-center p-3 rounded-lg border bg-gray-50 group"
               >
                 <div className="flex items-center gap-3">
                   <div className={`p-2 rounded-full ${
@@ -55,16 +109,35 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transactions })
                   </div>
                 </div>
                 
-                <div className={`text-sm font-semibold ${
-                  transaction.type === "income" ? "text-green-600" : "text-red-600"
-                }`}>
-                  {transaction.type === "income" ? "+" : "-"}${transaction.amount.toFixed(2)}
+                <div className="flex items-center gap-2">
+                  <div className={`text-sm font-semibold ${
+                    transaction.type === "income" ? "text-green-600" : "text-red-600"
+                  }`}>
+                    {transaction.type === "income" ? "+" : "-"}${transaction.amount.toFixed(2)}
+                  </div>
+                  
+                  {(onEditTransaction || onDeleteTransaction) && (
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                      <TransactionActions
+                        transaction={transaction}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                      />
+                    </div>
+                  )}
                 </div>
               </motion.div>
             ))}
           </div>
         )}
       </ScrollArea>
+
+      <EditTransactionDialog
+        transaction={editingTransaction}
+        isOpen={!!editingTransaction}
+        onClose={() => setEditingTransaction(null)}
+        onSave={handleSaveEdit}
+      />
     </div>
   );
 };

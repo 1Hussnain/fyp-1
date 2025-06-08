@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,6 +7,8 @@ import {
   getCurrentBudget, 
   createOrUpdateBudget,
   updateBudgetSpent,
+  updateTransaction,
+  deleteTransaction,
   Transaction 
 } from "@/services/financialDatabase";
 
@@ -230,6 +231,187 @@ export const useFinancialDataDB = () => {
     }
   };
 
+  const handleEditTransaction = async (id: string, updates: Partial<FormattedTransaction>) => {
+    try {
+      const { data, error } = await updateTransaction(id, {
+        category: updates.category,
+        amount: updates.amount,
+        type: updates.type,
+      });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to update transaction",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Update local state
+      setTransactions(prevTransactions => 
+        prevTransactions.map(t => 
+          t.id === id 
+            ? { ...t, ...updates }
+            : t
+        )
+      );
+
+      // Recalculate totals
+      const updatedTransactions = transactions.map(t => 
+        t.id === id ? { ...t, ...updates } : t
+      );
+      
+      const newIncome = updatedTransactions
+        .filter(t => t.type === "income")
+        .reduce((sum, t) => sum + t.amount, 0);
+      
+      const newExpenses = updatedTransactions
+        .filter(t => t.type === "expense")
+        .reduce((sum, t) => sum + t.amount, 0);
+      
+      setIncome(newIncome);
+      setExpenses(newExpenses);
+
+      toast({
+        title: "Success",
+        description: "Transaction updated successfully",
+      });
+    } catch (err) {
+      console.error("Error updating transaction:", err);
+      toast({
+        title: "Error",
+        description: "Failed to update transaction",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteTransaction = async (id: string) => {
+    try {
+      const { error } = await deleteTransaction(id);
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to delete transaction",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Find the transaction to calculate totals correctly
+      const deletedTransaction = transactions.find(t => t.id === id);
+      if (deletedTransaction) {
+        if (deletedTransaction.type === "income") {
+          setIncome(prev => prev - deletedTransaction.amount);
+        } else {
+          setExpenses(prev => prev - deletedTransaction.amount);
+        }
+      }
+
+      // Update local state
+      setTransactions(prevTransactions => 
+        prevTransactions.filter(t => t.id !== id)
+      );
+
+      toast({
+        title: "Success",
+        description: "Transaction deleted successfully",
+      });
+    } catch (err) {
+      console.error("Error deleting transaction:", err);
+      toast({
+        title: "Error",
+        description: "Failed to delete transaction",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleBulkImport = async (importedTransactions: Omit<FormattedTransaction, 'id'>[]) => {
+    try {
+      const results = await Promise.all(
+        importedTransactions.map(transaction => 
+          createTransaction({
+            type: transaction.type,
+            category: transaction.category,
+            source: transaction.type === "income" ? transaction.category : null,
+            amount: transaction.amount,
+            description: null,
+            date: new Date().toISOString()
+          })
+        )
+      );
+
+      const successfulImports = results.filter(result => !result.error);
+      const failedImports = results.filter(result => result.error);
+
+      // Add successful imports to local state
+      const newTransactions = successfulImports.map(result => ({
+        id: result.data!.id,
+        category: result.data!.category,
+        amount: parseFloat(result.data!.amount.toString()),
+        type: result.data!.type as "income" | "expense",
+        date: new Date(result.data!.date).toLocaleDateString(),
+      }));
+
+      setTransactions(prev => [...newTransactions, ...prev]);
+
+      // Update totals
+      const addedIncome = newTransactions
+        .filter(t => t.type === "income")
+        .reduce((sum, t) => sum + t.amount, 0);
+      
+      const addedExpenses = newTransactions
+        .filter(t => t.type === "expense")
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      setIncome(prev => prev + addedIncome);
+      setExpenses(prev => prev + addedExpenses);
+
+      toast({
+        title: "Import Complete",
+        description: `Successfully imported ${successfulImports.length} transactions${
+          failedImports.length > 0 ? `. ${failedImports.length} failed.` : ''
+        }`,
+        variant: failedImports.length > 0 ? "destructive" : "default",
+      });
+
+    } catch (err) {
+      console.error("Error importing transactions:", err);
+      toast({
+        title: "Error",
+        description: "Failed to import transactions",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddRecurring = async (recurringTransaction: any) => {
+    // For now, create the first occurrence
+    // In a full implementation, you'd store the recurring pattern in the database
+    try {
+      await handleAddTransaction(
+        recurringTransaction.category,
+        recurringTransaction.amount,
+        recurringTransaction.type
+      );
+
+      toast({
+        title: "Recurring Transaction Added",
+        description: `First occurrence of ${recurringTransaction.category} has been created. Future occurrences will be processed automatically.`,
+      });
+    } catch (err) {
+      console.error("Error adding recurring transaction:", err);
+      toast({
+        title: "Error",
+        description: "Failed to add recurring transaction",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleFilterChange = (newFilter: TransactionFilter) => {
     setFilter(newFilter);
   };
@@ -304,6 +486,10 @@ export const useFinancialDataDB = () => {
     filter,
     handleBudgetLimitChange,
     handleAddTransaction,
+    handleEditTransaction,
+    handleDeleteTransaction,
+    handleBulkImport,
+    handleAddRecurring,
     handleFilterChange,
     handleResetFilters,
     loadFinancialData

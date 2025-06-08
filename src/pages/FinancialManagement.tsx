@@ -27,6 +27,10 @@ const FinancialManagement = () => {
     loading,
     handleBudgetLimitChange,
     handleAddTransaction,
+    handleEditTransaction,
+    handleDeleteTransaction,
+    handleBulkImport,
+    handleAddRecurring,
     handleFilterChange,
     handleResetFilters
   } = useFinancialDataDB();
@@ -91,7 +95,7 @@ const FinancialManagement = () => {
             expenses={expenses}
           />
 
-          {/* Transaction Management Section */}
+          {/* Enhanced Transaction Management Section */}
           <div className="space-y-6">
             <h3 className="text-xl font-semibold text-gray-800">Transaction History</h3>
             
@@ -101,7 +105,13 @@ const FinancialManagement = () => {
               onResetFilters={handleResetFilters}
             />
             
-            <TransactionHistory transactions={transactions} />
+            <TransactionHistory 
+              transactions={transactions}
+              onEditTransaction={handleEditTransaction}
+              onDeleteTransaction={handleDeleteTransaction}
+              onBulkImport={handleBulkImport}
+              onAddRecurring={handleAddRecurring}
+            />
           </div>
         </div>
       </motion.div>
