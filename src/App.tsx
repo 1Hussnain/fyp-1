@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
+import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/AuthContext';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import Index from '@/pages/Index';
 import Dashboard from '@/pages/Dashboard';
 import BudgetTracker from '@/pages/BudgetTracker';
