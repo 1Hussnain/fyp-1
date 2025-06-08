@@ -10,7 +10,7 @@ interface Goal {
   target: number;
   saved: number;
   deadline: string;
-  goalType: string;
+  type: string;
 }
 
 interface GoalProgressSummaryProps {
