@@ -1,13 +1,13 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { useGoals } from "@/hooks/useGoals";
+import { useGoalsDB } from "@/hooks/useGoalsDB";
 import GoalCreationForm from "@/components/goals/GoalCreationForm";
 import GoalsList from "@/components/goals/GoalsList";
 import MotivationalTips from "@/components/goals/MotivationalTips";
+import DataMigration from "@/components/DataMigration";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/use-toast";
-import { Clock, Target, Award } from "lucide-react";
+import { Clock, Target, Award, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
 
@@ -15,6 +15,7 @@ const GoalsTracker = () => {
   const {
     goals,
     formData,
+    loading,
     handleFormChange,
     handleAddGoal,
     handleAddSavings,
@@ -27,7 +28,18 @@ const GoalsTracker = () => {
     getFilteredGoals,
     daysLeft,
     getProgress,
-  } = useGoals();
+  } = useGoalsDB();
+
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto px-6 py-8 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading your financial goals...</p>
+        </div>
+      </div>
+    );
+  }
 
   const activeGoals = goals.filter(goal => (goal.saved / goal.target) * 100 < 100);
   const achievedGoals = goals.filter(goal => (goal.saved / goal.target) * 100 >= 100);
@@ -66,6 +78,8 @@ const GoalsTracker = () => {
             </Link>
           </div>
         </header>
+
+        <DataMigration />
 
         <GoalCreationForm 
           formData={formData} 

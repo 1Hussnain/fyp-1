@@ -2,13 +2,15 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { useBudgetTracker } from "@/hooks/useBudgetTracker";
+import { useBudgetTrackerDB } from "@/hooks/useBudgetTrackerDB";
 import BudgetLimit from "@/components/budget-tracker/BudgetLimit";
 import SummaryCards from "@/components/budget-tracker/SummaryCards";
 import TransactionForm from "@/components/budget-tracker/TransactionForm";
 import CategoryBreakdown from "@/components/budget-tracker/CategoryBreakdown";
 import TransactionList from "@/components/budget-tracker/TransactionList";
+import DataMigration from "@/components/DataMigration";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 
 const BudgetTracker = () => {
   const {
@@ -20,9 +22,21 @@ const BudgetTracker = () => {
     overBudget,
     closeToLimit,
     categoryTotalsArray,
+    loading,
     handleBudgetLimitChange,
     handleAddTransaction
-  } = useBudgetTracker();
+  } = useBudgetTrackerDB();
+
+  if (loading) {
+    return (
+      <div className="max-w-5xl mx-auto px-6 py-8 space-y-8 flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading your budget data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
@@ -42,6 +56,8 @@ const BudgetTracker = () => {
             </Link>
           </div>
         </div>
+
+        <DataMigration />
 
         {/* Budget Limit Setting */}
         <BudgetLimit 
