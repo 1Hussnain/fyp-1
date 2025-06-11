@@ -2,11 +2,7 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { 
-  getCurrentBudget, 
-  createOrUpdateBudget,
-  updateBudgetSpent
-} from "@/services/financialDatabase";
+import { budgetService } from "@/services/budgetService";
 
 export const useBudget = () => {
   const { toast } = useToast();
@@ -25,7 +21,7 @@ export const useBudget = () => {
   const loadBudget = async () => {
     setLoading(true);
     try {
-      const { data, error } = await getCurrentBudget();
+      const { data, error } = await budgetService.getCurrentBudget();
       if (error) {
         console.error('Error loading budget:', error);
       } else if (data) {
@@ -51,7 +47,7 @@ export const useBudget = () => {
 
     try {
       const currentDate = new Date();
-      const { error } = await createOrUpdateBudget({
+      const { error } = await budgetService.createOrUpdateBudget({
         monthly_limit: newLimit,
         current_spent: currentSpent,
         month: currentDate.getMonth() + 1,
@@ -86,7 +82,7 @@ export const useBudget = () => {
 
   const updateSpent = async (newSpent: number) => {
     try {
-      const { error } = await updateBudgetSpent(newSpent);
+      const { error } = await budgetService.updateBudgetSpent(newSpent);
       if (error) {
         console.error("Error updating budget spent:", error);
       } else {
