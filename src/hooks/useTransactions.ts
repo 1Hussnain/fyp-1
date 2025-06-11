@@ -12,7 +12,7 @@ export const useTransactions = () => {
   const [transactions, setTransactions] = useState<FormattedTransaction[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const { addTransaction, editTransaction, removeTransaction } = useTransactionOperations();
+  const { addTransaction, editTransaction, deleteTransaction } = useTransactionOperations();
   const { filter, filteredTransactions, handleFilterChange, handleResetFilters } = useTransactionFilters(transactions);
 
   // Load transactions from database
@@ -67,7 +67,7 @@ export const useTransactions = () => {
   };
 
   const handleDeleteTransaction = async (id: string) => {
-    const success = await removeTransaction(id);
+    const success = await deleteTransaction(id);
     if (success) {
       setTransactions(prevTransactions => 
         prevTransactions.filter(t => t.id !== id)
