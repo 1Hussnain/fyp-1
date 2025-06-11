@@ -1,64 +1,32 @@
 
-import { useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useTransactions } from "./useTransactions";
-import { useBudget } from "./useBudget";
-import { useFinancialCalculations } from "./useFinancialCalculations";
-import { useBulkOperations } from "./useBulkOperations";
+import { useFinancialDataOrchestrator } from "./useFinancialDataOrchestrator";
+import { useFinancialActions } from "./useFinancialActions";
 
 export const useFinancialDataDB = () => {
-  const { user } = useAuth();
   const {
     transactions,
     allTransactions,
-    loading: transactionsLoading,
-    filter,
-    addTransaction,
-    editTransaction,
-    removeTransaction,
-    setFilter,
-    resetFilters
-  } = useTransactions();
-
-  const {
-    budgetLimit,
-    currentSpent,
-    loading: budgetLoading,
-    updateBudgetLimit,
-    updateSpent
-  } = useBudget();
-
-  const {
     income,
     expenses,
+    budgetLimit,
     remaining,
+    overBudget,
+    closeToLimit,
+    loading,
     categoryTotalsArray,
-    getBudgetStatus
-  } = useFinancialCalculations(allTransactions);
+    filter
+  } = useFinancialDataOrchestrator();
 
-  const { handleBulkImport, handleAddRecurring } = useBulkOperations();
-
-  // Update budget spent when expenses change
-  useEffect(() => {
-    if (user && !budgetLoading) {
-      updateSpent(expenses);
-    }
-  }, [expenses, user, budgetLoading]);
-
-  const budgetStatus = getBudgetStatus(budgetLimit);
-
-  const handleBudgetLimitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Number(e.target.value);
-    updateBudgetLimit(value);
-  };
-
-  const handleFilterChange = (newFilter: any) => {
-    setFilter(newFilter);
-  };
-
-  const handleResetFilters = () => {
-    resetFilters();
-  };
+  const {
+    handleAddTransaction,
+    handleEditTransaction,
+    handleDeleteTransaction,
+    handleBudgetLimitChange,
+    handleBulkImport,
+    handleAddRecurring,
+    handleFilterChange,
+    handleResetFilters
+  } = useFinancialActions();
 
   return {
     transactions,
@@ -67,16 +35,16 @@ export const useFinancialDataDB = () => {
     expenses,
     budgetLimit,
     remaining,
-    overBudget: budgetStatus.overBudget,
-    closeToLimit: budgetStatus.closeToLimit,
-    loading: transactionsLoading || budgetLoading,
+    overBudget,
+    closeToLimit,
+    loading,
     error: null,
     categoryTotalsArray,
     filter,
     handleBudgetLimitChange,
-    handleAddTransaction: addTransaction,
-    handleEditTransaction: editTransaction,
-    handleDeleteTransaction: removeTransaction,
+    handleAddTransaction,
+    handleEditTransaction,
+    handleDeleteTransaction,
     handleBulkImport,
     handleAddRecurring,
     handleFilterChange,
