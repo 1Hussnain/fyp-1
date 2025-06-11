@@ -14,7 +14,7 @@ const QuickActions = () => {
       icon: Plus,
       label: "Add Transaction",
       description: "Record income or expense",
-      onClick: () => navigate("/income-expenses"),
+      onClick: () => navigate("/financial-management"),
       color: "bg-blue-500 hover:bg-blue-600"
     },
     {
@@ -28,7 +28,7 @@ const QuickActions = () => {
       icon: Upload,
       label: "Import Data",
       description: "Upload CSV transactions",
-      onClick: () => navigate("/income-expenses"),
+      onClick: () => navigate("/financial-management"),
       color: "bg-purple-500 hover:bg-purple-600"
     },
     {

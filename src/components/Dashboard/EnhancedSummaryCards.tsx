@@ -2,7 +2,8 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Wallet, CreditCard, PiggyBank, Calendar, TrendingUp, TrendingDown } from "lucide-react";
-import { useFinancialDataDB } from "@/hooks/useFinancialDataDB";
+import { useFinancialSummary } from "@/hooks/useFinancialSummary";
+import { useBudget } from "@/hooks/useBudget";
 import { useGoalsDB } from "@/hooks/useGoalsDB";
 
 const cardVariants = {
@@ -21,13 +22,11 @@ const container = {
 };
 
 const EnhancedSummaryCards = () => {
-  const { income, expenses, budgetLimit } = useFinancialDataDB();
+  const { income, expenses, savings } = useFinancialSummary();
+  const { budgetLimit, currentSpent } = useBudget();
   const { goals } = useGoalsDB();
 
-  const savings = income - expenses;
-  const budgetRemaining = budgetLimit - expenses;
-  const totalGoalTarget = goals.reduce((sum, goal) => sum + goal.target, 0);
-  const totalGoalSaved = goals.reduce((sum, goal) => sum + goal.saved, 0);
+  const budgetRemaining = budgetLimit - currentSpent;
 
   const cards = [
     { 
@@ -54,7 +53,7 @@ const EnhancedSummaryCards = () => {
       icon: PiggyBank, 
       color: "text-blue-500",
       bgColor: "bg-blue-50",
-      trend: `${savings > 0 ? '+' : ''}${((savings / income) * 100).toFixed(1)}%`,
+      trend: `${savings > 0 ? '+' : ''}${income > 0 ? ((savings / income) * 100).toFixed(1) : '0'}%`,
       isPositive: savings > 0
     },
     { 
