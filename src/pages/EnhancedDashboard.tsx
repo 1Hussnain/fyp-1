@@ -11,9 +11,8 @@ import BudgetChart from "../components/Dashboard/BudgetChart";
 import EnhancedGoalsOverview from "../components/Dashboard/EnhancedGoalsOverview";
 import EnhancedReceiptUpload from "../components/Dashboard/EnhancedReceiptUpload";
 import MotivationalTip from "../components/Dashboard/MotivationalTip";
-import MobileQuickStats from "../components/Dashboard/MobileQuickStats";
 
-const Dashboard = () => {
+const EnhancedDashboard = () => {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
@@ -28,9 +27,6 @@ const Dashboard = () => {
           >
             {/* Budget Alerts */}
             <EnhancedBudgetAlerts />
-            
-            {/* Mobile Quick Stats */}
-            <MobileQuickStats />
             
             {/* Enhanced Summary Cards */}
             <EnhancedSummaryCards />
@@ -80,4 +76,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default EnhancedDashboard;
