@@ -1,13 +1,11 @@
 
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Index from '@/pages/Index';
 import Dashboard from '@/pages/Dashboard';
-import BudgetTracker from '@/pages/BudgetTracker';
-import IncomeExpenses from '@/pages/IncomeExpenses';
 import GoalsTracker from '@/pages/GoalsTracker';
 import BudgetSummary from '@/pages/BudgetSummary';
 import FinanceChat from '@/pages/FinanceChat';
@@ -32,16 +30,9 @@ function App() {
               <FinancialManagement />
             </ProtectedRoute>
           } />
-          <Route path="/budget-tracker" element={
-            <ProtectedRoute>
-              <BudgetTracker />
-            </ProtectedRoute>
-          } />
-          <Route path="/income-expenses" element={
-            <ProtectedRoute>
-              <IncomeExpenses />
-            </ProtectedRoute>
-          } />
+          {/* Redirect old routes to unified financial management */}
+          <Route path="/budget-tracker" element={<Navigate to="/financial-management" replace />} />
+          <Route path="/income-expenses" element={<Navigate to="/financial-management" replace />} />
           <Route path="/goals-tracker" element={
             <ProtectedRoute>
               <GoalsTracker />

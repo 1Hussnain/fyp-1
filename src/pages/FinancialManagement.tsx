@@ -3,12 +3,15 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useFinancialDataDB } from "@/hooks/useFinancialDataDB";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import BudgetLimit from "@/components/budget-tracker/BudgetLimit";
 import SummaryCards from "@/components/budget-tracker/SummaryCards";
 import UnifiedTransactionForm from "@/components/financial/UnifiedTransactionForm";
+import TransactionTabs from "@/components/income-expenses/TransactionTabs";
 import CategoryBreakdown from "@/components/budget-tracker/CategoryBreakdown";
 import TransactionFilter from "@/components/financial/TransactionFilter";
 import TransactionHistory from "@/components/financial/TransactionHistory";
+import TransactionList from "@/components/budget-tracker/TransactionList";
 import DataMigration from "@/components/DataMigration";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
@@ -34,6 +37,36 @@ const FinancialManagement = () => {
     handleFilterChange,
     handleResetFilters
   } = useFinancialDataDB();
+
+  const [activeTab, setActiveTab] = React.useState<"income" | "expense">("income");
+  const [incomeForm, setIncomeForm] = React.useState({ source: "", amount: "" });
+  const [expenseForm, setExpenseForm] = React.useState({ category: "", amount: "" });
+
+  const handleIncomeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setIncomeForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleExpenseChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setExpenseForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddIncome = async () => {
+    const amount = parseFloat(incomeForm.amount);
+    if (incomeForm.source && !isNaN(amount) && amount > 0) {
+      await handleAddTransaction(incomeForm.source, amount, "income");
+      setIncomeForm({ source: "", amount: "" });
+    }
+  };
+
+  const handleAddExpense = async () => {
+    const amount = parseFloat(expenseForm.amount);
+    if (expenseForm.category && !isNaN(amount) && amount > 0) {
+      await handleAddTransaction(expenseForm.category, amount, "expense");
+      setExpenseForm({ category: "", amount: "" });
+    }
+  };
 
   if (loading) {
     return (
@@ -85,35 +118,77 @@ const FinancialManagement = () => {
           closeToLimit={closeToLimit}
         />
 
-        {/* Unified Transaction Form */}
-        <UnifiedTransactionForm onAddTransaction={handleAddTransaction} />
+        {/* Tabbed Interface for Different Views */}
+        <Tabs defaultValue="unified" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="unified">Unified Entry</TabsTrigger>
+            <TabsTrigger value="separate">Income & Expenses</TabsTrigger>
+            <TabsTrigger value="analysis">Analysis & History</TabsTrigger>
+          </TabsList>
 
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Category Breakdown */}
-          <CategoryBreakdown 
-            categoryTotalsArray={categoryTotalsArray}
-            expenses={expenses}
-          />
-
-          {/* Enhanced Transaction Management Section */}
-          <div className="space-y-6">
-            <h3 className="text-xl font-semibold text-gray-800">Transaction History</h3>
+          {/* Unified Transaction Form Tab */}
+          <TabsContent value="unified" className="space-y-6">
+            <UnifiedTransactionForm onAddTransaction={handleAddTransaction} />
             
-            <TransactionFilter
-              filter={filter}
-              onFilterChange={handleFilterChange}
-              onResetFilters={handleResetFilters}
+            <div className="grid lg:grid-cols-2 gap-8">
+              <CategoryBreakdown 
+                categoryTotalsArray={categoryTotalsArray}
+                expenses={expenses}
+              />
+              <TransactionList transactions={transactions.slice(0, 10)} />
+            </div>
+          </TabsContent>
+
+          {/* Income & Expenses Tab */}
+          <TabsContent value="separate" className="space-y-6">
+            <TransactionTabs
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              incomeForm={incomeForm}
+              expenseForm={expenseForm}
+              handleIncomeChange={handleIncomeChange}
+              handleExpenseChange={handleExpenseChange}
+              handleAddIncome={handleAddIncome}
+              handleAddExpense={handleAddExpense}
             />
             
-            <TransactionHistory 
-              transactions={transactions}
-              onEditTransaction={handleEditTransaction}
-              onDeleteTransaction={handleDeleteTransaction}
-              onBulkImport={handleBulkImport}
-              onAddRecurring={handleAddRecurring}
-            />
-          </div>
-        </div>
+            <div className="grid lg:grid-cols-2 gap-8">
+              <CategoryBreakdown 
+                categoryTotalsArray={categoryTotalsArray}
+                expenses={expenses}
+              />
+              <TransactionList transactions={transactions.slice(0, 10)} />
+            </div>
+          </TabsContent>
+
+          {/* Analysis & History Tab */}
+          <TabsContent value="analysis" className="space-y-6">
+            <div className="grid lg:grid-cols-2 gap-8">
+              <CategoryBreakdown 
+                categoryTotalsArray={categoryTotalsArray}
+                expenses={expenses}
+              />
+
+              <div className="space-y-6">
+                <h3 className="text-xl font-semibold text-gray-800">Transaction Management</h3>
+                
+                <TransactionFilter
+                  filter={filter}
+                  onFilterChange={handleFilterChange}
+                  onResetFilters={handleResetFilters}
+                />
+                
+                <TransactionHistory 
+                  transactions={transactions}
+                  onEditTransaction={handleEditTransaction}
+                  onDeleteTransaction={handleDeleteTransaction}
+                  onBulkImport={handleBulkImport}
+                  onAddRecurring={handleAddRecurring}
+                />
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </motion.div>
     </div>
   );
