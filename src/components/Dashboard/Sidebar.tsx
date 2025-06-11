@@ -15,11 +15,10 @@ const Sidebar = () => {
   const navItems = [
     { name: "Home", icon: Home, path: "/" },
     { name: "Dashboard", icon: BarChart3, path: "/dashboard" },
-    { name: "Budget Tracker", icon: Wallet, path: "/budget-tracker" },
+    { name: "Financial Management", icon: Wallet, path: "/financial-management" },
     { name: "Goals Tracker", icon: Target, path: "/goals-tracker" },
     { name: "Budget Summary", icon: PieChart, path: "/budget-summary" },
-    { name: "Income & Expenses", icon: Wallet, path: "/income-expenses" },
-    { name: "Documents", icon: FileText, path: "/documents" },
+    { name: "Documents", icon: FileText, path: "/document-viewer" },
     { name: "Finance Chat", icon: MessageSquare, path: "/finance-chat" },
     { name: "Settings", icon: Settings, path: "/settings" }
   ];
