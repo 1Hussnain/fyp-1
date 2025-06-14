@@ -19,13 +19,13 @@ const CTASection = () => {
           duration: 0.8
         }} viewport={{
           once: true
-        }} className="bg-gradient-to-r from-green-600/20 to-blue-600/20 rounded-2xl p-12 border border-green-500/30">
-          <h2 className="text-4xl font-bold text-white mb-6">Ready to Transform Your Finances?</h2>
-          <p className="text-xl text-gray-300 mb-8">
+        }} className="bg-gradient-to-r from-green-100 to-blue-100 rounded-2xl p-12 border border-gray-200 shadow-lg">
+          <h2 className="text-4xl font-bold text-gray-900 mb-6">Ready to Transform Your Finances?</h2>
+          <p className="text-xl text-gray-600 mb-8">
             Start your journey to financial freedom today with FinanceAI's intelligent tools and insights.
           </p>
           <Link to="/login">
-            <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white">
+            <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white shadow-lg">
               Get Started Now
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
