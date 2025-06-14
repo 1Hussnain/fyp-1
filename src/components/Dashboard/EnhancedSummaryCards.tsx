@@ -33,8 +33,9 @@ const EnhancedSummaryCards = () => {
       title: "Monthly Income", 
       amount: `$${income.toLocaleString()}`, 
       icon: Wallet, 
-      color: "text-green-500",
+      color: "text-green-600",
       bgColor: "bg-green-50",
+      borderColor: "border-green-200",
       trend: "+5.2%",
       isPositive: true
     },
@@ -42,8 +43,9 @@ const EnhancedSummaryCards = () => {
       title: "Monthly Expenses", 
       amount: `$${expenses.toLocaleString()}`, 
       icon: CreditCard, 
-      color: "text-red-500",
+      color: "text-red-600",
       bgColor: "bg-red-50",
+      borderColor: "border-red-200",
       trend: "-2.1%",
       isPositive: true
     },
@@ -51,8 +53,9 @@ const EnhancedSummaryCards = () => {
       title: "Net Savings", 
       amount: `$${savings.toLocaleString()}`, 
       icon: PiggyBank, 
-      color: "text-blue-500",
+      color: "text-blue-600",
       bgColor: "bg-blue-50",
+      borderColor: "border-blue-200",
       trend: `${savings > 0 ? '+' : ''}${income > 0 ? ((savings / income) * 100).toFixed(1) : '0'}%`,
       isPositive: savings > 0
     },
@@ -60,8 +63,9 @@ const EnhancedSummaryCards = () => {
       title: "Budget Remaining", 
       amount: `$${budgetRemaining.toLocaleString()}`, 
       icon: Calendar, 
-      color: budgetRemaining < 0 ? "text-red-500" : "text-orange-500",
+      color: budgetRemaining < 0 ? "text-red-600" : "text-orange-600",
       bgColor: budgetRemaining < 0 ? "bg-red-50" : "bg-orange-50",
+      borderColor: budgetRemaining < 0 ? "border-red-200" : "border-orange-200",
       trend: `${((budgetRemaining / budgetLimit) * 100).toFixed(1)}%`,
       isPositive: budgetRemaining > 0
     }
@@ -72,20 +76,20 @@ const EnhancedSummaryCards = () => {
       variants={container}
       initial="hidden"
       animate="show"
-      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
     >
       {cards.map((card, index) => (
         <motion.div
           key={index}
           variants={cardVariants}
           whileHover={{ scale: 1.02, y: -2 }}
-          className={`${card.bgColor} p-6 rounded-xl shadow-sm border transition-all duration-200 hover:shadow-md`}
+          className={`${card.bgColor} ${card.borderColor} border p-4 sm:p-6 rounded-xl shadow-sm transition-all duration-200 hover:shadow-md min-h-[120px] flex flex-col justify-between`}
         >
           <div className="flex items-center justify-between mb-4">
-            <div className={`rounded-lg p-3 ${card.color} bg-white bg-opacity-50`}>
-              <card.icon size={24} className={card.color} />
+            <div className={`rounded-lg p-2 sm:p-3 ${card.color} bg-white bg-opacity-80 shadow-sm`}>
+              <card.icon size={20} className={card.color} />
             </div>
-            <div className="flex items-center gap-1 text-sm">
+            <div className="flex items-center gap-1 text-xs sm:text-sm">
               {card.isPositive ? (
                 <TrendingUp className="h-3 w-3 text-green-500" />
               ) : (
@@ -97,8 +101,8 @@ const EnhancedSummaryCards = () => {
             </div>
           </div>
           <div>
-            <p className="text-sm text-gray-600 mb-1">{card.title}</p>
-            <p className="text-2xl font-bold text-gray-800">{card.amount}</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1 font-medium">{card.title}</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-800">{card.amount}</p>
           </div>
         </motion.div>
       ))}

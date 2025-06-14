@@ -7,8 +7,9 @@ import { useBudget } from "@/hooks/useBudget";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088fe', '#00C49F'];
+const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
 const BudgetChart = () => {
   const { expenses, categoryTotalsArray } = useFinancialSummary();
@@ -20,17 +21,22 @@ const BudgetChart = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.4 }}
-        className="bg-white p-6 rounded-xl shadow mt-6"
       >
-        <h3 className="text-lg font-semibold mb-4">Budget vs. Actual Spending</h3>
-        <Skeleton className="h-64 w-full" />
+        <Card className="shadow-sm border-gray-200">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg font-semibold text-gray-800">Budget Overview</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-64 w-full rounded-lg" />
+          </CardContent>
+        </Card>
       </motion.div>
     );
   }
 
   const budgetData = [
     {
-      name: 'Budget vs Actual',
+      name: 'This Month',
       budget: budgetLimit,
       actual: expenses,
     }
@@ -43,72 +49,96 @@ const BudgetChart = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.4 }}
-      className="bg-white p-6 rounded-xl shadow mt-6"
     >
-      <h3 className="text-lg font-semibold mb-4">Budget vs. Actual Spending</h3>
-      
-      {overBudget && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            You're over budget this month! Consider reviewing your spending.
-          </AlertDescription>
-        </Alert>
-      )}
-      
-      {expenses === 0 && budgetLimit === 0 ? (
-        <div className="h-64 bg-gray-100 rounded-xl flex items-center justify-center flex-col">
-          <p className="text-gray-500 mb-2">No budget or spending data yet</p>
-          <p className="text-xs text-gray-400">Set your budget and add transactions to see charts</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Budget vs Actual Bar Chart */}
-          <div>
-            <h4 className="text-sm font-medium text-gray-600 mb-2">Monthly Budget Overview</h4>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={budgetData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, '']} />
-                <Bar dataKey="budget" fill="#8884d8" name="Budget" />
-                <Bar dataKey="actual" fill={overBudget ? "#ff4444" : "#82ca9d"} name="Actual" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Category Breakdown Pie Chart */}
-          <div>
-            <h4 className="text-sm font-medium text-gray-600 mb-2">Spending by Category</h4>
-            {topCategories.length > 0 ? (
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie
-                    data={topCategories}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ category, amount }) => `${category}: $${amount.toFixed(0)}`}
-                    outerRadius={60}
-                    fill="#8884d8"
-                    dataKey="amount"
-                  >
-                    {topCategories.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, 'Amount']} />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-48 bg-gray-100 rounded-xl flex items-center justify-center">
-                <p className="text-gray-500 text-sm">No expense categories yet</p>
+      <Card className="shadow-sm border-gray-200">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg font-semibold text-gray-800">Budget Overview</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {overBudget && (
+            <Alert variant="destructive" className="border-red-200 bg-red-50">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription className="text-red-700">
+                You're over budget this month! Consider reviewing your spending.
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {expenses === 0 && budgetLimit === 0 ? (
+            <div className="h-64 bg-gray-100 rounded-xl flex items-center justify-center flex-col">
+              <p className="text-gray-500 mb-2 font-medium">No budget or spending data yet</p>
+              <p className="text-sm text-gray-400">Set your budget and add transactions to see charts</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Budget vs Actual Bar Chart */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-gray-700">Monthly Budget vs Actual</h4>
+                <div className="h-48">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={budgetData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                      <XAxis dataKey="name" fontSize={12} />
+                      <YAxis fontSize={12} />
+                      <Tooltip 
+                        formatter={(value) => [`$${value.toLocaleString()}`, '']} 
+                        contentStyle={{ 
+                          backgroundColor: 'white', 
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          fontSize: '12px'
+                        }}
+                      />
+                      <Bar dataKey="budget" fill="#3b82f6" name="Budget" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="actual" fill={overBudget ? "#ef4444" : "#10b981"} name="Actual" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
-            )}
-          </div>
-        </div>
-      )}
+
+              {/* Category Breakdown Pie Chart */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-gray-700">Spending by Category</h4>
+                {topCategories.length > 0 ? (
+                  <div className="h-48">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={topCategories}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ category, amount }) => amount > 0 ? `${category}: $${amount.toFixed(0)}` : ''}
+                          outerRadius={70}
+                          fill="#8884d8"
+                          dataKey="amount"
+                        >
+                          {topCategories.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          formatter={(value) => [`$${value.toLocaleString()}`, 'Amount']}
+                          contentStyle={{ 
+                            backgroundColor: 'white', 
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px',
+                            fontSize: '12px'
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="h-48 bg-gray-100 rounded-xl flex items-center justify-center">
+                    <p className="text-gray-500 text-sm font-medium">No expense categories yet</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </motion.div>
   );
 };

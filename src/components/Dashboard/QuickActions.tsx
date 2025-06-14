@@ -41,10 +41,10 @@ const QuickActions = () => {
   ];
 
   return (
-    <Card className="mb-6">
-      <CardContent className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <Card className="shadow-sm border-gray-200">
+      <CardContent className="p-4 sm:p-6">
+        <h3 className="text-lg font-semibold mb-4 sm:mb-6 text-gray-800">Quick Actions</h3>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {actions.map((action, index) => (
             <motion.div
               key={index}
@@ -54,14 +54,14 @@ const QuickActions = () => {
               <Button
                 onClick={action.onClick}
                 variant="outline"
-                className="h-auto p-4 flex flex-col items-center gap-3 w-full hover:shadow-md transition-all duration-200"
+                className="h-24 sm:h-28 p-3 sm:p-4 flex flex-col items-center gap-2 sm:gap-3 w-full hover:shadow-md transition-all duration-200 border-gray-200 hover:border-gray-300"
               >
-                <div className={`p-3 rounded-full text-white ${action.color} transition-colors`}>
-                  <action.icon size={20} />
+                <div className={`p-2 sm:p-3 rounded-full text-white ${action.color} transition-colors shadow-sm`}>
+                  <action.icon size={16} className="sm:w-5 sm:h-5" />
                 </div>
                 <div className="text-center">
-                  <div className="font-medium text-sm">{action.label}</div>
-                  <div className="text-xs text-gray-500 mt-1">{action.description}</div>
+                  <div className="font-medium text-xs sm:text-sm text-gray-800">{action.label}</div>
+                  <div className="text-xs text-gray-500 mt-1 hidden sm:block">{action.description}</div>
                 </div>
               </Button>
             </motion.div>

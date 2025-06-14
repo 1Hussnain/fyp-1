@@ -17,26 +17,28 @@ const Dashboard = () => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="space-y-4 sm:space-y-6"
+      className="space-y-6"
     >
       {/* Budget Alerts */}
       <EnhancedBudgetAlerts />
       
       {/* Mobile Quick Stats */}
-      <MobileQuickStats />
+      <div className="sm:hidden">
+        <MobileQuickStats />
+      </div>
       
       {/* Enhanced Summary Cards */}
       <EnhancedSummaryCards />
       
-      {/* Quick Actions - Mobile Optimized */}
-      <div className="block sm:hidden">
+      {/* Quick Actions - Mobile */}
+      <div className="sm:hidden">
         <QuickActions />
       </div>
       
-      {/* Main Content Grid - Responsive */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
-        {/* Left Column - Main Content */}
-        <div className="lg:col-span-8 space-y-4 sm:space-y-6">
+      {/* Main Content Grid - Improved Layout */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* Left Column - Main Content (2 columns on xl screens) */}
+        <div className="xl:col-span-2 space-y-6">
           {/* Quick Actions - Desktop */}
           <div className="hidden sm:block">
             <QuickActions />
@@ -44,14 +46,14 @@ const Dashboard = () => {
           
           <RecentTransactions />
           
-          {/* Budget Chart - Hide on mobile, show on tablet+ */}
-          <div className="hidden md:block">
+          {/* Budget Chart - Full width on desktop */}
+          <div className="hidden lg:block">
             <BudgetChart />
           </div>
         </div>
         
         {/* Right Column - Sidebar Content */}
-        <div className="lg:col-span-4 space-y-4 sm:space-y-6">
+        <div className="xl:col-span-1 space-y-6">
           <EnhancedGoalsOverview />
           <EnhancedReceiptUpload />
           
@@ -63,7 +65,7 @@ const Dashboard = () => {
       </div>
 
       {/* Mobile-only Budget Chart */}
-      <div className="block md:hidden">
+      <div className="lg:hidden">
         <BudgetChart />
       </div>
     </motion.div>
