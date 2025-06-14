@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { transactionService, FormattedTransaction } from "@/services/transactionService";
@@ -73,7 +72,7 @@ export const useTransactionOperations = () => {
 
     setLoading(true);
     try {
-      const { error } = await transactionService.updateTransaction(id, updates);
+      const { data, error } = await transactionService.updateTransaction(id, updates);
 
       if (error) {
         handleError(error, "updating transaction");
