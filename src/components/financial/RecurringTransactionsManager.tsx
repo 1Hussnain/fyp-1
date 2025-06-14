@@ -46,7 +46,7 @@ const RecurringTransactionsManager = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <Label htmlFor="type">Type</Label>
-          <Select value={type} onValueChange={setType}>
+          <Select value={type} onValueChange={(value) => setType(value as "income" | "expense")}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select type" />
             </SelectTrigger>
@@ -59,7 +59,7 @@ const RecurringTransactionsManager = () => {
 
         <div>
           <Label htmlFor="frequency">Frequency</Label>
-          <Select value={frequency} onValueChange={setFrequency}>
+          <Select value={frequency} onValueChange={(value) => setFrequency(value as "weekly" | "monthly" | "yearly")}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select frequency" />
             </SelectTrigger>

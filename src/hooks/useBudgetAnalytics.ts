@@ -27,8 +27,8 @@ interface Goal {
   name: string;
   target_amount: number;
   saved_amount: number;
-  progress: number;
-  remaining: number;
+  progress?: number;
+  remaining?: number;
 }
 
 export const useBudgetAnalytics = () => {
@@ -151,11 +151,11 @@ export const useBudgetAnalytics = () => {
     }
 
     // Goals progress - using the correct property names
-    const activeGoals = goals.filter(goal => (Number(goal.saved_amount || 0) / Number(goal.target_amount || 1)) * 100 < 100);
+    const activeGoals = goals.filter(goal => (Number(goal.saved_amount ?? 0) / Number(goal.target_amount ?? 1)) * 100 < 100);
     if (activeGoals.length > 0) {
       const avgProgress = activeGoals.reduce((sum, goal) => {
-        const saved = Number(goal.saved_amount || 0);
-        const target = Number(goal.target_amount || 1);
+        const saved = Number(goal.saved_amount ?? 0);
+        const target = Number(goal.target_amount ?? 1);
         return sum + (saved / target) * 100;
       }, 0) / activeGoals.length;
       

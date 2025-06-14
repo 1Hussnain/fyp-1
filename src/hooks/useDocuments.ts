@@ -1,138 +1,92 @@
-
-import { useState, useEffect } from 'react';
-import { 
-  getDocuments, 
-  getFolders, 
-  uploadDocument, 
-  createFolder, 
-  deleteDocument, 
-  deleteFolder,
-  Document,
-  Folder 
-} from '@/services/database';
-import { toast } from '@/components/ui/sonner';
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  getDocuments,
+  getFolders,
+  createFolder,
+  deleteDocument,
+  uploadDocument,
+} from "@/services/database";
 
 export const useDocuments = () => {
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [folders, setFolders] = useState<Folder[]>([]);
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [folders, setFolders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
-    loadData();
+    fetchDocuments();
+    fetchFolders();
   }, []);
 
-  const loadData = async () => {
+  const fetchDocuments = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const [documentsResult, foldersResult] = await Promise.all([
-        getDocuments(),
-        getFolders()
-      ]);
-
-      if (documentsResult.error) {
-        console.error('Error loading documents:', documentsResult.error);
-      } else {
-        setDocuments(documentsResult.data || []);
-      }
-
-      if (foldersResult.error) {
-        console.error('Error loading folders:', foldersResult.error);
-      } else {
-        setFolders(foldersResult.data || []);
-      }
-    } catch (error) {
-      console.error('Error loading data:', error);
-      toast.error('Failed to load documents and folders');
+      const { data, error } = await getDocuments();
+      if (error) throw error;
+      setDocuments(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Error fetching documents",
+        description: error.message,
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUploadDocument = async (file: File, folderId?: string) => {
+  const fetchFolders = async () => {
+    setLoading(true);
     try {
-      setUploading(true);
-      const { data, error } = await uploadDocument(file, folderId);
-      
-      if (error) {
-        toast.error('Failed to upload document');
-        return { success: false, error };
-      }
-
-      if (data) {
-        setDocuments(prev => [data, ...prev]);
-        toast.success('Document uploaded successfully');
-      }
-
-      return { success: true, data };
-    } catch (error) {
-      console.error('Error uploading document:', error);
-      toast.error('Failed to upload document');
-      return { success: false, error };
+      const { data, error } = await getFolders();
+      if (error) throw error;
+      setFolders(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Error fetching folders",
+        description: error.message,
+        variant: "destructive",
+      });
     } finally {
-      setUploading(false);
+      setLoading(false);
     }
   };
 
-  const handleCreateFolder = async (name: string) => {
+  const createNewFolder = async (folderName: string) => {
     try {
-      const { data, error } = await createFolder(name);
-      
-      if (error) {
-        toast.error('Failed to create folder');
-        return { success: false, error };
-      }
-
-      if (data) {
-        setFolders(prev => [data, ...prev]);
-        toast.success('Folder created successfully');
-      }
-
-      return { success: true, data };
-    } catch (error) {
-      console.error('Error creating folder:', error);
-      toast.error('Failed to create folder');
-      return { success: false, error };
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+      await createFolder({ name: folderName, user_id: user.id });
+      toast({
+        title: "Folder created",
+        description: "Folder created successfully",
+      });
+      fetchFolders();
+    } catch (error: any) {
+      toast({
+        title: "Error creating folder",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
-  const handleDeleteDocument = async (documentId: string) => {
+  const deleteExistingDocument = async (documentId: string) => {
     try {
-      const { error } = await deleteDocument(documentId);
-      
-      if (error) {
-        toast.error('Failed to delete document');
-        return { success: false, error };
-      }
-
-      setDocuments(prev => prev.filter(doc => doc.id !== documentId));
-      toast.success('Document deleted successfully');
-      return { success: true };
-    } catch (error) {
-      console.error('Error deleting document:', error);
-      toast.error('Failed to delete document');
-      return { success: false, error };
-    }
-  };
-
-  const handleDeleteFolder = async (folderId: string) => {
-    try {
-      const { error } = await deleteFolder(folderId);
-      
-      if (error) {
-        toast.error('Failed to delete folder');
-        return { success: false, error };
-      }
-
-      setFolders(prev => prev.filter(folder => folder.id !== folderId));
-      // Also remove documents in this folder from the list
-      setDocuments(prev => prev.filter(doc => doc.folder_id !== folderId));
-      toast.success('Folder deleted successfully');
-      return { success: true };
-    } catch (error) {
-      console.error('Error deleting folder:', error);
-      toast.error('Failed to delete folder');
-      return { success: false, error };
+      await deleteDocument(documentId);
+      toast({
+        title: "Document deleted",
+        description: "Document deleted successfully",
+      });
+      fetchDocuments();
+    } catch (error: any) {
+      toast({
+        title: "Error deleting document",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -140,11 +94,9 @@ export const useDocuments = () => {
     documents,
     folders,
     loading,
-    uploading,
-    uploadDocument: handleUploadDocument,
-    createFolder: handleCreateFolder,
-    deleteDocument: handleDeleteDocument,
-    deleteFolder: handleDeleteFolder,
-    refreshData: loadData,
+    fetchDocuments,
+    fetchFolders,
+    createNewFolder,
+    deleteExistingDocument,
   };
 };

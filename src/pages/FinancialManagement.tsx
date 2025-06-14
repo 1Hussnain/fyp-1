@@ -13,6 +13,7 @@ import { Loader2 } from "lucide-react";
 const FinancialManagement = () => {
   const {
     transactions,
+    allTransactions,
     income,
     expenses,
     budgetLimit,
