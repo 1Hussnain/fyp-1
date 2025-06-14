@@ -19,50 +19,62 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppLayout>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
+        <Routes>
+          <Route path="/" element={<AppLayout><Index /></AppLayout>} />
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <AppLayout pageTitle="Dashboard">
                 <Dashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/financial-management" element={
-              <ProtectedRoute>
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/financial-management" element={
+            <ProtectedRoute>
+              <AppLayout pageTitle="Financial Management">
                 <FinancialManagement />
-              </ProtectedRoute>
-            } />
-            {/* Redirect old routes to unified financial management */}
-            <Route path="/budget-tracker" element={<Navigate to="/financial-management" replace />} />
-            <Route path="/income-expenses" element={<Navigate to="/financial-management" replace />} />
-            <Route path="/goals-tracker" element={
-              <ProtectedRoute>
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+          {/* Redirect old routes to unified financial management */}
+          <Route path="/budget-tracker" element={<Navigate to="/financial-management" replace />} />
+          <Route path="/income-expenses" element={<Navigate to="/financial-management" replace />} />
+          <Route path="/goals-tracker" element={
+            <ProtectedRoute>
+              <AppLayout pageTitle="Goals Tracker">
                 <GoalsTracker />
-              </ProtectedRoute>
-            } />
-            <Route path="/budget-summary" element={
-              <ProtectedRoute>
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/budget-summary" element={
+            <ProtectedRoute>
+              <AppLayout pageTitle="Budget Summary">
                 <BudgetSummary />
-              </ProtectedRoute>
-            } />
-            <Route path="/finance-chat" element={
-              <ProtectedRoute>
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/finance-chat" element={
+            <ProtectedRoute>
+              <AppLayout pageTitle="Finance Chat">
                 <FinanceChat />
-              </ProtectedRoute>
-            } />
-            <Route path="/document-viewer" element={
-              <ProtectedRoute>
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/document-viewer" element={
+            <ProtectedRoute>
+              <AppLayout pageTitle="Document Viewer">
                 <DocumentViewer />
-              </ProtectedRoute>
-            } />
-            <Route path="/settings" element={
-              <ProtectedRoute>
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/settings" element={
+            <ProtectedRoute>
+              <AppLayout pageTitle="Settings">
                 <Settings />
-              </ProtectedRoute>
-            } />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AppLayout>
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="*" element={<AppLayout><NotFound /></AppLayout>} />
+        </Routes>
         <Toaster />
       </AuthProvider>
     </BrowserRouter>
