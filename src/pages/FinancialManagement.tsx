@@ -2,7 +2,6 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { useFinancialDataDB } from "@/hooks/useFinancialDataDB";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import BudgetLimit from "@/components/budget-tracker/BudgetLimit";
 import SummaryCards from "@/components/budget-tracker/SummaryCards";
 import UnifiedTransactionForm from "@/components/financial/UnifiedTransactionForm";
@@ -76,7 +75,7 @@ const FinancialManagement = () => {
       description: item.description || null,
       date: item.date || new Date().toISOString().split('T')[0],
       user_id: item.user_id || '',
-      category: item.category || null // Add the category object property
+      category: item.category || { name: 'Uncategorized' }
     }));
     
     await handleBulkImport(convertedTransactions);
@@ -117,77 +116,35 @@ const FinancialManagement = () => {
           closeToLimit={closeToLimit}
         />
 
-        {/* Tabbed Interface for Different Views */}
-        <Tabs defaultValue="unified" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="unified">Unified Entry</TabsTrigger>
-            <TabsTrigger value="separate">Income & Expenses</TabsTrigger>
-            <TabsTrigger value="analysis">Analysis & History</TabsTrigger>
-          </TabsList>
-
-          {/* Unified Transaction Form Tab */}
-          <TabsContent value="unified" className="space-y-6">
-            <UnifiedTransactionForm onAddTransaction={handleAddTransaction} />
-            
-            <div className="grid lg:grid-cols-2 gap-8">
-              <CategoryBreakdown 
-                categoryTotalsArray={categoryTotalsArray}
-                expenses={expenses}
-              />
-              <TransactionList transactions={transactions.slice(0, 10)} />
-            </div>
-          </TabsContent>
-
-          {/* Income & Expenses Tab */}
-          <TabsContent value="separate" className="space-y-6">
-            <TransactionTabs
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              incomeForm={incomeForm}
-              expenseForm={expenseForm}
-              handleIncomeChange={handleIncomeChange}
-              handleExpenseChange={handleExpenseChange}
-              handleAddIncome={handleAddIncome}
-              handleAddExpense={handleAddExpense}
+        {/* Overview Content */}
+        <div className="space-y-6">
+          <UnifiedTransactionForm onAddTransaction={handleAddTransaction} />
+          
+          <div className="grid lg:grid-cols-2 gap-8">
+            <CategoryBreakdown 
+              categoryTotalsArray={categoryTotalsArray}
+              expenses={expenses}
             />
             
-            <div className="grid lg:grid-cols-2 gap-8">
-              <CategoryBreakdown 
-                categoryTotalsArray={categoryTotalsArray}
-                expenses={expenses}
+            <div className="space-y-6">
+              <h3 className="text-xl font-semibold text-gray-800">Transaction Management</h3>
+              
+              <TransactionFilter
+                filter={filter}
+                onFilterChange={handleFilterChange}
+                onResetFilters={handleResetFilters}
               />
-              <TransactionList transactions={transactions.slice(0, 10)} />
-            </div>
-          </TabsContent>
-
-          {/* Analysis & History Tab */}
-          <TabsContent value="analysis" className="space-y-6">
-            <div className="grid lg:grid-cols-2 gap-8">
-              <CategoryBreakdown 
-                categoryTotalsArray={categoryTotalsArray}
-                expenses={expenses}
+              
+              <TransactionHistory 
+                transactions={transactions}
+                onEditTransaction={handleEditTransaction}
+                onDeleteTransaction={handleDeleteTransaction}
+                onBulkImport={handleBulkImportWrapper}
+                onAddRecurring={handleAddRecurring}
               />
-
-              <div className="space-y-6">
-                <h3 className="text-xl font-semibold text-gray-800">Transaction Management</h3>
-                
-                <TransactionFilter
-                  filter={filter}
-                  onFilterChange={handleFilterChange}
-                  onResetFilters={handleResetFilters}
-                />
-                
-                <TransactionHistory 
-                  transactions={transactions}
-                  onEditTransaction={handleEditTransaction}
-                  onDeleteTransaction={handleDeleteTransaction}
-                  onBulkImport={handleBulkImportWrapper}
-                  onAddRecurring={handleAddRecurring}
-                />
-              </div>
             </div>
-          </TabsContent>
-        </Tabs>
+          </div>
+        </div>
       </motion.div>
     </div>
   );
