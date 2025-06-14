@@ -6,10 +6,8 @@ import GoalCreationForm from "@/components/goals/GoalCreationForm";
 import GoalsList from "@/components/goals/GoalsList";
 import MotivationalTips from "@/components/goals/MotivationalTips";
 import DataMigration from "@/components/DataMigration";
-import { Button } from "@/components/ui/button";
 import { Clock, Target, Award, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Link } from "react-router-dom";
 
 const GoalsTracker = () => {
   const {
@@ -62,7 +60,7 @@ const GoalsTracker = () => {
           <h1 className="text-3xl font-bold mb-2 text-gray-800">🎯 Financial Goals Tracker</h1>
           <p className="text-gray-600">Set, track, and achieve your financial dreams one milestone at a time.</p>
           
-          <div className="mt-4 flex justify-center space-x-4">
+          <div className="mt-4 flex justify-center">
             <select 
               className="px-4 py-2 border rounded-lg text-sm"
               value={goalTypeFilter}
@@ -72,10 +70,6 @@ const GoalsTracker = () => {
               <option value="short-term">Short-Term</option>
               <option value="long-term">Long-Term</option>
             </select>
-            
-            <Link to="/dashboard">
-              <Button variant="outline">Back to Dashboard</Button>
-            </Link>
           </div>
         </header>
 

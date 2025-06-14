@@ -19,13 +19,15 @@ export const useTransactionOperations = () => {
     });
 
     if (!validation.success) {
-      validation.errors.forEach(error => {
-        toast({
-          title: "Validation Error",
-          description: error,
-          variant: "destructive",
+      if ('errors' in validation) {
+        validation.errors.forEach(error => {
+          toast({
+            title: "Validation Error",
+            description: error,
+            variant: "destructive",
+          });
         });
-      });
+      }
       return false;
     }
 
@@ -60,13 +62,15 @@ export const useTransactionOperations = () => {
     if (updates.category || updates.amount || updates.type) {
       const validation = validateData(transactionSchema.partial(), updates);
       if (!validation.success) {
-        validation.errors.forEach(error => {
-          toast({
-            title: "Validation Error",
-            description: error,
-            variant: "destructive",
+        if ('errors' in validation) {
+          validation.errors.forEach(error => {
+            toast({
+              title: "Validation Error",
+              description: error,
+              variant: "destructive",
+            });
           });
-        });
+        }
         return false;
       }
     }

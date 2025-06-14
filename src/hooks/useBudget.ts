@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -49,13 +48,15 @@ export const useBudget = () => {
     });
 
     if (!validation.success) {
-      validation.errors.forEach(error => {
-        toast({
-          title: "Validation Error",
-          description: error,
-          variant: "destructive",
+      if ('errors' in validation) {
+        validation.errors.forEach(error => {
+          toast({
+            title: "Validation Error",
+            description: error,
+            variant: "destructive",
+          });
         });
-      });
+      }
       return false;
     }
 

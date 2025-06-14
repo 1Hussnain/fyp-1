@@ -1,7 +1,6 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
 import { useFinancialDataDB } from "@/hooks/useFinancialDataDB";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import BudgetLimit from "@/components/budget-tracker/BudgetLimit";
@@ -13,7 +12,6 @@ import TransactionFilter from "@/components/financial/TransactionFilter";
 import TransactionHistory from "@/components/financial/TransactionHistory";
 import TransactionList from "@/components/budget-tracker/TransactionList";
 import DataMigration from "@/components/DataMigration";
-import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
 const FinancialManagement = () => {
@@ -86,21 +84,6 @@ const FinancialManagement = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-3xl font-bold text-gray-800">Financial Management</h2>
-          <div className="flex gap-3">
-            <Link to="/dashboard">
-              <Button variant="outline">Dashboard</Button>
-            </Link>
-            <Link to="/goals-tracker">
-              <Button variant="outline">Goals</Button>
-            </Link>
-            <Link to="/budget-summary">
-              <Button variant="outline">Summary</Button>
-            </Link>
-          </div>
-        </div>
-
         <DataMigration />
 
         {/* Budget Limit Setting */}

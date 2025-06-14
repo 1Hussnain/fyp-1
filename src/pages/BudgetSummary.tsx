@@ -9,7 +9,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import { ArrowDown, ArrowUp, Download, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
 import { useBudgetAnalytics } from "@/hooks/useBudgetAnalytics";
 import { useFinancialDataDB } from "@/hooks/useFinancialDataDB";
 import { useGoalsDB } from "@/hooks/useGoalsDB";
@@ -58,12 +57,6 @@ const BudgetSummary = () => {
         <h1 className="text-2xl font-bold">📊 Budget Summary & Analytics</h1>
         
         <div className="flex items-center space-x-3">
-          <Link to="/financial-management">
-            <Button variant="outline" size="sm">
-              Manage Transactions
-            </Button>
-          </Link>
-          
           <Button size="sm" variant="outline" className="flex items-center" onClick={handleExportData}>
             <Download size={16} className="mr-1" />
             Export
