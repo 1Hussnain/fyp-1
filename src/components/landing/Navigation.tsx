@@ -1,7 +1,5 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 
 const Navigation = () => {
   return (
@@ -11,11 +9,6 @@ const Navigation = () => {
           <div className="flex items-center">
             <h1 className="text-2xl font-bold text-white">FinanceAI</h1>
           </div>
-          <Link to="/dashboard">
-            <Button className="bg-green-600 hover:bg-green-700 text-white">
-              Get Started
-            </Button>
-          </Link>
         </div>
       </div>
     </nav>
