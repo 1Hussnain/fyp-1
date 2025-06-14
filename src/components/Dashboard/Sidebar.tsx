@@ -68,18 +68,18 @@ const Sidebar = () => {
                 animate={{ x: 0 }}
                 exit={{ x: -280 }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="fixed left-0 top-0 h-full w-64 bg-white shadow-xl z-50 overflow-y-auto"
+                className="fixed left-0 top-0 h-full w-64 bg-white dark:bg-gray-900 shadow-xl z-50 overflow-y-auto"
               >
-                <div className="p-4 border-b">
-                  <h1 className="text-xl font-bold text-blue-600">FinanceAI</h1>
+                <div className="p-4 border-b dark:border-gray-700">
+                  <h1 className="text-xl font-bold text-blue-600 dark:text-blue-400">FinanceAI</h1>
                 </div>
                 <div className="p-4">
                   <ul className="space-y-2">
                     {navItems.map((item) => (
                       <li key={item.name}>
                         <div
-                          className={`flex items-center gap-3 p-3 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors ${
-                            activeItem === item.name ? "bg-blue-100 text-blue-600" : ""
+                          className={`flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer transition-colors ${
+                            activeItem === item.name ? "bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400" : "text-gray-700 dark:text-gray-300"
                           }`}
                           onClick={() => handleNavigation(item.name, item.path)}
                         >
@@ -98,17 +98,17 @@ const Sidebar = () => {
     );
   }
 
-  // Desktop sidebar
+  // Desktop sidebar - now sticky
   return (
     <motion.div
       initial={{ x: -50, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="w-64 bg-white shadow-lg h-screen fixed md:relative z-10 overflow-y-auto"
+      className="w-64 bg-white dark:bg-gray-900 shadow-lg h-screen fixed top-0 left-0 z-20 overflow-y-auto border-r dark:border-gray-700"
     >
-      <div className="p-6 border-b">
-        <h1 className="text-2xl font-bold text-blue-600">FinanceAI</h1>
-        <p className="text-sm text-gray-500 mt-1">Smart Financial Management</p>
+      <div className="p-6 border-b dark:border-gray-700">
+        <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400">FinanceAI</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Smart Financial Management</p>
       </div>
       <div className="p-4">
         <ul className="space-y-1">
@@ -117,8 +117,8 @@ const Sidebar = () => {
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className={`flex items-center gap-3 p-3 hover:bg-gray-100 rounded-lg cursor-pointer transition-all duration-200 ${
-                  activeItem === item.name ? "bg-blue-100 text-blue-600 shadow-sm" : "text-gray-700"
+                className={`flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer transition-all duration-200 ${
+                  activeItem === item.name ? "bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 shadow-sm" : "text-gray-700 dark:text-gray-300"
                 }`}
                 onClick={() => handleNavigation(item.name, item.path)}
               >

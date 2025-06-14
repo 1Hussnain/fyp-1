@@ -20,8 +20,10 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, pageTitle }) => {
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 w-full transition-colors duration-200">
       <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0">
-        <EnhancedTopNav />
+      <div className="flex-1 flex flex-col min-w-0 ml-0 md:ml-64">
+        <div className="sticky top-0 z-30">
+          <EnhancedTopNav />
+        </div>
         <main className="p-4 sm:p-6 overflow-y-auto flex-1">
           {pageTitle && (
             <div className="mb-6">
