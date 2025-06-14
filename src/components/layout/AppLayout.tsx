@@ -22,13 +22,13 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, pageTitle }) => {
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <EnhancedTopNav />
-        <main className="p-4 sm:p-6 lg:p-8 overflow-y-auto flex-1">
+        <main className="p-4 sm:p-6 overflow-y-auto flex-1">
           {pageTitle && (
-            <div className="mb-8">
+            <div className="mb-6">
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{pageTitle}</h1>
             </div>
           )}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {children}
           </div>
         </main>

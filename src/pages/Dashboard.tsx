@@ -17,7 +17,7 @@ const Dashboard = () => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="space-y-6"
+      className="space-y-4 sm:space-y-6"
     >
       {/* Budget Alerts */}
       <EnhancedBudgetAlerts />
@@ -36,9 +36,9 @@ const Dashboard = () => {
       </div>
       
       {/* Main Content Grid - Improved Layout */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
         {/* Left Column - Main Content (2 columns on xl screens) */}
-        <div className="xl:col-span-2 space-y-6">
+        <div className="xl:col-span-2 space-y-4 sm:space-y-6">
           {/* Quick Actions - Desktop */}
           <div className="hidden sm:block">
             <QuickActions />
@@ -53,7 +53,7 @@ const Dashboard = () => {
         </div>
         
         {/* Right Column - Sidebar Content */}
-        <div className="xl:col-span-1 space-y-6">
+        <div className="xl:col-span-1 space-y-4 sm:space-y-6">
           <EnhancedGoalsOverview />
           <EnhancedReceiptUpload />
           
