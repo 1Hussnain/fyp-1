@@ -30,7 +30,7 @@ const HeroSection = () => {
               and intelligent budgeting tools designed to help you achieve your financial goals.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/dashboard">
+              <Link to="/">
                 <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white">
                   Start Your Journey
                   <ArrowRight className="ml-2 h-5 w-5" />

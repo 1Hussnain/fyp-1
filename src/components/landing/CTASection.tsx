@@ -24,7 +24,7 @@ const CTASection = () => {
           <p className="text-xl text-gray-300 mb-8">
             Start your journey to financial freedom today with FinanceAI's intelligent tools and insights.
           </p>
-          <Link to="/dashboard">
+          <Link to="/">
             <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white">
               Get Started Now
               <ArrowRight className="ml-2 h-5 w-5" />
