@@ -1,6 +1,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import ComponentErrorBoundary from "@/components/ui/ComponentErrorBoundary";
 import EnhancedSummaryCards from "../components/Dashboard/EnhancedSummaryCards";
 import EnhancedBudgetAlerts from "../components/Dashboard/EnhancedBudgetAlerts";
 import QuickActions from "../components/Dashboard/QuickActions";
@@ -20,19 +21,27 @@ const Dashboard = () => {
       className="space-y-4 sm:space-y-6"
     >
       {/* Budget Alerts */}
-      <EnhancedBudgetAlerts />
+      <ComponentErrorBoundary componentName="Budget Alerts" minimal>
+        <EnhancedBudgetAlerts />
+      </ComponentErrorBoundary>
       
       {/* Mobile Quick Stats */}
       <div className="sm:hidden">
-        <MobileQuickStats />
+        <ComponentErrorBoundary componentName="Quick Stats" minimal>
+          <MobileQuickStats />
+        </ComponentErrorBoundary>
       </div>
       
       {/* Enhanced Summary Cards */}
-      <EnhancedSummaryCards />
+      <ComponentErrorBoundary componentName="Summary Cards" showRetry>
+        <EnhancedSummaryCards />
+      </ComponentErrorBoundary>
       
       {/* Quick Actions - Mobile */}
       <div className="sm:hidden">
-        <QuickActions />
+        <ComponentErrorBoundary componentName="Quick Actions" minimal>
+          <QuickActions />
+        </ComponentErrorBoundary>
       </div>
       
       {/* Main Content Grid - Improved Layout */}
@@ -41,32 +50,47 @@ const Dashboard = () => {
         <div className="xl:col-span-2 space-y-4 sm:space-y-6">
           {/* Quick Actions - Desktop */}
           <div className="hidden sm:block">
-            <QuickActions />
+            <ComponentErrorBoundary componentName="Quick Actions" minimal>
+              <QuickActions />
+            </ComponentErrorBoundary>
           </div>
           
-          <RecentTransactions />
+          <ComponentErrorBoundary componentName="Recent Transactions" showRetry>
+            <RecentTransactions />
+          </ComponentErrorBoundary>
           
           {/* Budget Chart - Full width on desktop */}
           <div className="hidden lg:block">
-            <BudgetChart />
+            <ComponentErrorBoundary componentName="Budget Chart" showRetry>
+              <BudgetChart />
+            </ComponentErrorBoundary>
           </div>
         </div>
         
         {/* Right Column - Sidebar Content */}
         <div className="xl:col-span-1 space-y-4 sm:space-y-6">
-          <EnhancedGoalsOverview />
-          <EnhancedReceiptUpload />
+          <ComponentErrorBoundary componentName="Goals Overview" showRetry>
+            <EnhancedGoalsOverview />
+          </ComponentErrorBoundary>
+          
+          <ComponentErrorBoundary componentName="Receipt Upload" showRetry>
+            <EnhancedReceiptUpload />
+          </ComponentErrorBoundary>
           
           {/* Motivational Tip - Hide on mobile */}
           <div className="hidden sm:block">
-            <MotivationalTip />
+            <ComponentErrorBoundary componentName="Motivational Tip" minimal>
+              <MotivationalTip />
+            </ComponentErrorBoundary>
           </div>
         </div>
       </div>
 
       {/* Mobile-only Budget Chart */}
       <div className="lg:hidden">
-        <BudgetChart />
+        <ComponentErrorBoundary componentName="Budget Chart" showRetry>
+          <BudgetChart />
+        </ComponentErrorBoundary>
       </div>
     </motion.div>
   );
