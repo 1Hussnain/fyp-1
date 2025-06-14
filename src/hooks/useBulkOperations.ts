@@ -1,31 +1,27 @@
 
 import { useToast } from "@/hooks/use-toast";
-import { transactionService, FormattedTransaction } from "@/services/transactionService";
+import { optimizedFinancialService, TransactionWithCategory } from "@/services/optimizedFinancialService";
 
 export const useBulkOperations = () => {
   const { toast } = useToast();
 
-  const handleBulkImport = async (importedTransactions: Omit<FormattedTransaction, 'id'>[]) => {
+  const handleBulkImport = async (importedTransactions: Omit<TransactionWithCategory, 'id'>[]) => {
     try {
       const results = await Promise.all(
         importedTransactions.map(transaction => 
-          transactionService.createTransaction({
+          optimizedFinancialService.createTransaction({
             type: transaction.type,
-            category: transaction.category,
-            source: transaction.type === "income" ? transaction.category : null,
-            amount: transaction.amount,
-            description: null,
-            date: new Date().toISOString()
+            category_id: transaction.category_id,
+            amount: Number(transaction.amount),
+            description: transaction.description,
+            date: transaction.date,
+            user_id: transaction.user_id
           })
         )
       );
 
       const successfulImports = results.filter(result => !result.error);
       const failedImports = results.filter(result => result.error);
-
-      const newTransactions = successfulImports.map(result => 
-        transactionService.formatTransaction(result.data!)
-      );
 
       toast({
         title: "Import Complete",
@@ -35,7 +31,7 @@ export const useBulkOperations = () => {
         variant: failedImports.length > 0 ? "destructive" : "default",
       });
 
-      return newTransactions;
+      return successfulImports.map(result => result.data).filter(Boolean);
     } catch (err) {
       console.error("Error importing transactions:", err);
       toast({
@@ -49,21 +45,21 @@ export const useBulkOperations = () => {
 
   const handleAddRecurring = async (recurringTransaction: any) => {
     try {
-      const result = await transactionService.createTransaction({
+      const result = await optimizedFinancialService.createTransaction({
         type: recurringTransaction.type,
-        category: recurringTransaction.category,
-        source: recurringTransaction.type === "income" ? recurringTransaction.category : null,
-        amount: recurringTransaction.amount,
-        description: null,
-        date: new Date().toISOString()
+        category_id: recurringTransaction.category_id,
+        amount: Number(recurringTransaction.amount),
+        description: recurringTransaction.description || null,
+        date: new Date().toISOString().split('T')[0],
+        user_id: recurringTransaction.user_id
       });
 
       if (!result.error) {
         toast({
           title: "Recurring Transaction Added",
-          description: `First occurrence of ${recurringTransaction.category} has been created.`,
+          description: `Transaction has been created.`,
         });
-        return transactionService.formatTransaction(result.data);
+        return result.data;
       }
     } catch (err) {
       console.error("Error adding recurring transaction:", err);

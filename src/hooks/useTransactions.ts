@@ -1,10 +1,21 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { transactionService, FormattedTransaction } from "@/services/transactionService";
+import { optimizedFinancialService, TransactionWithCategory } from "@/services/optimizedFinancialService";
 import { useTransactionOperations } from "./useTransactionOperations";
 import { useTransactionFilters } from "./useTransactionFilters";
 import { useToast } from "@/hooks/use-toast";
+
+// Updated FormattedTransaction to match new schema
+export interface FormattedTransaction {
+  id: string;
+  category: string;
+  amount: number;
+  type: "income" | "expense";
+  date: string;
+  description?: string;
+  category_id?: string;
+}
 
 export const useTransactions = () => {
   const { toast } = useToast();
@@ -25,7 +36,7 @@ export const useTransactions = () => {
   const loadTransactions = async () => {
     setLoading(true);
     try {
-      const { data, error } = await transactionService.getTransactions();
+      const { data, error } = await optimizedFinancialService.getTransactions();
       if (error) {
         console.error('Error loading transactions:', error);
         toast({
@@ -34,7 +45,7 @@ export const useTransactions = () => {
           variant: "destructive",
         });
       } else {
-        const formattedTransactions = (data || []).map(transactionService.formatTransaction);
+        const formattedTransactions = (data || []).map(formatTransaction);
         setTransactions(formattedTransactions);
       }
     } catch (error) {
@@ -44,10 +55,22 @@ export const useTransactions = () => {
     }
   };
 
+  const formatTransaction = (transaction: TransactionWithCategory): FormattedTransaction => {
+    return {
+      id: transaction.id,
+      category: transaction.category?.name || 'Uncategorized',
+      amount: Number(transaction.amount),
+      type: transaction.type as "income" | "expense",
+      date: new Date(transaction.date).toLocaleDateString(),
+      description: transaction.description || undefined,
+      category_id: transaction.category_id || undefined
+    };
+  };
+
   const handleAddTransaction = async (category: string, amount: number, type: "income" | "expense") => {
     const result = await addTransaction(category, amount, type);
     if (result) {
-      const newTransaction = transactionService.formatTransaction(result);
+      const newTransaction = formatTransaction(result);
       setTransactions([newTransaction, ...transactions]);
       return true;
     }

@@ -95,7 +95,8 @@ export const useOptimizedFinancial = () => {
       const { data, error } = await optimizedFinancialService.createTransaction({
         ...transactionData,
         user_id: user!.id,
-        date: transactionData.date || new Date().toISOString().split('T')[0]
+        date: transactionData.date || new Date().toISOString().split('T')[0],
+        description: transactionData.description || null
       });
 
       if (error) {
@@ -229,7 +230,12 @@ export const useOptimizedFinancial = () => {
   };
 
   // Category operations
-  const addCategory = async (categoryData: Omit<Category, 'id' | 'created_at' | 'is_system'>) => {
+  const addCategory = async (categoryData: {
+    name: string;
+    type: 'income' | 'expense';
+    color: string;
+    icon: string;
+  }) => {
     try {
       const { data, error } = await optimizedFinancialService.createCategory({
         ...categoryData,

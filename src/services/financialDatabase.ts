@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 
@@ -226,10 +227,8 @@ export const migrateLocalStorageToDatabase = async () => {
         await createTransaction({
           type: transaction.type,
           amount: parseFloat(transaction.amount),
-          category: transaction.source || transaction.category,
-          source: transaction.type === 'income' ? transaction.source : null,
-          description: null,
-          date: new Date(transaction.date).toISOString()
+          description: transaction.description,
+          date: new Date(transaction.date).toISOString().split('T')[0]
         });
       }
       
@@ -249,10 +248,8 @@ export const migrateLocalStorageToDatabase = async () => {
         await createTransaction({
           type: transaction.type,
           amount: parseFloat(transaction.amount),
-          category: transaction.category,
-          source: transaction.type === 'income' ? transaction.category : null,
-          description: null,
-          date: new Date(transaction.date).toISOString()
+          description: transaction.description,
+          date: new Date(transaction.date).toISOString().split('T')[0]
         });
       }
       
@@ -287,7 +284,7 @@ export const migrateLocalStorageToDatabase = async () => {
           target_amount: parseFloat(goal.target),
           saved_amount: parseFloat(goal.saved),
           deadline: goal.deadline,
-          goal_type: goal.type || 'short-term'
+          goal_type: goal.type || 'other'
         });
       }
       
