@@ -43,61 +43,75 @@ export type Database = {
       }
       budgets: {
         Row: {
-          created_at: string
-          current_spent: number
+          category_id: string | null
+          created_at: string | null
+          current_spent: number | null
           id: string
           month: number
           monthly_limit: number
-          updated_at: string
+          updated_at: string | null
           user_id: string
           year: number
         }
         Insert: {
-          created_at?: string
-          current_spent?: number
+          category_id?: string | null
+          created_at?: string | null
+          current_spent?: number | null
           id?: string
           month: number
           monthly_limit: number
-          updated_at?: string
+          updated_at?: string | null
           user_id: string
           year: number
         }
         Update: {
-          created_at?: string
-          current_spent?: number
+          category_id?: string | null
+          created_at?: string | null
+          current_spent?: number | null
           id?: string
           month?: number
           monthly_limit?: number
-          updated_at?: string
+          updated_at?: string | null
           user_id?: string
           year?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "budgets_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       categories: {
         Row: {
           color: string | null
-          created_at: string
+          created_at: string | null
+          icon: string | null
           id: string
-          is_system: boolean
+          is_system: boolean | null
           name: string
           type: string
           user_id: string | null
         }
         Insert: {
           color?: string | null
-          created_at?: string
+          created_at?: string | null
+          icon?: string | null
           id?: string
-          is_system?: boolean
+          is_system?: boolean | null
           name: string
           type: string
           user_id?: string | null
         }
         Update: {
           color?: string | null
-          created_at?: string
+          created_at?: string | null
+          icon?: string | null
           id?: string
-          is_system?: boolean
+          is_system?: boolean | null
           name?: string
           type?: string
           user_id?: string | null
@@ -225,36 +239,45 @@ export type Database = {
       }
       financial_goals: {
         Row: {
-          created_at: string
+          created_at: string | null
           deadline: string
+          description: string | null
           goal_type: string
           id: string
+          is_completed: boolean | null
           name: string
-          saved_amount: number
+          priority: string | null
+          saved_amount: number | null
           target_amount: number
-          updated_at: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           deadline: string
+          description?: string | null
           goal_type: string
           id?: string
+          is_completed?: boolean | null
           name: string
-          saved_amount?: number
+          priority?: string | null
+          saved_amount?: number | null
           target_amount: number
-          updated_at?: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           deadline?: string
+          description?: string | null
           goal_type?: string
           id?: string
+          is_completed?: boolean | null
           name?: string
-          saved_amount?: number
+          priority?: string | null
+          saved_amount?: number | null
           target_amount?: number
-          updated_at?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -439,45 +462,59 @@ export type Database = {
       transactions: {
         Row: {
           amount: number
-          category: string
-          created_at: string
+          category_id: string | null
+          created_at: string | null
           date: string
           description: string | null
           id: string
-          source: string | null
           type: string
-          updated_at: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
           amount: number
-          category: string
-          created_at?: string
+          category_id?: string | null
+          created_at?: string | null
           date?: string
           description?: string | null
           id?: string
-          source?: string | null
           type: string
-          updated_at?: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
           amount?: number
-          category?: string
-          created_at?: string
+          category_id?: string | null
+          created_at?: string | null
           date?: string
           description?: string | null
           id?: string
-          source?: string | null
           type?: string
-          updated_at?: string
+          updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "transactions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
-      [_ in never]: never
+      user_financial_summary: {
+        Row: {
+          month: string | null
+          total_expenses: number | null
+          total_income: number | null
+          transaction_count: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cleanup_expired_otps: {

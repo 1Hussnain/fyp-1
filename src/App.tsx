@@ -15,6 +15,8 @@ import DocumentViewer from '@/pages/DocumentViewer';
 import Settings from '@/pages/Settings';
 import NotFound from '@/pages/NotFound';
 import FinancialManagement from '@/pages/FinancialManagement';
+import OptimizedFinancialManagement from '@/pages/OptimizedFinancialManagement';
+import OptimizedGoalsTracker from '@/pages/OptimizedGoalsTracker';
 
 function App() {
   return (
@@ -45,7 +47,7 @@ function App() {
                         <p>Unable to load financial management. Please refresh the page.</p>
                       </div>
                     }>
-                      <FinancialManagement />
+                      <OptimizedFinancialManagement />
                     </ErrorBoundary>
                   </AppLayout>
                 </ProtectedRoute>
@@ -60,7 +62,7 @@ function App() {
                         <p>Unable to load goals tracker. Please refresh the page.</p>
                       </div>
                     }>
-                      <GoalsTracker />
+                      <OptimizedGoalsTracker />
                     </ErrorBoundary>
                   </AppLayout>
                 </ProtectedRoute>
