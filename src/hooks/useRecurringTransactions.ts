@@ -15,6 +15,7 @@ export interface RecurringTransaction {
   lastProcessed?: string;
   active: boolean;
   description?: string;
+  categoryName?: string; // Add this for display purposes
 }
 
 export const useRecurringTransactions = () => {

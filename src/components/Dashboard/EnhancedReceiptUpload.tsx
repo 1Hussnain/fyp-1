@@ -59,11 +59,13 @@ const EnhancedReceiptUpload = () => {
     if (!extractionResult?.parsedReceipt) return;
 
     const { parsedReceipt } = extractionResult;
-    const success = await handleAddTransaction(
-      parsedReceipt.category,
-      parsedReceipt.amount,
-      "expense"
-    );
+    const success = await handleAddTransaction({
+      type: "expense",
+      category_id: null,
+      amount: parsedReceipt.amount,
+      description: `Receipt from ${parsedReceipt.merchant}`,
+      date: new Date().toISOString().split('T')[0]
+    });
 
     if (success) {
       toast({

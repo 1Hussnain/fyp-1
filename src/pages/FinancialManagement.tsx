@@ -5,11 +5,9 @@ import { useFinancialDataDB } from "@/hooks/useFinancialDataDB";
 import BudgetLimit from "@/components/budget-tracker/BudgetLimit";
 import SummaryCards from "@/components/budget-tracker/SummaryCards";
 import UnifiedTransactionForm from "@/components/financial/UnifiedTransactionForm";
-import TransactionTabs from "@/components/income-expenses/TransactionTabs";
 import CategoryBreakdown from "@/components/budget-tracker/CategoryBreakdown";
 import TransactionFilter from "@/components/financial/TransactionFilter";
 import TransactionHistory from "@/components/financial/TransactionHistory";
-import TransactionList from "@/components/budget-tracker/TransactionList";
 import DataMigration from "@/components/DataMigration";
 import { Loader2 } from "lucide-react";
 
@@ -35,34 +33,24 @@ const FinancialManagement = () => {
     handleResetFilters
   } = useFinancialDataDB();
 
-  const [activeTab, setActiveTab] = React.useState<"income" | "expense">("income");
-  const [incomeForm, setIncomeForm] = React.useState({ source: "", amount: "" });
-  const [expenseForm, setExpenseForm] = React.useState({ category: "", amount: "" });
-
-  const handleIncomeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setIncomeForm(prev => ({ ...prev, [name]: value }));
+  const handleAddIncome = async (sourceData: { source: string; amount: number }) => {
+    await handleAddTransaction({
+      type: "income",
+      category_id: null,
+      amount: sourceData.amount,
+      description: sourceData.source,
+      date: new Date().toISOString().split('T')[0]
+    });
   };
 
-  const handleExpenseChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setExpenseForm(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleAddIncome = async () => {
-    const amount = parseFloat(incomeForm.amount);
-    if (incomeForm.source && !isNaN(amount) && amount > 0) {
-      await handleAddTransaction(incomeForm.source, amount, "income");
-      setIncomeForm({ source: "", amount: "" });
-    }
-  };
-
-  const handleAddExpense = async () => {
-    const amount = parseFloat(expenseForm.amount);
-    if (expenseForm.category && !isNaN(amount) && amount > 0) {
-      await handleAddTransaction(expenseForm.category, amount, "expense");
-      setExpenseForm({ category: "", amount: "" });
-    }
+  const handleAddExpense = async (expenseData: { category: string; amount: number }) => {
+    await handleAddTransaction({
+      type: "expense", 
+      category_id: null,
+      amount: expenseData.amount,
+      description: expenseData.category,
+      date: new Date().toISOString().split('T')[0]
+    });
   };
 
   // Simple bulk import handler that converts the data format
@@ -75,10 +63,14 @@ const FinancialManagement = () => {
       description: item.description || null,
       date: item.date || new Date().toISOString().split('T')[0],
       user_id: item.user_id || '',
-      category: item.category || { name: 'Uncategorized' }
+      categories: item.categories || { name: 'Uncategorized' }
     }));
     
     await handleBulkImport(convertedTransactions);
+  };
+
+  const handleAddRecurringWrapper = async (recurringData: any) => {
+    await handleAddRecurring(recurringData, "monthly", 1);
   };
 
   if (loading) {
@@ -130,17 +122,24 @@ const FinancialManagement = () => {
               <h3 className="text-xl font-semibold text-gray-800">Transaction Management</h3>
               
               <TransactionFilter
-                filter={filter}
+                filter={{
+                  ...filter,
+                  startDate: new Date(),
+                  endDate: new Date()
+                }}
                 onFilterChange={handleFilterChange}
                 onResetFilters={handleResetFilters}
               />
               
               <TransactionHistory 
-                transactions={transactions}
+                transactions={transactions.map(t => ({
+                  ...t,
+                  category: t.categories?.name || 'Uncategorized'
+                }))}
                 onEditTransaction={handleEditTransaction}
                 onDeleteTransaction={handleDeleteTransaction}
                 onBulkImport={handleBulkImportWrapper}
-                onAddRecurring={handleAddRecurring}
+                onAddRecurring={handleAddRecurringWrapper}
               />
             </div>
           </div>

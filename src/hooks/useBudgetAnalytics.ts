@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from "react";
 import { useFinancialDataDB } from "./useFinancialDataDB";
 import { useGoalsDB } from "./useGoalsDB";
@@ -141,10 +142,15 @@ export const useBudgetAnalytics = () => {
       });
     }
 
-    // Goals progress
-    const activeGoals = goals.filter(goal => (Number(goal.saved_amount) / Number(goal.target_amount)) * 100 < 100);
+    // Goals progress - using the correct property names
+    const activeGoals = goals.filter(goal => (Number(goal.saved_amount || 0) / Number(goal.target_amount || 1)) * 100 < 100);
     if (activeGoals.length > 0) {
-      const avgProgress = activeGoals.reduce((sum, goal) => sum + (Number(goal.saved_amount) / Number(goal.target_amount)) * 100, 0) / activeGoals.length;
+      const avgProgress = activeGoals.reduce((sum, goal) => {
+        const saved = Number(goal.saved_amount || 0);
+        const target = Number(goal.target_amount || 1);
+        return sum + (saved / target) * 100;
+      }, 0) / activeGoals.length;
+      
       if (avgProgress < 25) {
         insights.push({
           type: "info",
