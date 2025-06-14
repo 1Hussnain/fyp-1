@@ -1,8 +1,10 @@
+
 import React from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { BarChart3, Target, PieChart, TrendingUp, Shield, Smartphone, ArrowRight, CheckCircle } from "lucide-react";
+
 const LandingPage = () => {
   const features = [{
     icon: BarChart3,
@@ -29,7 +31,9 @@ const LandingPage = () => {
     title: "AI-Powered Insights",
     description: "Get personalized financial advice and insights powered by artificial intelligence."
   }];
+  
   const benefits = ["Automated transaction categorization", "Real-time spending alerts", "Comprehensive financial reports", "Goal-based savings plans", "Smart budget recommendations", "Secure data encryption"];
+  
   return <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-green-900">
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 bg-black/20 backdrop-blur-md border-b border-green-500/20">
@@ -37,11 +41,6 @@ const LandingPage = () => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <h1 className="text-2xl font-bold text-white">FinanceAI</h1>
-            </div>
-            <div className="hidden md:flex space-x-8">
-              <a href="#about" className="text-gray-300 hover:text-green-400 transition-colors">About</a>
-              <a href="#features" className="text-gray-300 hover:text-green-400 transition-colors">Features</a>
-              
             </div>
             <Link to="/dashboard">
               <Button className="bg-green-600 hover:bg-green-700 text-white">
@@ -82,9 +81,6 @@ const LandingPage = () => {
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
-                <Button variant="outline" size="lg" className="border-green-400 hover:bg-green-400/10 text-slate-50">
-                  Watch Demo
-                </Button>
               </div>
             </motion.div>
             
@@ -129,7 +125,7 @@ const LandingPage = () => {
       </section>
 
       {/* About Section */}
-      <section id="about" className="py-20 px-4 sm:px-6 lg:px-8">
+      <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div initial={{
           opacity: 0,
@@ -154,7 +150,7 @@ const LandingPage = () => {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 px-4 sm:px-6 lg:px-8">
+      <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <motion.div initial={{
           opacity: 0,
@@ -195,7 +191,7 @@ const LandingPage = () => {
       </section>
 
       {/* Benefits Section */}
-      <section id="benefits" className="py-20 px-4 sm:px-6 lg:px-8">
+      <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div initial={{
@@ -306,4 +302,5 @@ const LandingPage = () => {
       </footer>
     </div>;
 };
+
 export default LandingPage;
