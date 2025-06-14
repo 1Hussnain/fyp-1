@@ -54,7 +54,7 @@ const LandingPage = () => {
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto text-slate-900 bg-inherit">
+        <div className="max-w-7xl mx-auto bg-inherit text-slate-100">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div initial={{
             opacity: 0,
