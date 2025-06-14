@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
@@ -8,10 +7,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { LogOut } from "lucide-react";
 
 const Settings = () => {
+  const { signOut } = useAuth();
+
   const handleSave = () => {
     toast.success("Settings saved successfully");
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success("Logged out successfully");
+    } catch (error) {
+      toast.error("Failed to log out");
+    }
   };
 
   return (
@@ -42,8 +54,19 @@ const Settings = () => {
                 <Input id="email" type="email" defaultValue="john.doe@example.com" />
               </div>
               
-              <div className="pt-4">
+              <div className="pt-4 space-y-3">
                 <Button onClick={handleSave}>Save Changes</Button>
+                
+                <div className="pt-4 border-t">
+                  <Button 
+                    variant="destructive" 
+                    onClick={handleLogout}
+                    className="w-full"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Log Out
+                  </Button>
+                </div>
               </div>
             </div>
           </Card>
