@@ -68,13 +68,57 @@ export const useTransactions = () => {
   };
 
   const handleAddTransaction = async (category: string, amount: number, type: "income" | "expense") => {
-    const result = await addTransaction(category, amount, type);
-    if (result) {
+    // First find or create the category
+    const { data: categories } = await optimizedFinancialService.getCategories(type);
+    let categoryId = categories.find(c => c.name === category)?.id;
+    
+    if (!categoryId) {
+      // Create new category if it doesn't exist
+      const { data: newCategory } = await optimizedFinancialService.createCategory({
+        name: category,
+        type,
+        color: '#3B82F6',
+        icon: 'DollarSign',
+        user_id: user!.id,
+        is_system: false
+      });
+      categoryId = newCategory?.id;
+    }
+
+    if (!categoryId) {
+      toast({
+        title: "Error",
+        description: "Failed to create category",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    const { data: result, error } = await optimizedFinancialService.createTransaction({
+      type,
+      category_id: categoryId,
+      amount: amount,
+      description: null,
+      date: new Date().toISOString().split('T')[0],
+      user_id: user!.id
+    });
+
+    if (result && !error) {
       const newTransaction = formatTransaction(result);
       setTransactions([newTransaction, ...transactions]);
+      toast({
+        title: "Success",
+        description: "Transaction added successfully",
+      });
       return true;
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to add transaction",
+        variant: "destructive",
+      });
+      return false;
     }
-    return false;
   };
 
   const handleEditTransaction = async (id: string, updates: Partial<FormattedTransaction>) => {

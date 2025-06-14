@@ -5,12 +5,12 @@ import { optimizedFinancialService, TransactionWithCategory } from "@/services/o
 export const useBulkOperations = () => {
   const { toast } = useToast();
 
-  const handleBulkImport = async (importedTransactions: Omit<TransactionWithCategory, 'id'>[]) => {
+  const handleBulkImport = async (importedTransactions: Omit<TransactionWithCategory, 'id' | 'created_at' | 'updated_at'>[]) => {
     try {
       const results = await Promise.all(
         importedTransactions.map(transaction => 
           optimizedFinancialService.createTransaction({
-            type: transaction.type,
+            type: transaction.type as 'income' | 'expense',
             category_id: transaction.category_id,
             amount: Number(transaction.amount),
             description: transaction.description,

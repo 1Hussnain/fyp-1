@@ -66,6 +66,21 @@ const FinancialManagement = () => {
     }
   };
 
+  // Simple bulk import handler that converts the data format
+  const handleBulkImportWrapper = async (importedData: any[]) => {
+    // Convert the incoming data to the expected format
+    const convertedTransactions = importedData.map(item => ({
+      type: item.type || 'expense',
+      category_id: item.category_id || null,
+      amount: item.amount || 0,
+      description: item.description || null,
+      date: item.date || new Date().toISOString().split('T')[0],
+      user_id: item.user_id || ''
+    }));
+    
+    await handleBulkImport(convertedTransactions);
+  };
+
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto px-6 py-8 space-y-8 flex items-center justify-center min-h-screen">
@@ -165,7 +180,7 @@ const FinancialManagement = () => {
                   transactions={transactions}
                   onEditTransaction={handleEditTransaction}
                   onDeleteTransaction={handleDeleteTransaction}
-                  onBulkImport={handleBulkImport}
+                  onBulkImport={handleBulkImportWrapper}
                   onAddRecurring={handleAddRecurring}
                 />
               </div>
