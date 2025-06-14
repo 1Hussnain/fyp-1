@@ -10,6 +10,13 @@ export const useOptimizedFinancial = () => {
   const [transactions, setTransactions] = useState<TransactionWithCategory[]>([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState({
+    totalIncome: 0,
+    totalExpenses: 0,
+    netIncome: 0,
+    transactionCount: 0
+  });
+  const [categorySpending, setCategorySpending] = useState([]);
 
   useEffect(() => {
     if (user) {
@@ -20,9 +27,11 @@ export const useOptimizedFinancial = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [transactionsResult, categoriesResult] = await Promise.all([
+      const [transactionsResult, categoriesResult, summaryResult, categorySpendingResult] = await Promise.all([
         optimizedFinancialService.getTransactions(),
-        optimizedFinancialService.getCategories()
+        optimizedFinancialService.getCategories(),
+        optimizedFinancialService.getFinancialSummary(),
+        optimizedFinancialService.getCategorySpending()
       ]);
 
       if (transactionsResult.error) {
@@ -35,6 +44,18 @@ export const useOptimizedFinancial = () => {
         console.error('Error loading categories:', categoriesResult.error);
       } else {
         setCategories(categoriesResult.data);
+      }
+
+      if (summaryResult.error) {
+        console.error('Error loading summary:', summaryResult.error);
+      } else if (summaryResult.data) {
+        setSummary(summaryResult.data);
+      }
+
+      if (categorySpendingResult.error) {
+        console.error('Error loading category spending:', categorySpendingResult.error);
+      } else {
+        setCategorySpending(categorySpendingResult.data);
       }
     } catch (error) {
       console.error('Error loading financial data:', error);
@@ -129,10 +150,21 @@ export const useOptimizedFinancial = () => {
     }
   };
 
+  const income = summary.totalIncome;
+  const expenses = summary.totalExpenses;
+  const netIncome = summary.netIncome;
+  const transactionCount = summary.transactionCount;
+
   return {
     transactions,
     categories,
     loading,
+    summary,
+    categorySpending,
+    income,
+    expenses,
+    netIncome,
+    transactionCount,
     addTransaction,
     updateTransaction,
     deleteTransaction,

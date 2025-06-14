@@ -76,9 +76,11 @@ const RecentTransactions = () => {
                   <TableBody>
                     {recentTransactions.map((transaction) => (
                       <TableRow key={transaction.id} className="border-gray-100 hover:bg-gray-50">
-                        <TableCell className="font-medium text-gray-800">{transaction.category}</TableCell>
+                        <TableCell className="font-medium text-gray-800">
+                          {transaction.categories?.name || 'Uncategorized'}
+                        </TableCell>
                         <TableCell className={transaction.type === "income" ? "text-green-600 font-semibold" : "text-red-600 font-semibold"}>
-                          {transaction.type === "income" ? "+" : "-"}${transaction.amount.toLocaleString()}
+                          {transaction.type === "income" ? "+" : "-"}${Number(transaction.amount).toLocaleString()}
                         </TableCell>
                         <TableCell>
                           <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
@@ -89,7 +91,9 @@ const RecentTransactions = () => {
                             {transaction.type}
                           </span>
                         </TableCell>
-                        <TableCell className="text-gray-600">{transaction.date}</TableCell>
+                        <TableCell className="text-gray-600">
+                          {new Date(transaction.date).toLocaleDateString()}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -101,11 +105,13 @@ const RecentTransactions = () => {
                 {recentTransactions.map((transaction) => (
                   <div key={transaction.id} className="p-4 border border-gray-200 rounded-lg bg-gray-50">
                     <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-medium text-gray-800">{transaction.category}</h4>
+                      <h4 className="font-medium text-gray-800">
+                        {transaction.categories?.name || 'Uncategorized'}
+                      </h4>
                       <span className={`text-sm font-semibold ${
                         transaction.type === "income" ? "text-green-600" : "text-red-600"
                       }`}>
-                        {transaction.type === "income" ? "+" : "-"}${transaction.amount.toLocaleString()}
+                        {transaction.type === "income" ? "+" : "-"}${Number(transaction.amount).toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
@@ -116,7 +122,9 @@ const RecentTransactions = () => {
                       }`}>
                         {transaction.type}
                       </span>
-                      <span className="text-xs text-gray-500">{transaction.date}</span>
+                      <span className="text-xs text-gray-500">
+                        {new Date(transaction.date).toLocaleDateString()}
+                      </span>
                     </div>
                   </div>
                 ))}

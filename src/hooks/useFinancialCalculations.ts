@@ -1,16 +1,16 @@
 
 import { useMemo } from "react";
-import { FormattedTransaction } from "@/services/transactionService";
+import { TransactionWithCategory } from "@/services/optimizedFinancialService";
 
-export const useFinancialCalculations = (transactions: FormattedTransaction[]) => {
+export const useFinancialCalculations = (transactions: TransactionWithCategory[]) => {
   const calculations = useMemo(() => {
     const income = transactions
       .filter(t => t.type === "income")
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + Number(t.amount), 0);
     
     const expenses = transactions
       .filter(t => t.type === "expense")
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + Number(t.amount), 0);
 
     const remaining = income - expenses;
 
@@ -18,7 +18,8 @@ export const useFinancialCalculations = (transactions: FormattedTransaction[]) =
     const categoryTotals: Record<string, number> = {};
     transactions.forEach((transaction) => {
       if (transaction.type === "expense") {
-        categoryTotals[transaction.category] = (categoryTotals[transaction.category] || 0) + transaction.amount;
+        const categoryName = transaction.categories?.name || 'Uncategorized';
+        categoryTotals[categoryName] = (categoryTotals[categoryName] || 0) + Number(transaction.amount);
       }
     });
 

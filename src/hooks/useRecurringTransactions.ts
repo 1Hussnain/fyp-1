@@ -1,11 +1,12 @@
 
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { transactionService } from "@/services/transactionService";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface RecurringTransaction {
   id: string;
-  category: string;
+  category_id: string | null;
   amount: number;
   type: "income" | "expense";
   frequency: "weekly" | "monthly" | "yearly";
@@ -13,10 +14,12 @@ export interface RecurringTransaction {
   endDate?: string;
   lastProcessed?: string;
   active: boolean;
+  description?: string;
 }
 
 export const useRecurringTransactions = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>([]);
 
   // Load from localStorage on mount
@@ -43,7 +46,7 @@ export const useRecurringTransactions = () => {
     
     toast({
       title: "Recurring Transaction Added",
-      description: `${transaction.type === 'income' ? 'Income' : 'Expense'} for ${transaction.category} will be processed ${transaction.frequency}.`,
+      description: `${transaction.type === 'income' ? 'Income' : 'Expense'} will be processed ${transaction.frequency}.`,
     });
 
     return newTransaction.id;
@@ -76,16 +79,20 @@ export const useRecurringTransactions = () => {
       
       if (shouldProcess) {
         try {
-          await transactionService.createTransaction({
-            type: recurring.type,
-            category: recurring.category,
-            source: recurring.type === "income" ? recurring.category : null,
-            amount: recurring.amount,
-            description: `Recurring ${recurring.frequency} transaction`,
-            date: today.toISOString()
-          });
+          const { error } = await supabase
+            .from('transactions')
+            .insert({
+              user_id: user?.id,
+              type: recurring.type,
+              category_id: recurring.category_id,
+              amount: recurring.amount,
+              description: recurring.description || `Recurring ${recurring.frequency} transaction`,
+              date: today.toISOString().split('T')[0]
+            });
 
-          processedTransactions.push(recurring.category);
+          if (error) throw error;
+
+          processedTransactions.push(recurring.description || recurring.type);
           
           // Update last processed date
           setRecurringTransactions(prev =>

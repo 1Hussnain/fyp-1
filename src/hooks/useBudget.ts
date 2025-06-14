@@ -96,9 +96,14 @@ export const useBudget = () => {
     }
   };
 
+  const remaining = budgetLimit - currentSpent;
+  const overBudget = currentSpent > budgetLimit;
+
   return {
     budgetLimit,
     currentSpent,
+    remaining,
+    overBudget,
     loading,
     updateBudgetLimit,
     updateSpent

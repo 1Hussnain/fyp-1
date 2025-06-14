@@ -86,14 +86,14 @@ const OptimizedTransactionList: React.FC<OptimizedTransactionListProps> = ({
                   
                   <div>
                     <div className="flex items-center gap-2">
-                      {transaction.category && (
+                      {transaction.categories && (
                         <div 
                           className="w-3 h-3 rounded-full" 
-                          style={{ backgroundColor: transaction.category.color }}
+                          style={{ backgroundColor: transaction.categories.color || '#6B7280' }}
                         />
                       )}
                       <span className="font-medium">
-                        {transaction.category?.name || 'Uncategorized'}
+                        {transaction.categories?.name || 'Uncategorized'}
                       </span>
                     </div>
                     <div className="text-sm text-gray-500 dark:text-gray-400">

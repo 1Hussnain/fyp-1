@@ -8,11 +8,11 @@ export const useFinancialSummary = () => {
   const summary = useMemo(() => {
     const income = allTransactions
       .filter(t => t.type === "income")
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + Number(t.amount), 0);
     
     const expenses = allTransactions
       .filter(t => t.type === "expense")
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + Number(t.amount), 0);
 
     const savings = income - expenses;
 
@@ -20,7 +20,8 @@ export const useFinancialSummary = () => {
     const categoryTotals: Record<string, number> = {};
     allTransactions.forEach((transaction) => {
       if (transaction.type === "expense") {
-        categoryTotals[transaction.category] = (categoryTotals[transaction.category] || 0) + transaction.amount;
+        const categoryName = transaction.categories?.name || 'Uncategorized';
+        categoryTotals[categoryName] = (categoryTotals[categoryName] || 0) + Number(transaction.amount);
       }
     });
 

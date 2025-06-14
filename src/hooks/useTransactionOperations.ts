@@ -1,12 +1,15 @@
 
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { transactionService, FormattedTransaction } from "@/services/transactionService";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { TransactionWithCategory } from "@/services/optimizedFinancialService";
 import { transactionSchema, validateData } from "@/utils/validation";
 import { useErrorHandler } from "./useErrorHandler";
 
 export const useTransactionOperations = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const { handleError, handleSuccess } = useErrorHandler();
   const [loading, setLoading] = useState(false);
 
@@ -33,14 +36,47 @@ export const useTransactionOperations = () => {
 
     setLoading(true);
     try {
-      const { data, error } = await transactionService.createTransaction({
-        type,
-        category: validation.data.category,
-        source: type === "income" ? validation.data.category : null,
-        amount: validation.data.amount,
-        description: null,
-        date: new Date().toISOString()
-      });
+      // Find or create category
+      let categoryId = null;
+      const { data: existingCategory } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('name', validation.data.category)
+        .eq('type', type)
+        .maybeSingle();
+
+      if (existingCategory) {
+        categoryId = existingCategory.id;
+      } else {
+        const { data: newCategory, error: categoryError } = await supabase
+          .from('categories')
+          .insert({
+            name: validation.data.category,
+            type,
+            user_id: user?.id
+          })
+          .select('id')
+          .single();
+
+        if (categoryError) throw categoryError;
+        categoryId = newCategory.id;
+      }
+
+      const { data, error } = await supabase
+        .from('transactions')
+        .insert({
+          user_id: user?.id,
+          type,
+          category_id: categoryId,
+          amount: validation.data.amount,
+          description: null,
+          date: new Date().toISOString().split('T')[0]
+        })
+        .select(`
+          *,
+          categories(*)
+        `)
+        .single();
 
       if (error) {
         handleError(error, "adding transaction");
@@ -57,9 +93,9 @@ export const useTransactionOperations = () => {
     }
   };
 
-  const editTransaction = async (id: string, updates: Partial<FormattedTransaction>) => {
+  const editTransaction = async (id: string, updates: Partial<TransactionWithCategory>) => {
     // Validate updates if they contain validatable fields
-    if (updates.category || updates.amount || updates.type) {
+    if (updates.amount || updates.type) {
       const validation = validateData(transactionSchema.partial(), updates);
       if (!validation.success) {
         if ('errors' in validation) {
@@ -77,7 +113,18 @@ export const useTransactionOperations = () => {
 
     setLoading(true);
     try {
-      const { data, error } = await transactionService.updateTransaction(id, updates);
+      const { data, error } = await supabase
+        .from('transactions')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select(`
+          *,
+          categories(*)
+        `)
+        .single();
 
       if (error) {
         handleError(error, "updating transaction");
@@ -97,7 +144,10 @@ export const useTransactionOperations = () => {
   const deleteTransaction = async (id: string) => {
     setLoading(true);
     try {
-      const { error } = await transactionService.deleteTransaction(id);
+      const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('id', id);
 
       if (error) {
         handleError(error, "deleting transaction");

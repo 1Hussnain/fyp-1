@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { useFinancialDataDB } from "./useFinancialDataDB";
 import { useGoalsDB } from "./useGoalsDB";
@@ -41,9 +40,9 @@ export const useBudgetAnalytics = () => {
       }
       
       if (transaction.type === "income") {
-        monthlyData[monthKey].income += transaction.amount;
+        monthlyData[monthKey].income += Number(transaction.amount);
       } else {
-        monthlyData[monthKey].expense += transaction.amount;
+        monthlyData[monthKey].expense += Number(transaction.amount);
       }
     });
 
@@ -70,7 +69,8 @@ export const useBudgetAnalytics = () => {
     allTransactions
       .filter(t => t.type === "expense")
       .forEach(transaction => {
-        categoryTotals[transaction.category] = (categoryTotals[transaction.category] || 0) + transaction.amount;
+        const categoryName = transaction.categories?.name || 'Uncategorized';
+        categoryTotals[categoryName] = (categoryTotals[categoryName] || 0) + Number(transaction.amount);
       });
 
     return Object.entries(categoryTotals)
@@ -142,9 +142,9 @@ export const useBudgetAnalytics = () => {
     }
 
     // Goals progress
-    const activeGoals = goals.filter(goal => (goal.saved / goal.target) * 100 < 100);
+    const activeGoals = goals.filter(goal => (Number(goal.saved_amount) / Number(goal.target_amount)) * 100 < 100);
     if (activeGoals.length > 0) {
-      const avgProgress = activeGoals.reduce((sum, goal) => sum + (goal.saved / goal.target) * 100, 0) / activeGoals.length;
+      const avgProgress = activeGoals.reduce((sum, goal) => sum + (Number(goal.saved_amount) / Number(goal.target_amount)) * 100, 0) / activeGoals.length;
       if (avgProgress < 25) {
         insights.push({
           type: "info",
