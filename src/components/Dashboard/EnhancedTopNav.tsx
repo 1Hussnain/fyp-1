@@ -1,7 +1,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Search, User, Settings, Moon, Sun } from "lucide-react";
+import { Search, User, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -47,10 +47,6 @@ const EnhancedTopNav = () => {
             ) : (
               <Moon className="h-4 w-4" />
             )}
-          </Button>
-          
-          <Button variant="outline" size="sm" className="dark:border-gray-600 dark:hover:bg-gray-700">
-            <Settings className="h-4 w-4" />
           </Button>
 
           <div className="flex items-center gap-2">
