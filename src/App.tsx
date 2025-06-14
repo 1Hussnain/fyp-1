@@ -8,6 +8,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AppLayout from '@/components/layout/AppLayout';
 import LandingPage from '@/pages/LandingPage';
+import Index from '@/pages/Index';
 import Dashboard from '@/pages/Dashboard';
 import GoalsTracker from '@/pages/GoalsTracker';
 import BudgetSummary from '@/pages/BudgetSummary';
@@ -27,6 +28,7 @@ function App() {
           <AuthProvider>
             <Routes>
               <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<Index />} />
               <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <AppLayout pageTitle="Dashboard">
