@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
@@ -6,7 +7,7 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AppLayout from '@/components/layout/AppLayout';
-import Index from '@/pages/Index';
+import LandingPage from '@/pages/LandingPage';
 import Dashboard from '@/pages/Dashboard';
 import GoalsTracker from '@/pages/GoalsTracker';
 import BudgetSummary from '@/pages/BudgetSummary';
@@ -25,7 +26,7 @@ function App() {
         <ThemeProvider>
           <AuthProvider>
             <Routes>
-              <Route path="/" element={<AppLayout><Index /></AppLayout>} />
+              <Route path="/" element={<LandingPage />} />
               <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <AppLayout pageTitle="Dashboard">
