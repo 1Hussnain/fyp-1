@@ -68,14 +68,15 @@ const FinancialManagement = () => {
 
   // Simple bulk import handler that converts the data format
   const handleBulkImportWrapper = async (importedData: any[]) => {
-    // Convert the incoming data to the expected format
+    // Convert the incoming data to the expected format with category object
     const convertedTransactions = importedData.map(item => ({
       type: item.type || 'expense',
       category_id: item.category_id || null,
       amount: item.amount || 0,
       description: item.description || null,
       date: item.date || new Date().toISOString().split('T')[0],
-      user_id: item.user_id || ''
+      user_id: item.user_id || '',
+      category: item.category || null // Add the category object property
     }));
     
     await handleBulkImport(convertedTransactions);
