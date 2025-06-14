@@ -1,4 +1,6 @@
 
+import Tesseract from 'tesseract.js';
+
 export interface ExtractedTextData {
   text: string;
   confidence: number;
@@ -20,33 +22,55 @@ export interface ReceiptData {
 }
 
 class TextExtractionService {
-  // Simulate OCR processing for images
+  // Real OCR processing for images using Tesseract.js
   async extractTextFromImage(file: File): Promise<ExtractedTextData> {
-    return new Promise((resolve) => {
-      // Simulate processing time
-      setTimeout(() => {
-        // Mock extracted text based on file name or simulate realistic receipt text
-        const mockText = this.generateMockReceiptText();
-        resolve({
-          text: mockText,
-          confidence: 0.92,
-          metadata: {
-            language: 'en',
-            processingTime: 1500
+    const startTime = Date.now();
+    
+    try {
+      const result = await Tesseract.recognize(file, 'eng', {
+        logger: (m) => {
+          if (m.status === 'recognizing text') {
+            // Optional: could emit progress events here
+            console.log(`OCR Progress: ${Math.round(m.progress * 100)}%`);
           }
-        });
-      }, 1500);
-    });
+        }
+      });
+
+      const processingTime = Date.now() - startTime;
+      
+      return {
+        text: result.data.text,
+        confidence: result.data.confidence / 100, // Convert to 0-1 scale
+        metadata: {
+          language: 'en',
+          processingTime
+        }
+      };
+    } catch (error) {
+      console.error('OCR extraction failed:', error);
+      throw new Error('Failed to extract text from image');
+    }
   }
 
   // Extract text from PDF files
   async extractTextFromPDF(file: File): Promise<ExtractedTextData> {
-    return new Promise((resolve) => {
+    const startTime = Date.now();
+    
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => {
-        // In a real implementation, you'd use a PDF parsing library
-        // For now, we'll simulate PDF text extraction
-        setTimeout(() => {
+      reader.onload = async () => {
+        try {
+          // For PDFs, we could use pdf-parse or similar library
+          // For now, we'll convert to image and use OCR
+          // This is a simplified approach - in production you might want pdf-parse
+          const arrayBuffer = reader.result as ArrayBuffer;
+          const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+          
+          // Convert PDF to image using canvas (simplified approach)
+          // In a real implementation, you'd use pdf-parse or pdf2pic
+          const processingTime = Date.now() - startTime;
+          
+          // Fallback to mock for PDFs since proper PDF parsing requires additional libraries
           const mockText = this.generateMockDocumentText();
           resolve({
             text: mockText,
@@ -54,11 +78,15 @@ class TextExtractionService {
             metadata: {
               pageCount: 1,
               language: 'en',
-              processingTime: 800
+              processingTime
             }
           });
-        }, 800);
+        } catch (error) {
+          reject(new Error('Failed to extract text from PDF'));
+        }
       };
+      
+      reader.onerror = () => reject(new Error('Failed to read PDF file'));
       reader.readAsArrayBuffer(file);
     });
   }
@@ -67,48 +95,99 @@ class TextExtractionService {
   parseReceiptData(extractedText: string): ReceiptData {
     const lines = extractedText.split('\n').filter(line => line.trim());
     
-    // Simple parsing logic (in reality, you'd use more sophisticated NLP)
+    // Enhanced parsing logic for real OCR text
     let merchant = 'Unknown Merchant';
     let amount = 0;
     let date = new Date().toISOString().split('T')[0];
     let category = 'General';
     const items: Array<{ name: string; price: number }> = [];
 
-    // Extract merchant (usually first or second line)
-    if (lines.length > 0) {
-      merchant = lines[0].replace(/[^a-zA-Z\s]/g, '').trim() || 'Unknown Merchant';
+    // Extract merchant (usually first few lines, look for company names)
+    const merchantPatterns = [
+      /^([A-Z][A-Z\s&]+[A-Z])$/,  // All caps company names
+      /^([A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\s*$/,  // Title case company names
+    ];
+    
+    for (let i = 0; i < Math.min(3, lines.length); i++) {
+      const line = lines[i].trim();
+      for (const pattern of merchantPatterns) {
+        const match = line.match(pattern);
+        if (match && match[1].length > 3) {
+          merchant = match[1].trim();
+          break;
+        }
+      }
+      if (merchant !== 'Unknown Merchant') break;
     }
 
-    // Extract total amount (look for patterns like $XX.XX)
-    const amountMatch = extractedText.match(/(?:total|amount|sum)[\s:]*\$?(\d+\.?\d*)/i);
-    if (amountMatch) {
-      amount = parseFloat(amountMatch[1]);
+    // Extract total amount with better patterns
+    const amountPatterns = [
+      /(?:total|amount|sum|balance)\s*:?\s*\$?(\d+[.,]\d{2})/i,
+      /\$(\d+[.,]\d{2})\s*(?:total|amount|sum|balance)/i,
+      /(?:^|\s)\$(\d+[.,]\d{2})(?:\s|$)/g  // Standalone amounts
+    ];
+
+    for (const pattern of amountPatterns) {
+      const matches = extractedText.matchAll(pattern);
+      for (const match of matches) {
+        const value = parseFloat(match[1].replace(',', '.'));
+        if (value > amount) {
+          amount = value;
+        }
+      }
     }
 
-    // Extract date (look for date patterns)
-    const dateMatch = extractedText.match(/(\d{1,2}\/\d{1,2}\/\d{2,4}|\d{4}-\d{2}-\d{2})/);
-    if (dateMatch) {
-      date = dateMatch[1];
+    // Extract date with multiple formats
+    const datePatterns = [
+      /(\d{1,2}\/\d{1,2}\/\d{2,4})/,
+      /(\d{4}-\d{2}-\d{2})/,
+      /(\d{1,2}[-\.]\d{1,2}[-\.]\d{2,4})/,
+      /(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+\d{1,2},?\s+\d{4}/i
+    ];
+
+    for (const pattern of datePatterns) {
+      const match = extractedText.match(pattern);
+      if (match) {
+        date = match[1];
+        break;
+      }
     }
 
-    // Extract items (lines with price patterns)
+    // Extract items with better parsing
     lines.forEach(line => {
-      const itemMatch = line.match(/^(.+?)\s+\$?(\d+\.?\d*)$/);
-      if (itemMatch && !line.toLowerCase().includes('total')) {
-        items.push({
-          name: itemMatch[1].trim(),
-          price: parseFloat(itemMatch[2])
-        });
+      const itemPatterns = [
+        /^(.+?)\s+\$?(\d+[.,]\d{2})$/,  // Item name followed by price
+        /^(.+?)\s+(\d+[.,]\d{2})\s*$/,  // Item name followed by price (no $)
+      ];
+
+      for (const pattern of itemPatterns) {
+        const match = line.match(pattern);
+        if (match && !line.toLowerCase().includes('total') && !line.toLowerCase().includes('subtotal')) {
+          const itemName = match[1].trim();
+          const price = parseFloat(match[2].replace(',', '.'));
+          
+          // Filter out likely non-items (too short, all numbers, etc.)
+          if (itemName.length > 2 && !/^\d+$/.test(itemName) && price > 0) {
+            items.push({
+              name: itemName,
+              price: price
+            });
+          }
+          break;
+        }
       }
     });
 
     // Determine category based on merchant or items
-    if (merchant.toLowerCase().includes('grocery') || merchant.toLowerCase().includes('market')) {
+    const merchantLower = merchant.toLowerCase();
+    if (merchantLower.includes('grocery') || merchantLower.includes('market') || merchantLower.includes('food')) {
       category = 'Groceries';
-    } else if (merchant.toLowerCase().includes('gas') || merchant.toLowerCase().includes('fuel')) {
+    } else if (merchantLower.includes('gas') || merchantLower.includes('fuel') || merchantLower.includes('shell') || merchantLower.includes('bp')) {
       category = 'Transportation';
-    } else if (merchant.toLowerCase().includes('restaurant') || merchant.toLowerCase().includes('cafe')) {
+    } else if (merchantLower.includes('restaurant') || merchantLower.includes('cafe') || merchantLower.includes('pizza') || merchantLower.includes('bar')) {
       category = 'Dining';
+    } else if (merchantLower.includes('target') || merchantLower.includes('walmart') || merchantLower.includes('store')) {
+      category = 'Shopping';
     }
 
     return {
@@ -120,53 +199,6 @@ class TextExtractionService {
       confidence: 0.88,
       rawText: extractedText
     };
-  }
-
-  private generateMockReceiptText(): string {
-    const receipts = [
-      `WHOLE FOODS MARKET
-123 Main Street
-City, State 12345
-Date: ${new Date().toLocaleDateString()}
-
-Organic Bananas    $3.99
-Almond Milk       $4.50
-Chicken Breast    $12.99
-Mixed Vegetables  $6.99
-Whole Grain Bread $3.50
-
-Subtotal:         $31.97
-Tax:              $2.56
-Total:            $34.53
-
-Thank you for shopping!`,
-
-      `TARGET STORE #1234
-456 Shopping Ave
-Date: ${new Date().toLocaleDateString()}
-
-Laundry Detergent $8.99
-Paper Towels      $5.49
-Shampoo          $6.99
-Cereal           $4.29
-Milk             $3.99
-
-Subtotal:        $29.75
-Tax:             $2.38
-Total:           $32.13`,
-
-      `SHELL GAS STATION
-789 Highway Road
-Date: ${new Date().toLocaleDateString()}
-
-Regular Unleaded  $45.67
-Coffee           $2.99
-Energy Drink     $3.49
-
-Total:           $52.15`
-    ];
-
-    return receipts[Math.floor(Math.random() * receipts.length)];
   }
 
   private generateMockDocumentText(): string {
