@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import { useFinancialDataDB } from "@/hooks/useFinancialDataDB";
@@ -57,7 +56,7 @@ const FinancialManagement = () => {
   const handleBulkImportWrapper = async (importedData: any[]) => {
     // Convert the incoming data to the expected format with category object
     const convertedTransactions = importedData.map(item => ({
-      type: item.type || 'expense',
+      type: item.type || 'expense' as 'income' | 'expense',
       category_id: item.category_id || null,
       amount: item.amount || 0,
       description: item.description || null,
@@ -124,6 +123,7 @@ const FinancialManagement = () => {
               <TransactionFilter
                 filter={{
                   ...filter,
+                  type: filter.type || 'all',
                   startDate: new Date(),
                   endDate: new Date()
                 }}
@@ -134,6 +134,7 @@ const FinancialManagement = () => {
               <TransactionHistory 
                 transactions={transactions.map(t => ({
                   ...t,
+                  type: t.type as 'income' | 'expense',
                   category: t.categories?.name || 'Uncategorized'
                 }))}
                 onEditTransaction={handleEditTransaction}

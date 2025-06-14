@@ -1,155 +1,157 @@
-
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { Calendar, Play, Pause, Trash2, Plus } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
+import React from "react";
 import { useRecurringTransactions } from "@/hooks/useRecurringTransactions";
-import RecurringTransactionDialog from "./RecurringTransactionDialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 const RecurringTransactionsManager = () => {
   const {
     recurringTransactions,
+    addRecurringTransaction,
     toggleRecurringTransaction,
-    deleteRecurringTransaction,
-    processRecurringTransactions
+    deleteRecurringTransaction
   } = useRecurringTransactions();
 
-  const [showDialog, setShowDialog] = useState(false);
+  const [type, setType] = React.useState<"income" | "expense">("expense");
+  const [frequency, setFrequency] = React.useState<"weekly" | "monthly" | "yearly">("monthly");
+  const [amount, setAmount] = React.useState<number>(0);
+  const [description, setDescription] = React.useState<string>("");
+  const [categoryName, setCategoryName] = React.useState<string>("");
 
-  const handleProcessAll = async () => {
-    await processRecurringTransactions();
-  };
+  const handleAdd = () => {
+    addRecurringTransaction({
+      type,
+      frequency,
+      amount,
+      description,
+      startDate: new Date().toISOString().split('T')[0],
+      category_id: null,
+      categoryName
+    });
 
-  const getFrequencyColor = (frequency: string) => {
-    switch (frequency) {
-      case 'weekly':
-        return 'bg-blue-100 text-blue-800';
-      case 'monthly':
-        return 'bg-green-100 text-green-800';
-      case 'yearly':
-        return 'bg-purple-100 text-purple-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+    // Reset form
+    setType("expense");
+    setFrequency("monthly");
+    setAmount(0);
+    setDescription("");
+    setCategoryName("");
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Recurring Transactions
-          </CardTitle>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleProcessAll}
-              disabled={recurringTransactions.filter(t => t.active).length === 0}
-            >
-              <Play className="mr-2 h-4 w-4" />
-              Process Due
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowDialog(true)}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add Recurring
-            </Button>
-          </div>
+    <div className="space-y-4">
+      <h2 className="text-xl font-semibold">Recurring Transactions</h2>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="type">Type</Label>
+          <Select value={type} onValueChange={setType}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="income">Income</SelectItem>
+              <SelectItem value="expense">Expense</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-      </CardHeader>
-      <CardContent>
+
+        <div>
+          <Label htmlFor="frequency">Frequency</Label>
+          <Select value={frequency} onValueChange={setFrequency}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select frequency" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="weekly">Weekly</SelectItem>
+              <SelectItem value="monthly">Monthly</SelectItem>
+              <SelectItem value="yearly">Yearly</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="amount">Amount</Label>
+          <Input
+            type="number"
+            id="amount"
+            value={amount}
+            onChange={(e) => setAmount(Number(e.target.value))}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="description">Description</Label>
+          <Input
+            type="text"
+            id="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="category">Category</Label>
+        <Input
+          type="text"
+          id="category"
+          value={categoryName}
+          onChange={(e) => setCategoryName(e.target.value)}
+        />
+      </div>
+
+      <Button onClick={handleAdd}>Add Recurring Transaction</Button>
+
+      <div className="mt-6">
+        <h3 className="text-lg font-semibold mb-2">Current Recurring Transactions</h3>
         {recurringTransactions.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <Calendar className="mx-auto h-12 w-12 mb-4 opacity-50" />
-            <p>No recurring transactions set up</p>
-            <p className="text-sm mt-1">Add recurring income or expenses to automate your finances</p>
-          </div>
+          <p>No recurring transactions added yet.</p>
         ) : (
           <div className="space-y-3">
-            {recurringTransactions.map((transaction, index) => (
-              <motion.div
-                key={transaction.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className={`p-4 rounded-lg border ${
-                  transaction.active ? 'bg-white' : 'bg-gray-50 opacity-75'
-                }`}
-              >
-                <div className="flex items-center justify-between">
+            {recurringTransactions.map((transaction) => (
+              <div key={transaction.id}>
+                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h4 className="font-medium">{transaction.category}</h4>
-                      <Badge
-                        variant={transaction.type === 'income' ? 'default' : 'secondary'}
-                      >
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium text-gray-900">{transaction.description}</span>
+                      <Badge variant={transaction.type === 'income' ? 'default' : 'destructive'}>
                         {transaction.type}
                       </Badge>
-                      <Badge
-                        className={getFrequencyColor(transaction.frequency)}
-                        variant="outline"
-                      >
-                        {transaction.frequency}
-                      </Badge>
                     </div>
-                    
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
-                      <span className={`font-semibold ${
-                        transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
-                      </span>
-                      <span>Since: {new Date(transaction.startDate).toLocaleDateString()}</span>
-                      {transaction.endDate && (
-                        <span>Until: {new Date(transaction.endDate).toLocaleDateString()}</span>
-                      )}
-                      {transaction.lastProcessed && (
-                        <span>Last: {new Date(transaction.lastProcessed).toLocaleDateString()}</span>
-                      )}
+                    <div className="text-sm text-gray-600">
+                      <span className="mr-4">Amount: ${transaction.amount}</span>
+                      <span className="mr-4">Frequency: {transaction.frequency}</span>
+                      <span>Category: {transaction.categoryName || 'Uncategorized'}</span>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        checked={transaction.active}
-                        onCheckedChange={() => toggleRecurringTransaction(transaction.id)}
-                      />
-                      <span className="text-xs text-gray-500">
-                        {transaction.active ? 'Active' : 'Paused'}
-                      </span>
-                    </div>
-                    
+
+                  <div className="flex items-center space-x-2">
                     <Button
-                      variant="ghost"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleRecurringTransaction(transaction.id)}
+                    >
+                      {transaction.active ? "Deactivate" : "Activate"}
+                    </Button>
+                    <Button
+                      variant="destructive"
                       size="sm"
                       onClick={() => deleteRecurringTransaction(transaction.id)}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      Delete
                     </Button>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         )}
-
-        <RecurringTransactionDialog
-          onSave={(transaction) => {
-            // This will be handled by the existing RecurringTransactionDialog component
-            setShowDialog(false);
-          }}
-        />
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

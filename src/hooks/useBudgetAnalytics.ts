@@ -1,5 +1,4 @@
-
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useFinancialDataDB } from "./useFinancialDataDB";
 import { useGoalsDB } from "./useGoalsDB";
 
@@ -21,6 +20,15 @@ interface SpendingInsight {
   type: "warning" | "info" | "success";
   message: string;
   icon: string;
+}
+
+interface Goal {
+  id: string;
+  name: string;
+  target_amount: number;
+  saved_amount: number;
+  progress: number;
+  remaining: number;
 }
 
 export const useBudgetAnalytics = () => {
@@ -176,6 +184,20 @@ export const useBudgetAnalytics = () => {
       savingsChange: currentMonth.savings - previousMonth.savings
     };
   }, [monthlyTrend]);
+
+  const getGoalProgress = useCallback((goals: Goal[]) => {
+    return goals.map(goal => {
+      const progressPercentage = goal.target_amount > 0 
+        ? Math.min((goal.saved_amount / goal.target_amount) * 100, 100)
+        : 0;
+      
+      return {
+        ...goal,
+        progress: progressPercentage,
+        remaining: Math.max(goal.target_amount - goal.saved_amount, 0)
+      };
+    });
+  }, []);
 
   return {
     monthlyTrend,
