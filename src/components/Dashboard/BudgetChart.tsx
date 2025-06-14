@@ -1,7 +1,8 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell } from "recharts";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { useFinancialSummary } from "@/hooks/useFinancialSummary";
 import { useBudget } from "@/hooks/useBudget";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,6 +11,24 @@ import { AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+
+const budgetChartConfig = {
+  budget: {
+    label: "Budget",
+    color: "#3b82f6",
+  },
+  actual: {
+    label: "Actual",
+    color: "#10b981",
+  },
+};
+
+const categoryChartConfig = {
+  amount: {
+    label: "Amount",
+    color: "#8884d8",
+  },
+};
 
 const BudgetChart = () => {
   const { expenses, categoryTotalsArray } = useFinancialSummary();
@@ -74,61 +93,47 @@ const BudgetChart = () => {
               {/* Budget vs Actual Bar Chart */}
               <div className="space-y-3">
                 <h4 className="text-sm font-semibold text-gray-700">Monthly Budget vs Actual</h4>
-                <div className="h-48">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={budgetData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                      <XAxis dataKey="name" fontSize={12} />
-                      <YAxis fontSize={12} />
-                      <Tooltip 
-                        formatter={(value) => [`$${value.toLocaleString()}`, '']} 
-                        contentStyle={{ 
-                          backgroundColor: 'white', 
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '8px',
-                          fontSize: '12px'
-                        }}
-                      />
-                      <Bar dataKey="budget" fill="#3b82f6" name="Budget" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="actual" fill={overBudget ? "#ef4444" : "#10b981"} name="Actual" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+                <ChartContainer config={budgetChartConfig} className="h-48 w-full">
+                  <BarChart data={budgetData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                    <XAxis dataKey="name" fontSize={12} />
+                    <YAxis fontSize={12} />
+                    <ChartTooltip 
+                      content={<ChartTooltipContent />}
+                      formatter={(value) => [`$${value.toLocaleString()}`, '']}
+                    />
+                    <Bar dataKey="budget" fill="var(--color-budget)" name="Budget" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="actual" fill={overBudget ? "#ef4444" : "var(--color-actual)"} name="Actual" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ChartContainer>
               </div>
 
               {/* Category Breakdown Pie Chart */}
               <div className="space-y-3">
                 <h4 className="text-sm font-semibold text-gray-700">Spending by Category</h4>
                 {topCategories.length > 0 ? (
-                  <div className="h-48">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={topCategories}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={({ category, amount }) => amount > 0 ? `${category}: $${amount.toFixed(0)}` : ''}
-                          outerRadius={70}
-                          fill="#8884d8"
-                          dataKey="amount"
-                        >
-                          {topCategories.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip 
-                          formatter={(value) => [`$${value.toLocaleString()}`, 'Amount']}
-                          contentStyle={{ 
-                            backgroundColor: 'white', 
-                            border: '1px solid #e5e7eb',
-                            borderRadius: '8px',
-                            fontSize: '12px'
-                          }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <ChartContainer config={categoryChartConfig} className="h-48 w-full">
+                    <PieChart>
+                      <Pie
+                        data={topCategories}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ category, amount }) => amount > 0 ? `${category}: $${amount.toFixed(0)}` : ''}
+                        outerRadius={70}
+                        fill="#8884d8"
+                        dataKey="amount"
+                      >
+                        {topCategories.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <ChartTooltip 
+                        content={<ChartTooltipContent />}
+                        formatter={(value) => [`$${value.toLocaleString()}`, 'Amount']}
+                      />
+                    </PieChart>
+                  </ChartContainer>
                 ) : (
                   <div className="h-48 bg-gray-100 rounded-xl flex items-center justify-center">
                     <p className="text-gray-500 text-sm font-medium">No expense categories yet</p>
