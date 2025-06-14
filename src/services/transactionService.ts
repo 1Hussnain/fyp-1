@@ -1,18 +1,12 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { Database } from "@/integrations/supabase/types";
 
-export interface Transaction {
-  id: string;
-  user_id: string;
-  type: string;
-  category: string;
-  source: string | null;
-  amount: number;
-  description: string | null;
-  date: string;
-  created_at: string;
-  updated_at: string;
+export type Transaction = Database['public']['Tables']['transactions']['Row'];
+export type Category = Database['public']['Tables']['categories']['Row'];
+
+export interface TransactionWithCategory extends Transaction {
+  categories: Category | null;
 }
 
 export interface FormattedTransaction {
@@ -27,14 +21,16 @@ export const transactionService = {
   async getTransactions() {
     return await supabase
       .from('transactions')
-      .select('*')
+      .select(`
+        *,
+        categories(*)
+      `)
       .order('date', { ascending: false });
   },
 
   async createTransaction(transaction: {
     type: string;
-    category: string;
-    source: string | null;
+    category_id: string | null;
     amount: number;
     description: string | null;
     date: string;
@@ -45,20 +41,27 @@ export const transactionService = {
         user_id: (await supabase.auth.getUser()).data.user?.id,
         ...transaction
       }])
-      .select()
+      .select(`
+        *,
+        categories(*)
+      `)
       .single();
   },
 
   async updateTransaction(id: string, updates: {
-    category?: string;
+    category_id?: string;
     amount?: number;
     type?: string;
+    description?: string;
   }) {
     return await supabase
       .from('transactions')
       .update(updates)
       .eq('id', id)
-      .select()
+      .select(`
+        *,
+        categories(*)
+      `)
       .single();
   },
 
@@ -69,10 +72,10 @@ export const transactionService = {
       .eq('id', id);
   },
 
-  formatTransaction(transaction: Transaction): FormattedTransaction {
+  formatTransaction(transaction: TransactionWithCategory): FormattedTransaction {
     return {
       id: transaction.id,
-      category: transaction.category,
+      category: transaction.categories?.name || 'Uncategorized',
       amount: parseFloat(transaction.amount.toString()),
       type: transaction.type as "income" | "expense",
       date: new Date(transaction.date).toLocaleDateString()

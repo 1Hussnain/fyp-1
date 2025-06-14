@@ -1,158 +1,221 @@
 
-import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { optimizedFinancialService, TransactionWithCategory } from "@/services/optimizedFinancialService";
-import { useTransactionOperations } from "./useTransactionOperations";
-import { useTransactionFilters } from "./useTransactionFilters";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { TransactionWithCategory } from '@/services/optimizedFinancialService';
 
-// Updated FormattedTransaction to match new schema
-export interface FormattedTransaction {
-  id: string;
-  category: string;
-  amount: number;
-  type: "income" | "expense";
-  date: string;
-  description?: string;
-  category_id?: string;
+interface TransactionFilter {
+  type?: 'income' | 'expense';
+  category?: string;
+  dateRange?: {
+    start: string;
+    end: string;
+  };
 }
 
 export const useTransactions = () => {
-  const { toast } = useToast();
   const { user } = useAuth();
-  const [transactions, setTransactions] = useState<FormattedTransaction[]>([]);
+  const { toast } = useToast();
+  const [transactions, setTransactions] = useState<TransactionWithCategory[]>([]);
+  const [allTransactions, setAllTransactions] = useState<TransactionWithCategory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<TransactionFilter>({});
 
-  const { addTransaction, editTransaction, deleteTransaction } = useTransactionOperations();
-  const { filter, filteredTransactions, handleFilterChange, handleResetFilters } = useTransactionFilters(transactions);
-
-  // Load transactions from database
   useEffect(() => {
     if (user) {
-      loadTransactions();
+      fetchTransactions();
     }
   }, [user]);
 
-  const loadTransactions = async () => {
-    setLoading(true);
+  useEffect(() => {
+    applyFilter();
+  }, [allTransactions, filter]);
+
+  const fetchTransactions = async () => {
     try {
-      const { data, error } = await optimizedFinancialService.getTransactions();
-      if (error) {
-        console.error('Error loading transactions:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load transactions",
-          variant: "destructive",
-        });
-      } else {
-        const formattedTransactions = (data || []).map(formatTransaction);
-        setTransactions(formattedTransactions);
-      }
+      const { data, error } = await supabase
+        .from('transactions')
+        .select(`
+          *,
+          categories(*)
+        `)
+        .order('date', { ascending: false });
+
+      if (error) throw error;
+
+      const transactionsWithCategory = data.map(transaction => ({
+        ...transaction,
+        categories: transaction.categories
+      })) as TransactionWithCategory[];
+
+      setAllTransactions(transactionsWithCategory);
     } catch (error) {
-      console.error('Error loading transactions:', error);
+      console.error('Error fetching transactions:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch transactions",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const formatTransaction = (transaction: TransactionWithCategory): FormattedTransaction => {
-    return {
-      id: transaction.id,
-      category: transaction.category?.name || 'Uncategorized',
-      amount: Number(transaction.amount),
-      type: transaction.type as "income" | "expense",
-      date: new Date(transaction.date).toLocaleDateString(),
-      description: transaction.description || undefined,
-      category_id: transaction.category_id || undefined
-    };
+  const applyFilter = () => {
+    let filtered = [...allTransactions];
+
+    if (filter.type) {
+      filtered = filtered.filter(t => t.type === filter.type);
+    }
+
+    if (filter.category) {
+      filtered = filtered.filter(t => t.categories?.name === filter.category);
+    }
+
+    if (filter.dateRange) {
+      filtered = filtered.filter(t => {
+        const transactionDate = new Date(t.date);
+        const startDate = new Date(filter.dateRange!.start);
+        const endDate = new Date(filter.dateRange!.end);
+        return transactionDate >= startDate && transactionDate <= endDate;
+      });
+    }
+
+    setTransactions(filtered);
   };
 
-  const handleAddTransaction = async (category: string, amount: number, type: "income" | "expense") => {
-    // First find or create the category
-    const { data: categories } = await optimizedFinancialService.getCategories(type);
-    let categoryId = categories.find(c => c.name === category)?.id;
-    
-    if (!categoryId) {
-      // Create new category if it doesn't exist
-      const { data: newCategory } = await optimizedFinancialService.createCategory({
-        name: category,
-        type,
-        color: '#3B82F6',
-        icon: 'DollarSign',
-        user_id: user!.id,
-        is_system: false
-      });
-      categoryId = newCategory?.id;
-    }
+  const addTransaction = async (transactionData: {
+    type: 'income' | 'expense';
+    category_id: string | null;
+    amount: number;
+    description?: string;
+    date: string;
+  }) => {
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .insert([{
+          user_id: user?.id,
+          ...transactionData
+        }])
+        .select(`
+          *,
+          categories(*)
+        `)
+        .single();
 
-    if (!categoryId) {
+      if (error) throw error;
+
+      const newTransaction = {
+        ...data,
+        categories: data.categories
+      } as TransactionWithCategory;
+
+      setAllTransactions(prev => [newTransaction, ...prev]);
+
       toast({
-        title: "Error",
-        description: "Failed to create category",
-        variant: "destructive",
+        title: "Transaction Added",
+        description: `${transactionData.type === 'income' ? 'Income' : 'Expense'} of $${transactionData.amount} added`,
       });
-      return false;
-    }
 
-    const { data: result, error } = await optimizedFinancialService.createTransaction({
-      type,
-      category_id: categoryId,
-      amount: amount,
-      description: null,
-      date: new Date().toISOString().split('T')[0],
-      user_id: user!.id
-    });
-
-    if (result && !error) {
-      const newTransaction = formatTransaction(result);
-      setTransactions([newTransaction, ...transactions]);
-      toast({
-        title: "Success",
-        description: "Transaction added successfully",
-      });
-      return true;
-    } else {
+      return { success: true, data: newTransaction };
+    } catch (error) {
+      console.error('Error adding transaction:', error);
       toast({
         title: "Error",
         description: "Failed to add transaction",
         variant: "destructive",
       });
-      return false;
+      return { success: false, error };
     }
   };
 
-  const handleEditTransaction = async (id: string, updates: Partial<FormattedTransaction>) => {
-    const success = await editTransaction(id, updates);
-    if (success) {
-      setTransactions(prevTransactions => 
-        prevTransactions.map(t => 
-          t.id === id ? { ...t, ...updates } : t
-        )
+  const editTransaction = async (id: string, updates: Partial<TransactionWithCategory>) => {
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select(`
+          *,
+          categories(*)
+        `)
+        .single();
+
+      if (error) throw error;
+
+      const updatedTransaction = {
+        ...data,
+        categories: data.categories
+      } as TransactionWithCategory;
+
+      setAllTransactions(prev => 
+        prev.map(t => t.id === id ? updatedTransaction : t)
       );
+
+      toast({
+        title: "Transaction Updated",
+        description: "Transaction has been successfully updated",
+      });
+
+      return { success: true, data: updatedTransaction };
+    } catch (error) {
+      console.error('Error updating transaction:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update transaction",
+        variant: "destructive",
+      });
+      return { success: false, error };
     }
-    return success;
   };
 
-  const handleDeleteTransaction = async (id: string) => {
-    const success = await deleteTransaction(id);
-    if (success) {
-      setTransactions(prevTransactions => 
-        prevTransactions.filter(t => t.id !== id)
-      );
+  const removeTransaction = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setAllTransactions(prev => prev.filter(t => t.id !== id));
+
+      toast({
+        title: "Transaction Deleted",
+        description: "Transaction has been successfully deleted",
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting transaction:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete transaction",
+        variant: "destructive",
+      });
+      return { success: false, error };
     }
-    return success;
+  };
+
+  const resetFilters = () => {
+    setFilter({});
   };
 
   return {
-    transactions: filteredTransactions,
-    allTransactions: transactions,
+    transactions,
+    allTransactions,
     loading,
     filter,
-    addTransaction: handleAddTransaction,
-    editTransaction: handleEditTransaction,
-    removeTransaction: handleDeleteTransaction,
-    setFilter: handleFilterChange,
-    resetFilters: handleResetFilters,
-    loadTransactions
+    addTransaction,
+    editTransaction,
+    removeTransaction,
+    setFilter,
+    resetFilters,
+    refetch: fetchTransactions
   };
 };

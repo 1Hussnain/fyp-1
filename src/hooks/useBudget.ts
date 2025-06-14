@@ -1,135 +1,106 @@
-import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
-import { budgetService } from "@/services/budgetService";
-import { budgetSchema, validateData } from "@/utils/validation";
-import { useErrorHandler } from "./useErrorHandler";
+
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 export const useBudget = () => {
-  const { toast } = useToast();
-  const { handleError, handleSuccess } = useErrorHandler();
   const { user } = useAuth();
-  const [budgetLimit, setBudgetLimit] = useState(100000);
-  const [currentSpent, setCurrentSpent] = useState(0);
+  const { toast } = useToast();
+  const [budgetLimit, setBudgetLimit] = useState<number>(0);
+  const [currentSpent, setCurrentSpent] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
-  // Load budget from database
   useEffect(() => {
     if (user) {
-      loadBudget();
+      fetchCurrentBudget();
     }
   }, [user]);
 
-  const loadBudget = async () => {
-    setLoading(true);
+  const fetchCurrentBudget = async () => {
     try {
-      const { data, error } = await budgetService.getCurrentBudget();
-      if (error) {
-        handleError(error, "loading budget");
-      } else if (data) {
-        setBudgetLimit(parseFloat(data.monthly_limit.toString()));
-        setCurrentSpent(parseFloat(data.current_spent.toString()));
+      const currentDate = new Date();
+      const { data, error } = await supabase
+        .from('budgets')
+        .select('*')
+        .eq('month', currentDate.getMonth() + 1)
+        .eq('year', currentDate.getFullYear())
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching budget:', error);
+        return;
       }
-    } catch (err) {
-      handleError(err, "loading budget");
+
+      if (data) {
+        setBudgetLimit(Number(data.monthly_limit || 0));
+        setCurrentSpent(Number(data.current_spent || 0));
+      }
+    } catch (error) {
+      console.error('Error fetching budget:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const updateBudgetLimit = async (newLimit: number) => {
-    const currentDate = new Date();
-    
-    // Validate budget data
-    const validation = validateData(budgetSchema, {
-      monthly_limit: newLimit,
-      month: currentDate.getMonth() + 1,
-      year: currentDate.getFullYear()
-    });
-
-    if (!validation.success) {
-      if ('errors' in validation) {
-        validation.errors.forEach(error => {
-          toast({
-            title: "Validation Error",
-            description: error,
-            variant: "destructive",
-          });
-        });
-      }
-      return false;
-    }
-
     try {
-      const { error } = await budgetService.createOrUpdateBudget({
-        monthly_limit: validation.data.monthly_limit,
-        current_spent: currentSpent,
-        month: validation.data.month,
-        year: validation.data.year
+      const currentDate = new Date();
+      const { error } = await supabase
+        .from('budgets')
+        .upsert({
+          user_id: user?.id,
+          monthly_limit: newLimit,
+          current_spent: currentSpent,
+          month: currentDate.getMonth() + 1,
+          year: currentDate.getFullYear(),
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+
+      setBudgetLimit(newLimit);
+      toast({
+        title: "Budget Updated",
+        description: `Budget limit set to $${newLimit}`,
       });
-
-      if (error) {
-        handleError(error, "updating budget limit");
-        return false;
-      }
-
-      setBudgetLimit(validation.data.monthly_limit);
-      handleSuccess("Budget limit updated successfully");
-      return true;
-    } catch (err) {
-      handleError(err, "updating budget limit");
-      return false;
+    } catch (error) {
+      console.error('Error updating budget:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update budget limit",
+        variant: "destructive",
+      });
     }
   };
 
   const updateSpent = async (newSpent: number) => {
     try {
-      const { error } = await budgetService.updateBudgetSpent(newSpent);
-      if (error) {
-        console.error("Error updating budget spent:", error);
-      } else {
-        setCurrentSpent(newSpent);
-      }
-    } catch (err) {
-      console.error("Error updating budget spent:", err);
+      const currentDate = new Date();
+      const { error } = await supabase
+        .from('budgets')
+        .upsert({
+          user_id: user?.id,
+          monthly_limit: budgetLimit,
+          current_spent: newSpent,
+          month: currentDate.getMonth() + 1,
+          year: currentDate.getFullYear(),
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+
+      setCurrentSpent(newSpent);
+    } catch (error) {
+      console.error('Error updating spent amount:', error);
     }
   };
-
-  // Budget status calculations
-  const remaining = budgetLimit - currentSpent;
-  const overBudget = currentSpent > budgetLimit;
-  const closeToLimit = currentSpent > budgetLimit * 0.9 && !overBudget;
-  const percentUsed = budgetLimit > 0 ? (currentSpent / budgetLimit) * 100 : 0;
-
-  // Budget alerts
-  useEffect(() => {
-    if (loading || !user) return; // Don't show alerts while loading or not authenticated
-    
-    if (overBudget) {
-      toast({
-        title: "Budget Alert",
-        description: "⚠️ You've exceeded your monthly budget limit!",
-        variant: "destructive",
-      });
-    } else if (closeToLimit) {
-      toast({
-        title: "Budget Warning",
-        description: "Heads up! You're very close to your monthly budget limit.",
-        variant: "default",
-      });
-    }
-  }, [overBudget, closeToLimit, loading, user, toast]);
 
   return {
     budgetLimit,
     currentSpent,
-    remaining,
-    overBudget,
-    closeToLimit,
-    percentUsed,
     loading,
     updateBudgetLimit,
-    updateSpent,
-    loadBudget
+    updateSpent
   };
 };

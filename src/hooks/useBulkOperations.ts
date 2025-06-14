@@ -1,75 +1,104 @@
 
-import { useToast } from "@/hooks/use-toast";
-import { optimizedFinancialService, TransactionWithCategory } from "@/services/optimizedFinancialService";
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+
+interface BulkTransaction {
+  type: 'income' | 'expense';
+  category_id: string | null;
+  amount: number;
+  description?: string;
+  date: string;
+}
 
 export const useBulkOperations = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
 
-  const handleBulkImport = async (importedTransactions: Omit<TransactionWithCategory, 'id' | 'created_at' | 'updated_at'>[]) => {
+  const handleBulkImport = async (transactions: BulkTransaction[]) => {
     try {
-      const results = await Promise.all(
-        importedTransactions.map(transaction => 
-          optimizedFinancialService.createTransaction({
-            type: transaction.type as 'income' | 'expense',
-            category_id: transaction.category_id,
-            amount: Number(transaction.amount),
-            description: transaction.description,
-            date: transaction.date,
-            user_id: transaction.user_id
-          })
-        )
-      );
+      const transactionsWithUser = transactions.map(transaction => ({
+        ...transaction,
+        user_id: user?.id
+      }));
 
-      const successfulImports = results.filter(result => !result.error);
-      const failedImports = results.filter(result => result.error);
+      const { data, error } = await supabase
+        .from('transactions')
+        .insert(transactionsWithUser)
+        .select();
+
+      if (error) throw error;
 
       toast({
-        title: "Import Complete",
-        description: `Successfully imported ${successfulImports.length} transactions${
-          failedImports.length > 0 ? `. ${failedImports.length} failed.` : ''
-        }`,
-        variant: failedImports.length > 0 ? "destructive" : "default",
+        title: "Bulk Import Successful",
+        description: `${transactions.length} transactions imported successfully`,
       });
 
-      return successfulImports.map(result => result.data).filter(Boolean);
-    } catch (err) {
-      console.error("Error importing transactions:", err);
+      return { success: true, data };
+    } catch (error) {
+      console.error('Error importing transactions:', error);
       toast({
-        title: "Error",
+        title: "Import Failed",
         description: "Failed to import transactions",
         variant: "destructive",
       });
-      return [];
+      return { success: false, error };
     }
   };
 
-  const handleAddRecurring = async (recurringTransaction: any) => {
+  const handleAddRecurring = async (
+    transaction: BulkTransaction,
+    frequency: 'weekly' | 'monthly' | 'yearly',
+    occurrences: number
+  ) => {
     try {
-      const result = await optimizedFinancialService.createTransaction({
-        type: recurringTransaction.type,
-        category_id: recurringTransaction.category_id,
-        amount: Number(recurringTransaction.amount),
-        description: recurringTransaction.description || null,
-        date: new Date().toISOString().split('T')[0],
-        user_id: recurringTransaction.user_id
+      const transactions: any[] = [];
+      const startDate = new Date(transaction.date);
+
+      for (let i = 0; i < occurrences; i++) {
+        const date = new Date(startDate);
+        
+        switch (frequency) {
+          case 'weekly':
+            date.setDate(startDate.getDate() + (i * 7));
+            break;
+          case 'monthly':
+            date.setMonth(startDate.getMonth() + i);
+            break;
+          case 'yearly':
+            date.setFullYear(startDate.getFullYear() + i);
+            break;
+        }
+
+        transactions.push({
+          ...transaction,
+          date: date.toISOString().split('T')[0],
+          user_id: user?.id
+        });
+      }
+
+      const { data, error } = await supabase
+        .from('transactions')
+        .insert(transactions)
+        .select();
+
+      if (error) throw error;
+
+      toast({
+        title: "Recurring Transactions Added",
+        description: `${occurrences} recurring transactions created`,
       });
 
-      if (!result.error) {
-        toast({
-          title: "Recurring Transaction Added",
-          description: `Transaction has been created.`,
-        });
-        return result.data;
-      }
-    } catch (err) {
-      console.error("Error adding recurring transaction:", err);
+      return { success: true, data };
+    } catch (error) {
+      console.error('Error adding recurring transactions:', error);
       toast({
         title: "Error",
-        description: "Failed to add recurring transaction",
+        description: "Failed to add recurring transactions",
         variant: "destructive",
       });
+      return { success: false, error };
     }
-    return null;
   };
 
   return {

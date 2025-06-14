@@ -9,7 +9,7 @@ export const budgetService = {
       .select('*')
       .eq('month', currentDate.getMonth() + 1)
       .eq('year', currentDate.getFullYear())
-      .single();
+      .maybeSingle();
   },
 
   async createOrUpdateBudget(budget: {

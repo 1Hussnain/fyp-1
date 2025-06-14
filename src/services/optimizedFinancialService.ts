@@ -9,7 +9,7 @@ export type Budget = Database['public']['Tables']['budgets']['Row'];
 export type FinancialGoal = Database['public']['Tables']['financial_goals']['Row'];
 
 export interface TransactionWithCategory extends Transaction {
-  category: Category | null;
+  categories: Category | null;
 }
 
 export interface FinancialSummary {
@@ -53,7 +53,7 @@ class OptimizedFinancialService {
       .from('transactions')
       .select(`
         *,
-        category:categories(*)
+        categories(*)
       `)
       .order('date', { ascending: false })
       .order('created_at', { ascending: false })
@@ -67,7 +67,7 @@ class OptimizedFinancialService {
       .from('transactions')
       .select(`
         *,
-        category:categories(*)
+        categories(*)
       `)
       .gte('date', startDate)
       .lte('date', endDate)
@@ -82,7 +82,7 @@ class OptimizedFinancialService {
       .insert(transaction)
       .select(`
         *,
-        category:categories(*)
+        categories(*)
       `)
       .single();
 
@@ -96,7 +96,7 @@ class OptimizedFinancialService {
       .eq('id', id)
       .select(`
         *,
-        category:categories(*)
+        categories(*)
       `)
       .single();
 
@@ -163,7 +163,7 @@ class OptimizedFinancialService {
       .from('budgets')
       .select(`
         *,
-        category:categories(*)
+        categories(*)
       `)
       .eq('month', month)
       .eq('year', year);
@@ -180,7 +180,7 @@ class OptimizedFinancialService {
       })
       .select(`
         *,
-        category:categories(*)
+        categories(*)
       `)
       .single();
 
@@ -250,7 +250,7 @@ class OptimizedFinancialService {
       .select(`
         amount,
         type,
-        category:categories(name, color, icon)
+        categories(name, color, icon)
       `)
       .gte('date', startDate)
       .lte('date', endDate)
@@ -261,12 +261,12 @@ class OptimizedFinancialService {
     // Group by category
     const categoryMap = new Map();
     data?.forEach(transaction => {
-      const categoryName = transaction.category?.name || 'Uncategorized';
+      const categoryName = transaction.categories?.name || 'Uncategorized';
       const current = categoryMap.get(categoryName) || {
         category: categoryName,
         amount: 0,
-        color: transaction.category?.color || '#6B7280',
-        icon: transaction.category?.icon || 'DollarSign'
+        color: transaction.categories?.color || '#6B7280',
+        icon: transaction.categories?.icon || 'DollarSign'
       };
       current.amount += Number(transaction.amount);
       categoryMap.set(categoryName, current);
