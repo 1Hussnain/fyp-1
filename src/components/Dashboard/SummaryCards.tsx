@@ -5,6 +5,7 @@ import { Wallet, CreditCard, PiggyBank, Calendar } from "lucide-react";
 import { useFinancialSummary } from "@/hooks/useFinancialSummary";
 import { useBudget } from "@/hooks/useBudget";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -23,7 +24,7 @@ const container = {
 
 const SummaryCards = () => {
   const { income, expenses, savings } = useFinancialSummary();
-  const { budgetLimit, remaining, loading } = useBudget();
+  const { budgetLimit, remaining, loading, overBudget } = useBudget();
 
   if (loading) {
     return (
@@ -69,7 +70,7 @@ const SummaryCards = () => {
       title: "Savings", 
       amount: `$${savings.toLocaleString()}`, 
       icon: PiggyBank, 
-      color: "text-blue-500" 
+      color: savings >= 0 ? "text-blue-500" : "text-red-500" 
     },
     { 
       title: "Budget Remaining", 
@@ -80,31 +81,41 @@ const SummaryCards = () => {
   ];
 
   return (
-    <motion.div 
-      variants={container}
-      initial="hidden"
-      animate="show"
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
-    >
-      {cards.map((card, index) => (
-        <motion.div
-          key={index}
-          variants={cardVariants}
-          whileHover={{ scale: 1.03 }}
-          className="bg-white p-4 rounded-xl shadow transition hover:shadow-md"
-        >
-          <div className="flex items-center gap-4">
-            <div className={`rounded-lg p-2 ${card.color} bg-opacity-10`}>
-              <card.icon size={24} className={card.color} />
+    <div className="space-y-4">
+      {overBudget && (
+        <Alert variant="destructive">
+          <AlertDescription>
+            ⚠️ You've exceeded your monthly budget by ${Math.abs(remaining).toLocaleString()}
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      <motion.div 
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+      >
+        {cards.map((card, index) => (
+          <motion.div
+            key={index}
+            variants={cardVariants}
+            whileHover={{ scale: 1.03 }}
+            className="bg-white p-4 rounded-xl shadow transition hover:shadow-md"
+          >
+            <div className="flex items-center gap-4">
+              <div className={`rounded-lg p-2 ${card.color} bg-opacity-10`}>
+                <card.icon size={24} className={card.color} />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">{card.title}</p>
+                <p className="text-xl font-bold">{card.amount}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">{card.title}</p>
-              <p className="text-xl font-bold">{card.amount}</p>
-            </div>
-          </div>
-        </motion.div>
-      ))}
-    </motion.div>
+          </motion.div>
+        ))}
+      </motion.div>
+    </div>
   );
 };
 

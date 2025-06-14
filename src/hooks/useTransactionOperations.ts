@@ -2,26 +2,29 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { transactionService, FormattedTransaction } from "@/services/transactionService";
+import { transactionSchema, validateData } from "@/utils/validation";
+import { useErrorHandler } from "./useErrorHandler";
 
 export const useTransactionOperations = () => {
   const { toast } = useToast();
+  const { handleError, handleSuccess } = useErrorHandler();
   const [loading, setLoading] = useState(false);
 
   const addTransaction = async (category: string, amount: number, type: "income" | "expense") => {
-    if (!category.trim()) {
-      toast({
-        title: "Error",
-        description: "Category cannot be empty",
-        variant: "destructive",
-      });
-      return false;
-    }
-    
-    if (isNaN(amount) || amount <= 0) {
-      toast({
-        title: "Error",
-        description: "Amount must be a positive number",
-        variant: "destructive",
+    // Validate input data
+    const validation = validateData(transactionSchema, {
+      category: category.trim(),
+      amount,
+      type
+    });
+
+    if (!validation.success) {
+      validation.errors.forEach(error => {
+        toast({
+          title: "Validation Error",
+          description: error,
+          variant: "destructive",
+        });
       });
       return false;
     }
@@ -30,34 +33,22 @@ export const useTransactionOperations = () => {
     try {
       const { data, error } = await transactionService.createTransaction({
         type,
-        category: category.trim(),
-        source: type === "income" ? category.trim() : null,
-        amount,
+        category: validation.data.category,
+        source: type === "income" ? validation.data.category : null,
+        amount: validation.data.amount,
         description: null,
         date: new Date().toISOString()
       });
 
       if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to add transaction",
-          variant: "destructive",
-        });
+        handleError(error, "adding transaction");
         return false;
       }
 
-      toast({
-        title: "Success",
-        description: `${type === "income" ? "Income" : "Expense"} added successfully`,
-      });
+      handleSuccess(`${type === "income" ? "Income" : "Expense"} added successfully`);
       return data;
     } catch (err) {
-      console.error("Error adding transaction:", err);
-      toast({
-        title: "Error",
-        description: "Failed to add transaction",
-        variant: "destructive",
-      });
+      handleError(err, "adding transaction");
       return false;
     } finally {
       setLoading(false);
@@ -65,31 +56,34 @@ export const useTransactionOperations = () => {
   };
 
   const editTransaction = async (id: string, updates: Partial<FormattedTransaction>) => {
+    // Validate updates if they contain validatable fields
+    if (updates.category || updates.amount || updates.type) {
+      const validation = validateData(transactionSchema.partial(), updates);
+      if (!validation.success) {
+        validation.errors.forEach(error => {
+          toast({
+            title: "Validation Error",
+            description: error,
+            variant: "destructive",
+          });
+        });
+        return false;
+      }
+    }
+
     setLoading(true);
     try {
       const { error } = await transactionService.updateTransaction(id, updates);
 
       if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to update transaction",
-          variant: "destructive",
-        });
+        handleError(error, "updating transaction");
         return false;
       }
 
-      toast({
-        title: "Success",
-        description: "Transaction updated successfully",
-      });
+      handleSuccess("Transaction updated successfully");
       return true;
     } catch (err) {
-      console.error("Error updating transaction:", err);
-      toast({
-        title: "Error",
-        description: "Failed to update transaction",
-        variant: "destructive",
-      });
+      handleError(err, "updating transaction");
       return false;
     } finally {
       setLoading(false);
@@ -102,26 +96,14 @@ export const useTransactionOperations = () => {
       const { error } = await transactionService.deleteTransaction(id);
 
       if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to delete transaction",
-          variant: "destructive",
-        });
+        handleError(error, "deleting transaction");
         return false;
       }
 
-      toast({
-        title: "Success",
-        description: "Transaction deleted successfully",
-      });
+      handleSuccess("Transaction deleted successfully");
       return true;
     } catch (err) {
-      console.error("Error deleting transaction:", err);
-      toast({
-        title: "Error",
-        description: "Failed to delete transaction",
-        variant: "destructive",
-      });
+      handleError(err, "deleting transaction");
       return false;
     } finally {
       setLoading(false);

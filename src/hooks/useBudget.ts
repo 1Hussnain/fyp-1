@@ -3,9 +3,12 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { budgetService } from "@/services/budgetService";
+import { budgetSchema, validateData } from "@/utils/validation";
+import { useErrorHandler } from "./useErrorHandler";
 
 export const useBudget = () => {
   const { toast } = useToast();
+  const { handleError, handleSuccess } = useErrorHandler();
   const { user } = useAuth();
   const [budgetLimit, setBudgetLimit] = useState(100000);
   const [currentSpent, setCurrentSpent] = useState(0);
@@ -23,59 +26,57 @@ export const useBudget = () => {
     try {
       const { data, error } = await budgetService.getCurrentBudget();
       if (error) {
-        console.error('Error loading budget:', error);
+        handleError(error, "loading budget");
       } else if (data) {
         setBudgetLimit(parseFloat(data.monthly_limit.toString()));
         setCurrentSpent(parseFloat(data.current_spent.toString()));
       }
     } catch (err) {
-      console.error("Error loading budget:", err);
+      handleError(err, "loading budget");
     } finally {
       setLoading(false);
     }
   };
 
   const updateBudgetLimit = async (newLimit: number) => {
-    if (isNaN(newLimit) || newLimit < 0) {
-      toast({
-        title: "Error",
-        description: "Budget limit must be a valid positive number",
-        variant: "destructive",
+    const currentDate = new Date();
+    
+    // Validate budget data
+    const validation = validateData(budgetSchema, {
+      monthly_limit: newLimit,
+      month: currentDate.getMonth() + 1,
+      year: currentDate.getFullYear()
+    });
+
+    if (!validation.success) {
+      validation.errors.forEach(error => {
+        toast({
+          title: "Validation Error",
+          description: error,
+          variant: "destructive",
+        });
       });
       return false;
     }
 
     try {
-      const currentDate = new Date();
       const { error } = await budgetService.createOrUpdateBudget({
-        monthly_limit: newLimit,
+        monthly_limit: validation.data.monthly_limit,
         current_spent: currentSpent,
-        month: currentDate.getMonth() + 1,
-        year: currentDate.getFullYear()
+        month: validation.data.month,
+        year: validation.data.year
       });
 
       if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to update budget limit",
-          variant: "destructive",
-        });
+        handleError(error, "updating budget limit");
         return false;
       }
 
-      setBudgetLimit(newLimit);
-      toast({
-        title: "Success",
-        description: "Budget limit updated successfully",
-      });
+      setBudgetLimit(validation.data.monthly_limit);
+      handleSuccess("Budget limit updated successfully");
       return true;
     } catch (err) {
-      console.error("Error updating budget limit:", err);
-      toast({
-        title: "Error",
-        description: "Failed to update budget limit",
-        variant: "destructive",
-      });
+      handleError(err, "updating budget limit");
       return false;
     }
   };
@@ -97,10 +98,12 @@ export const useBudget = () => {
   const remaining = budgetLimit - currentSpent;
   const overBudget = currentSpent > budgetLimit;
   const closeToLimit = currentSpent > budgetLimit * 0.9 && !overBudget;
-  const percentUsed = (currentSpent / budgetLimit) * 100;
+  const percentUsed = budgetLimit > 0 ? (currentSpent / budgetLimit) * 100 : 0;
 
   // Budget alerts
   useEffect(() => {
+    if (loading || !user) return; // Don't show alerts while loading or not authenticated
+    
     if (overBudget) {
       toast({
         title: "Budget Alert",
@@ -114,7 +117,7 @@ export const useBudget = () => {
         variant: "default",
       });
     }
-  }, [overBudget, closeToLimit, toast]);
+  }, [overBudget, closeToLimit, loading, user, toast]);
 
   return {
     budgetLimit,

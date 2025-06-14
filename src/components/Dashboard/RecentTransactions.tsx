@@ -11,16 +11,8 @@ import {
 } from "@/components/ui/table";
 import { useTransactions } from "@/hooks/useTransactions";
 import { Skeleton } from "@/components/ui/skeleton";
-
-const container = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
-};
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const RecentTransactions = () => {
   const { transactions, loading } = useTransactions();

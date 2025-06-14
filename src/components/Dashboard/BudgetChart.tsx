@@ -5,12 +5,14 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { useFinancialSummary } from "@/hooks/useFinancialSummary";
 import { useBudget } from "@/hooks/useBudget";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088fe', '#00C49F'];
 
 const BudgetChart = () => {
   const { expenses, categoryTotalsArray } = useFinancialSummary();
-  const { budgetLimit, loading } = useBudget();
+  const { budgetLimit, loading, overBudget } = useBudget();
 
   if (loading) {
     return (
@@ -45,6 +47,15 @@ const BudgetChart = () => {
     >
       <h3 className="text-lg font-semibold mb-4">Budget vs. Actual Spending</h3>
       
+      {overBudget && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            You're over budget this month! Consider reviewing your spending.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       {expenses === 0 && budgetLimit === 0 ? (
         <div className="h-64 bg-gray-100 rounded-xl flex items-center justify-center flex-col">
           <p className="text-gray-500 mb-2">No budget or spending data yet</p>
@@ -62,7 +73,7 @@ const BudgetChart = () => {
                 <YAxis />
                 <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, '']} />
                 <Bar dataKey="budget" fill="#8884d8" name="Budget" />
-                <Bar dataKey="actual" fill="#82ca9d" name="Actual" />
+                <Bar dataKey="actual" fill={overBudget ? "#ff4444" : "#82ca9d"} name="Actual" />
               </BarChart>
             </ResponsiveContainer>
           </div>
