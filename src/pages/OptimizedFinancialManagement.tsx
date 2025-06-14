@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import { useOptimizedFinancial } from "@/hooks/useOptimizedFinancial";
@@ -8,7 +7,6 @@ import { Loader2, DollarSign, TrendingUp, TrendingDown, Activity } from "lucide-
 import OptimizedTransactionForm from "@/components/financial/OptimizedTransactionForm";
 import OptimizedTransactionList from "@/components/financial/OptimizedTransactionList";
 import OptimizedCategoryChart from "@/components/financial/OptimizedCategoryChart";
-
 const OptimizedFinancialManagement = () => {
   const {
     transactions,
@@ -25,25 +23,24 @@ const OptimizedFinancialManagement = () => {
     deleteTransaction,
     addCategory
   } = useOptimizedFinancial();
-
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
+    return <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
           <p className="text-gray-600 dark:text-gray-400">Loading your financial data...</p>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
+  return <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+      <motion.div initial={{
+      opacity: 0,
+      y: 20
+    }} animate={{
+      opacity: 1,
+      y: 0
+    }} transition={{
+      duration: 0.5
+    }}>
         {/* Financial Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <Card>
@@ -91,49 +88,24 @@ const OptimizedFinancialManagement = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="transactions">Transactions</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          </TabsList>
+          
 
           <TabsContent value="overview" className="space-y-6 mt-6">
             <div className="grid lg:grid-cols-2 gap-6">
-              <OptimizedTransactionForm 
-                categories={categories}
-                onAddTransaction={addTransaction}
-                onAddCategory={addCategory}
-              />
+              <OptimizedTransactionForm categories={categories} onAddTransaction={addTransaction} onAddCategory={addCategory} />
               <OptimizedCategoryChart data={categorySpending} />
             </div>
             
-            <OptimizedTransactionList
-              transactions={transactions.slice(0, 10)}
-              categories={categories}
-              onUpdateTransaction={updateTransaction}
-              onDeleteTransaction={deleteTransaction}
-              title="Recent Transactions"
-            />
+            <OptimizedTransactionList transactions={transactions.slice(0, 10)} categories={categories} onUpdateTransaction={updateTransaction} onDeleteTransaction={deleteTransaction} title="Recent Transactions" />
           </TabsContent>
 
           <TabsContent value="transactions" className="space-y-6 mt-6">
             <div className="grid lg:grid-cols-3 gap-6">
               <div className="lg:col-span-1">
-                <OptimizedTransactionForm 
-                  categories={categories}
-                  onAddTransaction={addTransaction}
-                  onAddCategory={addCategory}
-                />
+                <OptimizedTransactionForm categories={categories} onAddTransaction={addTransaction} onAddCategory={addCategory} />
               </div>
               <div className="lg:col-span-2">
-                <OptimizedTransactionList
-                  transactions={transactions}
-                  categories={categories}
-                  onUpdateTransaction={updateTransaction}
-                  onDeleteTransaction={deleteTransaction}
-                  title="All Transactions"
-                  showPagination={true}
-                />
+                <OptimizedTransactionList transactions={transactions} categories={categories} onUpdateTransaction={updateTransaction} onDeleteTransaction={deleteTransaction} title="All Transactions" showPagination={true} />
               </div>
             </div>
           </TabsContent>
@@ -158,7 +130,7 @@ const OptimizedFinancialManagement = () => {
                     <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                       <h4 className="font-medium text-green-900 dark:text-green-100">Savings Rate</h4>
                       <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-                        You're saving {income > 0 ? ((netIncome / income) * 100).toFixed(1) : 0}% of your income this month
+                        You're saving {income > 0 ? (netIncome / income * 100).toFixed(1) : 0}% of your income this month
                       </p>
                     </div>
                   </div>
@@ -168,8 +140,6 @@ const OptimizedFinancialManagement = () => {
           </TabsContent>
         </Tabs>
       </motion.div>
-    </div>
-  );
+    </div>;
 };
-
 export default OptimizedFinancialManagement;
