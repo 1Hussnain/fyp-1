@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -90,6 +91,27 @@ export const useDocuments = () => {
     }
   };
 
+  const uploadDoc = async (file: File) => {
+    try {
+      const result = await uploadDocument(file);
+      if (result.success) {
+        toast({
+          title: "Document uploaded",
+          description: "Document uploaded successfully",
+        });
+        fetchDocuments();
+      }
+      return result;
+    } catch (error: any) {
+      toast({
+        title: "Error uploading document",
+        description: error.message,
+        variant: "destructive",
+      });
+      return { success: false, error };
+    }
+  };
+
   return {
     documents,
     folders,
@@ -98,5 +120,7 @@ export const useDocuments = () => {
     fetchFolders,
     createNewFolder,
     deleteExistingDocument,
+    uploadDocument: uploadDoc,
+    deleteDocument: deleteExistingDocument,
   };
 };

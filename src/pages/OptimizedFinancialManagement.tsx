@@ -86,13 +86,12 @@ const OptimizedFinancialManagement = () => {
             {/* Remove onAddCategory as it's not in CategoryManagementDialog prop types */}
             <CategoryManagementDialog />
             
-            {/* Set correct props for summary */}
+            {/* Fix the props for FinancialInsightsCard */}
             <FinancialInsightsCard 
-              // If your FinancialInsightsCard needs different props, you may need to adjust here.
-              income={summary.totalIncome}
-              expenses={summary.totalExpenses}
-              netIncome={summary.netIncome}
-              transactionCount={summary.transactionCount}
+              totalIncome={summary.totalIncome}
+              totalExpenses={summary.totalExpenses}
+              savingsGoal={summary.netIncome}
+              currentSavings={summary.netIncome}
             />
           </div>
         </div>

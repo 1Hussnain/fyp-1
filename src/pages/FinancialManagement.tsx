@@ -1,3 +1,4 @@
+
 import React from "react";
 import { motion } from "framer-motion";
 import { useFinancialDataDB } from "@/hooks/useFinancialDataDB";
@@ -32,26 +33,6 @@ const FinancialManagement = () => {
     handleFilterChange,
     handleResetFilters
   } = useFinancialDataDB();
-
-  const handleAddIncome = async (sourceData: { source: string; amount: number }) => {
-    await handleAddTransaction({
-      type: "income",
-      category_id: null,
-      amount: sourceData.amount,
-      description: sourceData.source,
-      date: new Date().toISOString().split('T')[0]
-    });
-  };
-
-  const handleAddExpense = async (expenseData: { category: string; amount: number }) => {
-    await handleAddTransaction({
-      type: "expense", 
-      category_id: null,
-      amount: expenseData.amount,
-      description: expenseData.category,
-      date: new Date().toISOString().split('T')[0]
-    });
-  };
 
   // Simple bulk import handler that converts the data format
   const handleBulkImportWrapper = async (importedData: any[]) => {

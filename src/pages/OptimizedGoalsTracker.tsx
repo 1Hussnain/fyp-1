@@ -1,7 +1,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { useOptimizedFinancial } from "@/hooks/useOptimizedFinancial";
+import { useGoalsDB } from "@/hooks/useGoalsDB";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -13,13 +13,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 const OptimizedGoalsTracker = () => {
   const {
     goals,
-    activeGoals,
-    completedGoals,
     loading,
     addGoal,
     updateGoal,
     deleteGoal
-  } = useOptimizedFinancial();
+  } = useGoalsDB();
+
+  // Calculate active and completed goals from the goals array
+  const activeGoals = goals.filter(goal => !goal.is_completed && (Number(goal.saved_amount ?? 0) / Number(goal.target_amount ?? 1)) * 100 < 100);
+  const completedGoals = goals.filter(goal => goal.is_completed || (Number(goal.saved_amount ?? 0) / Number(goal.target_amount ?? 1)) * 100 >= 100);
 
   if (loading) {
     return (
