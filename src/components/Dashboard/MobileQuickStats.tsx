@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown, DollarSign, Target } from "lucide-react";
@@ -6,9 +5,15 @@ import { useFinancialSummary } from "@/hooks/useFinancialSummary";
 import { useBudget } from "@/hooks/useBudget";
 
 const MobileQuickStats = () => {
-  const { income, expenses, savings } = useFinancialSummary();
+  // Use correct fields from summary
+  const { totalIncome, totalExpenses, netIncome } = useFinancialSummary();
   const { budgetLimit } = useBudget();
-  
+
+  const expenses = totalExpenses;
+  const income = totalIncome;
+  // "savings" here should be netIncome if not using a dedicated "savings" field
+  const savings = netIncome;
+
   const budgetUsed = (expenses / budgetLimit) * 100;
   const savingsRate = income > 0 ? (savings / income) * 100 : 0;
 
@@ -21,7 +26,7 @@ const MobileQuickStats = () => {
       bgColor: "bg-green-50"
     },
     {
-      label: "Expenses", 
+      label: "Expenses",
       value: `$${expenses.toLocaleString()}`,
       icon: TrendingDown,
       color: "text-red-500",

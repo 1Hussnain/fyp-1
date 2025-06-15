@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import { Wallet, CreditCard, PiggyBank, Calendar } from "lucide-react";
@@ -23,8 +22,14 @@ const container = {
 };
 
 const SummaryCards = () => {
-  const { income, expenses, savings } = useFinancialSummary();
+  // Use correct summary values
+  const { totalIncome, totalExpenses, netIncome } = useFinancialSummary();
   const { budgetLimit, remaining, loading, overBudget } = useBudget();
+
+  const income = totalIncome;
+  const expenses = totalExpenses;
+  // "savings" as netIncome
+  const savings = netIncome;
 
   if (loading) {
     return (

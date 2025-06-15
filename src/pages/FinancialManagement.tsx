@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import { useFinancialDataDB } from "@/hooks/useFinancialDataDB";
@@ -36,9 +35,9 @@ const FinancialManagement = () => {
 
   // Simple bulk import handler that converts the data format
   const handleBulkImportWrapper = async (importedData: any[]) => {
-    // Convert the incoming data to the expected format with category object
+    // Convert incoming data to correct format, but patch to allow for correct typing
     const convertedTransactions = importedData.map(item => ({
-      type: item.type || 'expense' as 'income' | 'expense',
+      type: (item.type || 'expense') as 'income' | 'expense',
       category_id: item.category_id || null,
       amount: item.amount || 0,
       description: item.description || null,
@@ -46,7 +45,7 @@ const FinancialManagement = () => {
       user_id: item.user_id || '',
       categories: item.categories || { name: 'Uncategorized' }
     }));
-    
+
     await handleBulkImport(convertedTransactions);
   };
 

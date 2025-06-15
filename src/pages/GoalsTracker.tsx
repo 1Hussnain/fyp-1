@@ -15,6 +15,7 @@ const GoalsTracker = () => {
     deleteGoal
   } = useGoals();
 
+  // Patch: GoalCreationForm expects a prop 'onGoalCreate', not 'onAddGoal'
   const handleAddGoal = async (goalData: any) => {
     await addGoal(goalData);
   };
@@ -43,13 +44,12 @@ const GoalsTracker = () => {
         transition={{ duration: 0.5 }}
       >
         <h1 className="text-3xl font-bold mb-6">Financial Goals</h1>
-
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1 space-y-6">
-            <GoalCreationForm onAddGoal={handleAddGoal} />
+            {/* Pass as the correct prop */}
+            <GoalCreationForm onGoalCreate={handleAddGoal} />
             <MotivationalTips goals={goals} />
           </div>
-
           <div className="lg:col-span-2">
             <GoalsList
               goals={goals}

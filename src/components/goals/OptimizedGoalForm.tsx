@@ -14,13 +14,21 @@ interface OptimizedGoalFormProps {
 }
 
 const OptimizedGoalForm: React.FC<OptimizedGoalFormProps> = ({ onAddGoal }) => {
-  const [formData, setFormData] = useState({
+  // Use correct types for both fields
+  const [formData, setFormData] = useState<{
+    name: string;
+    description: string;
+    target_amount: string;
+    deadline: string;
+    priority: "low" | "medium" | "high";
+    goal_type: "savings" | "investment" | "debt_repayment" | "purchase" | "emergency_fund";
+  }>({
     name: '',
     description: '',
     target_amount: '',
     deadline: '',
-    priority: 'medium' as const,
-    goal_type: 'savings' as const
+    priority: 'medium',
+    goal_type: 'savings'
   });
   const [loading, setLoading] = useState(false);
 
@@ -29,7 +37,7 @@ const OptimizedGoalForm: React.FC<OptimizedGoalFormProps> = ({ onAddGoal }) => {
     if (!formData.name || !formData.target_amount) return;
 
     setLoading(true);
-    
+
     const goalData = {
       name: formData.name,
       description: formData.description || null,
@@ -41,7 +49,7 @@ const OptimizedGoalForm: React.FC<OptimizedGoalFormProps> = ({ onAddGoal }) => {
     };
 
     const result = await onAddGoal(goalData);
-    
+
     if (result.success) {
       setFormData({
         name: '',
@@ -52,7 +60,7 @@ const OptimizedGoalForm: React.FC<OptimizedGoalFormProps> = ({ onAddGoal }) => {
         goal_type: 'savings'
       });
     }
-    
+
     setLoading(false);
   };
 
@@ -116,9 +124,9 @@ const OptimizedGoalForm: React.FC<OptimizedGoalFormProps> = ({ onAddGoal }) => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="priority">Priority</Label>
-              <Select 
-                value={formData.priority} 
-                onValueChange={(value: 'low' | 'medium' | 'high') => 
+              <Select
+                value={formData.priority}
+                onValueChange={(value: "low" | "medium" | "high") =>
                   setFormData(prev => ({ ...prev, priority: value }))
                 }
               >
@@ -135,9 +143,9 @@ const OptimizedGoalForm: React.FC<OptimizedGoalFormProps> = ({ onAddGoal }) => {
 
             <div>
               <Label htmlFor="goal_type">Goal Type</Label>
-              <Select 
-                value={formData.goal_type} 
-                onValueChange={(value: string) => 
+              <Select
+                value={formData.goal_type}
+                onValueChange={(value: "savings" | "investment" | "debt_repayment" | "purchase" | "emergency_fund") =>
                   setFormData(prev => ({ ...prev, goal_type: value }))
                 }
               >

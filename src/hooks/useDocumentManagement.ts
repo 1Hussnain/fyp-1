@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { toast } from "@/components/ui/sonner";
 import { useDocuments } from "./useDocuments";
@@ -40,16 +39,15 @@ export const useDocumentManagement = (
       return;
     }
 
+    // PATCH: Add type guard and check for 'data' presence
     const result = await uploadDocument(documentForm.file);
-    
-    if (result.success && result.data) {
-      // Call the callback to add document message to chat
+
+    if (result.success && "data" in result && result.data) {
       onDocumentUpload(
         result.data,
         `Uploaded document: ${documentForm.file.name}`
       );
-      
-      // Reset form
+
       setDocumentForm({ file: null, docType: "Bank Statement", note: "" });
       setFileInputKey(prev => prev + 1);
       setShowDocumentUpload(false);

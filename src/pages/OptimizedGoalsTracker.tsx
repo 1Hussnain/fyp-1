@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import { useGoals } from "@/hooks/useGoals";
@@ -46,9 +45,9 @@ const OptimizedGoalsTracker = () => {
     return diffDays;
   };
 
-  const handleAddGoalWrapper = async (data: any) => {
-    const result = await addGoal(data);
-    return result.success;
+  // PATCH: onAddGoal must have right return type { success: boolean; error?: string }
+  const handleAddGoalWrapper = async (data: Omit<any, "user_id">) => {
+    return await addGoal(data);
   };
 
   const GoalCard = ({ goal, showActions = true }: { goal: any; showActions?: boolean }) => {
@@ -188,9 +187,9 @@ const OptimizedGoalsTracker = () => {
 
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1">
+            {/* Pass handler with correct type */}
             <OptimizedGoalForm onAddGoal={handleAddGoalWrapper} />
           </div>
-
           <div className="lg:col-span-2">
             <Tabs defaultValue="active" className="w-full">
               <TabsList className="grid w-full grid-cols-2">

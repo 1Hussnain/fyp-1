@@ -31,7 +31,21 @@ const categoryChartConfig = {
 };
 
 const BudgetChart = () => {
-  const { expenses, categoryTotalsArray } = useFinancialSummary();
+  // Patch: Use correct fields from summary
+  const { totalExpenses, transactions } = useFinancialSummary();
+
+  // Compute categoryTotalsArray manually
+  const categoryTotals: Record<string, number> = {};
+  transactions
+    .filter((t) => t.type === "expense")
+    .forEach((t) => {
+      const category = t.categories?.name || "Uncategorized";
+      categoryTotals[category] = (categoryTotals[category] || 0) + Number(t.amount);
+    });
+  const categoryTotalsArray = Object.entries(categoryTotals)
+    .map(([category, amount]) => ({ category, amount }))
+    .sort((a, b) => b.amount - a.amount);
+
   const { budgetLimit, loading, overBudget } = useBudget();
 
   if (loading) {
@@ -57,7 +71,7 @@ const BudgetChart = () => {
     {
       name: 'This Month',
       budget: budgetLimit,
-      actual: expenses,
+      actual: totalExpenses,
     }
   ];
 
@@ -82,8 +96,8 @@ const BudgetChart = () => {
               </AlertDescription>
             </Alert>
           )}
-          
-          {expenses === 0 && budgetLimit === 0 ? (
+
+          {totalExpenses === 0 && budgetLimit === 0 ? (
             <div className="h-64 bg-gray-100 rounded-xl flex items-center justify-center flex-col">
               <p className="text-gray-500 mb-2 font-medium">No budget or spending data yet</p>
               <p className="text-sm text-gray-400">Set your budget and add transactions to see charts</p>
@@ -98,7 +112,7 @@ const BudgetChart = () => {
                     <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                     <XAxis dataKey="name" fontSize={12} />
                     <YAxis fontSize={12} />
-                    <ChartTooltip 
+                    <ChartTooltip
                       content={<ChartTooltipContent />}
                       formatter={(value) => [`$${value.toLocaleString()}`, '']}
                     />
@@ -128,7 +142,7 @@ const BudgetChart = () => {
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <ChartTooltip 
+                      <ChartTooltip
                         content={<ChartTooltipContent />}
                         formatter={(value) => [`$${value.toLocaleString()}`, 'Amount']}
                       />
