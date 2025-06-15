@@ -2,70 +2,56 @@
 /**
  * Transaction Data Management Hook
  * 
- * Handles fetching and state management for transactions data
- * with error recovery and loading states.
+ * Combines transaction fetching and state management with
+ * user authentication integration and lifecycle management.
  */
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import { transactionService } from '@/services/supabase';
-import { TransactionWithCategory } from '@/types/database';
-import { useErrorRecovery } from './useErrorRecovery';
+import { useTransactionFetching } from './useTransactionFetching';
+import { useTransactionState } from './useTransactionState';
 
 export const useTransactionData = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
-  const { executeWithRetry } = useErrorRecovery();
-  
-  const [transactions, setTransactions] = useState<TransactionWithCategory[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { fetchTransactions } = useTransactionFetching();
+  const {
+    transactions,
+    loading,
+    error,
+    setTransactions,
+    updateLoading,
+    updateError,
+    resetState
+  } = useTransactionState();
 
   /**
-   * Fetch all transactions for the current user with error recovery
+   * Load transactions with proper state management
    */
-  const fetchTransactions = async () => {
+  const loadTransactions = async () => {
     if (!user) {
-      setLoading(false);
+      updateLoading(false);
       return;
     }
 
-    try {
-      setLoading(true);
-      setError(null);
+    updateLoading(true);
+    updateError(null);
 
-      console.log('[useTransactionData] Fetching transactions for user:', user.id);
-
-      const result = await executeWithRetry(
-        () => transactionService.getAll(user.id),
-        'Loading transactions'
-      );
-
-      if (result.success) {
-        setTransactions(result.data || []);
-        console.log('[useTransactionData] Successfully loaded', result.data?.length || 0, 'transactions');
-      } else {
-        setError(result.error || 'Failed to load transactions');
-        toast({
-          title: "Error",
-          description: "Failed to load transactions",
-          variant: "destructive",
-        });
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      setError(errorMessage);
-      console.error('[useTransactionData] Error fetching transactions:', err);
-    } finally {
-      setLoading(false);
+    const result = await fetchTransactions();
+    
+    if (result.success) {
+      setTransactions(result.data);
+      updateError(null);
+    } else {
+      updateError(result.error);
     }
+    
+    updateLoading(false);
   };
 
   // Initial data fetch when user changes
   useEffect(() => {
     console.log('[useTransactionData] User changed, fetching transactions');
-    fetchTransactions();
+    loadTransactions();
   }, [user]);
 
   return {
@@ -73,6 +59,6 @@ export const useTransactionData = () => {
     setTransactions,
     loading,
     error,
-    refetch: fetchTransactions
+    refetch: loadTransactions
   };
 };
