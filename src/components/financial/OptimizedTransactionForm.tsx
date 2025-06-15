@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus } from "lucide-react";
-import { Category } from "@/services/optimizedFinancialService";
+import { Category } from "@/types/database";
 
 interface OptimizedTransactionFormProps {
   categories: Category[];
@@ -125,7 +125,7 @@ const OptimizedTransactionForm: React.FC<OptimizedTransactionFormProps> = ({
                     <div className="flex items-center gap-2">
                       <div 
                         className="w-3 h-3 rounded-full" 
-                        style={{ backgroundColor: category.color }}
+                        style={{ backgroundColor: category.color || '#6B7280' }}
                       />
                       {category.name}
                     </div>

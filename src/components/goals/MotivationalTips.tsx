@@ -1,50 +1,36 @@
 
-import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { Card } from "@/components/ui/card";
-import { Goal } from "@/hooks/useGoals";
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Lightbulb } from "lucide-react";
+import { FinancialGoal } from "@/types/database";
 
 interface MotivationalTipsProps {
-  goals: Goal[];
-  getRandomMotivationalTip: () => string;
+  goals: FinancialGoal[];
 }
 
-const MotivationalTips: React.FC<MotivationalTipsProps> = ({ 
-  goals, 
-  getRandomMotivationalTip 
-}) => {
-  const [tip, setTip] = useState("");
-  
-  // Update the tip every 15 seconds
-  useEffect(() => {
-    setTip(getRandomMotivationalTip());
-    
-    const interval = setInterval(() => {
-      setTip(getRandomMotivationalTip());
-    }, 15000);
-    
-    return () => clearInterval(interval);
-  }, [getRandomMotivationalTip]);
-  
-  // Don't show tips if there are no goals
-  if (goals.length === 0) {
-    return null;
-  }
-  
+const MotivationalTips: React.FC<MotivationalTipsProps> = ({ goals }) => {
+  const tips = [
+    "Set specific, measurable goals with clear deadlines.",
+    "Break large goals into smaller, manageable milestones.",
+    "Track your progress regularly to stay motivated.",
+    "Celebrate small wins along the way to your bigger goals.",
+    "Review and adjust your goals as your situation changes."
+  ];
+
+  const randomTip = tips[Math.floor(Math.random() * tips.length)];
+
   return (
-    <motion.div
-      className="mt-12 mb-6"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.5 }}
-    >
-      <Card className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 shadow-sm border border-purple-100">
-        <div className="flex flex-col items-center text-center">
-          <h3 className="text-lg font-medium text-purple-800 mb-2">Financial Wisdom</h3>
-          <p className="text-gray-700 italic">"{tip}"</p>
-        </div>
-      </Card>
-    </motion.div>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Lightbulb className="h-5 w-5" />
+          Daily Tip
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-gray-600">{randomTip}</p>
+      </CardContent>
+    </Card>
   );
 };
 

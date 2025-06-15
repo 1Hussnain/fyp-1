@@ -1,54 +1,47 @@
 
 import { useMemo } from "react";
-import { TransactionWithCategory } from "@/services/optimizedFinancialService";
+import { useTransactions } from "./useTransactions";
+import { CategorySpending } from "@/types/database";
 
-export const useFinancialCalculations = (transactions: TransactionWithCategory[]) => {
+export const useFinancialCalculations = () => {
+  const { transactions } = useTransactions();
+
   const calculations = useMemo(() => {
     const income = transactions
       .filter(t => t.type === "income")
       .reduce((sum, t) => sum + Number(t.amount), 0);
-    
+
     const expenses = transactions
       .filter(t => t.type === "expense")
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
-    const remaining = income - expenses;
-
-    // Category breakdown for expenses
     const categoryTotals: Record<string, number> = {};
-    transactions.forEach((transaction) => {
-      if (transaction.type === "expense") {
+    const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088fe'];
+
+    transactions
+      .filter(t => t.type === "expense")
+      .forEach(transaction => {
         const categoryName = transaction.categories?.name || 'Uncategorized';
         categoryTotals[categoryName] = (categoryTotals[categoryName] || 0) + Number(transaction.amount);
-      }
-    });
+      });
 
-    const categoryTotalsArray = Object.entries(categoryTotals)
-      .map(([category, amount]) => ({ category, amount }))
+    const categorySpending: CategorySpending[] = Object.entries(categoryTotals)
+      .map(([name, amount], index) => ({
+        name,
+        amount,
+        fill: colors[index % colors.length],
+        percentage: expenses > 0 ? Math.round((amount / expenses) * 100) : 0
+      }))
       .sort((a, b) => b.amount - a.amount);
 
     return {
       income,
       expenses,
-      remaining,
-      categoryTotalsArray
+      netIncome: income - expenses,
+      categorySpending,
+      savingsRate: income > 0 ? ((income - expenses) / income) * 100 : 0
     };
   }, [transactions]);
 
-  const getBudgetStatus = (budgetLimit: number) => {
-    const overBudget = calculations.expenses > budgetLimit;
-    const closeToLimit = calculations.expenses > budgetLimit * 0.9 && !overBudget;
-    
-    return {
-      overBudget,
-      closeToLimit,
-      remaining: budgetLimit - calculations.expenses,
-      percentUsed: (calculations.expenses / budgetLimit) * 100
-    };
-  };
-
-  return {
-    ...calculations,
-    getBudgetStatus
-  };
+  return calculations;
 };

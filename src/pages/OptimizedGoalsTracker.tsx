@@ -46,10 +46,15 @@ const OptimizedGoalsTracker = () => {
     return diffDays;
   };
 
+  const handleAddGoalWrapper = async (data: any) => {
+    const result = await addGoal(data);
+    return result.success;
+  };
+
   const GoalCard = ({ goal, showActions = true }: { goal: any; showActions?: boolean }) => {
     const progress = getProgress(goal);
-    const daysLeft = getDaysUntilDeadline(goal.deadline);
-    const isOverdue = daysLeft < 0;
+    const daysLeft = goal.deadline ? getDaysUntilDeadline(goal.deadline) : null;
+    const isOverdue = daysLeft !== null && daysLeft < 0;
     const isComplete = goal.is_completed || progress >= 100;
 
     return (
@@ -96,18 +101,20 @@ const OptimizedGoalsTracker = () => {
                   ${Number(goal.saved_amount).toFixed(2)} of ${Number(goal.target_amount).toFixed(2)}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-gray-500" />
-                <span className={
-                  isOverdue ? 'text-red-600 font-medium' : 
-                  daysLeft <= 7 ? 'text-orange-600 font-medium' : 
-                  'text-gray-600'
-                }>
-                  {isOverdue ? `${Math.abs(daysLeft)} days overdue` : 
-                   daysLeft === 0 ? 'Due today' : 
-                   `${daysLeft} days left`}
-                </span>
-              </div>
+              {goal.deadline && (
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-gray-500" />
+                  <span className={
+                    isOverdue ? 'text-red-600 font-medium' : 
+                    daysLeft !== null && daysLeft <= 7 ? 'text-orange-600 font-medium' : 
+                    'text-gray-600'
+                  }>
+                    {isOverdue ? `${Math.abs(daysLeft!)} days overdue` : 
+                     daysLeft === 0 ? 'Due today' : 
+                     daysLeft !== null ? `${daysLeft} days left` : 'No deadline'}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div>
@@ -181,7 +188,7 @@ const OptimizedGoalsTracker = () => {
 
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1">
-            <OptimizedGoalForm onAddGoal={addGoal} />
+            <OptimizedGoalForm onAddGoal={handleAddGoalWrapper} />
           </div>
 
           <div className="lg:col-span-2">

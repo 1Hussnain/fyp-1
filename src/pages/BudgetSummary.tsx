@@ -1,247 +1,179 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { 
-  PieChart, Pie, Cell, 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
-} from "recharts";
-import { Card, CardContent } from "@/components/ui/card";
-import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
-import { ArrowDown, ArrowUp, Download, Info } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useBudgetAnalytics } from "@/hooks/useBudgetAnalytics";
-import { useFinancialDataDB } from "@/hooks/useFinancialDataDB";
-import { useGoalsDB } from "@/hooks/useGoalsDB";
-import SpendingInsights from "@/components/analytics/SpendingInsights";
-import GoalProgressSummary from "@/components/analytics/GoalProgressSummary";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useFinancialSummary } from "@/hooks/useFinancialSummary";
+import { useFinancialInsights } from "@/hooks/useFinancialInsights";
+import { useGoals } from "@/hooks/useGoals";
+import { TrendingUp, TrendingDown, Target, DollarSign } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const BudgetSummary = () => {
-  const { income, expenses, budgetLimit } = useFinancialDataDB();
-  const { goals } = useGoalsDB();
-  const {
-    monthlyTrend,
-    categorySpending,
-    spendingInsights,
-    comparativeMetrics,
-    totalSavings,
-    savingsRate,
-    budgetUtilization
-  } = useBudgetAnalytics();
+  const { totalIncome, totalExpenses, netIncome, loading } = useFinancialSummary();
+  const { monthlyIncome, monthlyExpenses, topSpendingCategories } = useFinancialInsights();
+  const { goals } = useGoals();
 
-  const overBudget = expenses > budgetLimit;
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto px-6 py-8">
+        <div className="text-center">Loading budget summary...</div>
+      </div>
+    );
+  }
 
-  // Generate CSV export data
-  const handleExportData = () => {
-    const csvData = [
-      ['Month', 'Income', 'Expenses', 'Savings'],
-      ...monthlyTrend.map(item => [item.month, item.income, item.expense, item.savings])
-    ];
-    
-    const csvContent = csvData.map(row => row.join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'budget-summary.csv';
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
+  const summaryCards = [
+    {
+      title: "Monthly Income",
+      value: `$${monthlyIncome.toFixed(2)}`,
+      icon: TrendingUp,
+      color: "text-green-600",
+      bgColor: "bg-green-50"
+    },
+    {
+      title: "Monthly Expenses",
+      value: `$${monthlyExpenses.toFixed(2)}`,
+      icon: TrendingDown,
+      color: "text-red-600",
+      bgColor: "bg-red-50"
+    },
+    {
+      title: "Net Savings",
+      value: `$${(monthlyIncome - monthlyExpenses).toFixed(2)}`,
+      icon: DollarSign,
+      color: monthlyIncome - monthlyExpenses >= 0 ? "text-green-600" : "text-red-600",
+      bgColor: monthlyIncome - monthlyExpenses >= 0 ? "bg-green-50" : "bg-red-50"
+    },
+    {
+      title: "Active Goals",
+      value: goals.filter(g => !g.is_completed).length.toString(),
+      icon: Target,
+      color: "text-blue-600",
+      bgColor: "bg-blue-50"
+    }
+  ];
+
+  const chartData = topSpendingCategories.map(([name, amount]) => ({
+    name,
+    value: amount
+  }));
+
+  const COLORS = ['#8884d8', '#82ca9d', '#ffc658'];
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <motion.div 
+    <div className="max-w-6xl mx-auto px-6 py-8 space-y-8">
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+        transition={{ duration: 0.5 }}
       >
-        <h1 className="text-2xl font-bold">📊 Budget Summary & Analytics</h1>
-        
-        <div className="flex items-center space-x-3">
-          <Button size="sm" variant="outline" className="flex items-center" onClick={handleExportData}>
-            <Download size={16} className="mr-1" />
-            Export
-          </Button>
+        <h1 className="text-3xl font-bold mb-6">Budget Summary</h1>
+
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {summaryCards.map((card, index) => (
+            <motion.div
+              key={card.title}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
+                  <div className={`p-2 rounded-lg ${card.bgColor}`}>
+                    <card.icon className={`h-4 w-4 ${card.color}`} />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className={`text-2xl font-bold ${card.color}`}>
+                    {card.value}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Charts */}
+        <div className="grid lg:grid-cols-2 gap-8">
+          {/* Top Spending Categories */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Top Spending Categories</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {chartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Amount']} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No spending data available
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Monthly Trends */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Monthly Overview</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Income vs Expenses</span>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Income</span>
+                    <span className="font-medium text-green-600">${monthlyIncome.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Expenses</span>
+                    <span className="font-medium text-red-600">${monthlyExpenses.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between border-t pt-2">
+                    <span className="text-sm font-medium">Net</span>
+                    <span className={`font-bold ${
+                      monthlyIncome - monthlyExpenses >= 0 ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      ${(monthlyIncome - monthlyExpenses).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+
+                {monthlyIncome > 0 && (
+                  <div className="mt-4">
+                    <div className="text-sm text-gray-600 mb-2">Savings Rate</div>
+                    <div className="text-lg font-bold text-blue-600">
+                      {((monthlyIncome - monthlyExpenses) / monthlyIncome * 100).toFixed(1)}%
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </motion.div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
-        <SummaryCard 
-          title="Total Income"
-          value={`$${income.toLocaleString()}`}
-          icon={<ArrowUp className="text-green-600" />}
-          color="bg-green-50 border-green-200"
-          textColor="text-green-700"
-        />
-        
-        <SummaryCard 
-          title="Total Expenses"
-          value={`$${expenses.toLocaleString()}`}
-          icon={<ArrowDown className="text-red-600" />}
-          color="bg-red-50 border-red-200"
-          textColor="text-red-700"
-        />
-        
-        <SummaryCard 
-          title="Net Savings"
-          value={`$${totalSavings.toLocaleString()}`}
-          subtitle={`${savingsRate.toFixed(1)}% rate`}
-          icon={<Info className="text-blue-600" />}
-          color="bg-blue-50 border-blue-200"
-          textColor="text-blue-700"
-        />
-
-        <SummaryCard 
-          title="Budget Usage"
-          value={`${budgetUtilization.toFixed(1)}%`}
-          subtitle={overBudget ? 'Over Budget' : 'Within Budget'}
-          icon={<Info className={overBudget ? "text-red-600" : "text-green-600"} />}
-          color={overBudget ? "bg-red-50 border-red-200" : "bg-green-50 border-green-200"}
-          textColor={overBudget ? "text-red-700" : "text-green-700"}
-        />
-      </div>
-
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Pie Chart: Expense Categories */}
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Spending by Category</h2>
-            {categorySpending.length > 0 ? (
-              <ChartContainer className="h-[300px]" config={{
-                expenses: { label: "Expenses" },
-              }}>
-                <PieChart>
-                  <Pie
-                    data={categorySpending}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="amount"
-                    nameKey="name"
-                    label={({ name, percentage }) => `${name}: ${percentage}%`}
-                  >
-                    {categorySpending.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<ChartTooltipContent />} />
-                </PieChart>
-              </ChartContainer>
-            ) : (
-              <div className="h-[300px] flex items-center justify-center text-gray-500">
-                <p>No expense data available</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Bar Chart: Income vs Expenses Trend */}
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Income vs Expenses Trend</h2>
-            {monthlyTrend.length > 0 ? (
-              <ChartContainer className="h-[300px]" config={{
-                income: { label: "Income", color: "#4ade80" },
-                expense: { label: "Expenses", color: "#f87171" },
-              }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={monthlyTrend}
-                    margin={{ top: 10, right: 10, left: 10, bottom: 20 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip content={<ChartTooltipContent />} />
-                    <Legend />
-                    <Bar dataKey="income" name="Income" fill="#4ade80" />
-                    <Bar dataKey="expense" name="Expenses" fill="#f87171" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            ) : (
-              <div className="h-[300px] flex items-center justify-center text-gray-500">
-                <p>No transaction history available</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Budget Progress */}
-      <Card className="mb-8">
-        <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2">
-            <h2 className="text-lg font-semibold">Budget vs Actual Spending</h2>
-            <p className="text-sm text-gray-500">Budget Limit: ${budgetLimit.toLocaleString()}</p>
-          </div>
-          
-          <div className="w-full bg-gray-100 h-6 rounded-full overflow-hidden">
-            <div 
-              className={`h-full ${overBudget ? 'bg-red-500' : 'bg-blue-500'}`} 
-              style={{ width: `${Math.min(budgetUtilization, 100)}%` }}
-            ></div>
-          </div>
-          
-          <div className="flex justify-between mt-2">
-            <p className="text-sm text-gray-500">0%</p>
-            <p className={`text-sm ${overBudget ? 'text-red-500 font-medium' : 'text-blue-500'}`}>
-              {budgetUtilization.toFixed(1)}% {overBudget ? '(Over Budget)' : 'of Budget Used'}
-            </p>
-            <p className="text-sm text-gray-500">100%</p>
-          </div>
-          
-          {overBudget && (
-            <div className="mt-2 p-2 bg-red-50 border border-red-100 rounded-md">
-              <p className="text-sm text-red-600">
-                ⚠️ You've exceeded your budget by ${(expenses - budgetLimit).toLocaleString()}
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Goals Progress Summary */}
-      <div className="mb-8">
-        <GoalProgressSummary goals={goals} />
-      </div>
-
-      {/* Spending Insights */}
-      <SpendingInsights 
-        insights={spendingInsights}
-        comparativeMetrics={comparativeMetrics}
-      />
     </div>
-  );
-};
-
-// Summary Card Component
-interface SummaryCardProps {
-  title: string;
-  value: string;
-  subtitle?: string;
-  icon: React.ReactNode;
-  color: string;
-  textColor: string;
-}
-
-const SummaryCard: React.FC<SummaryCardProps> = ({ title, value, subtitle, icon, color, textColor }) => {
-  return (
-    <Card className={`border ${color}`}>
-      <CardContent className="p-6">
-        <div className="flex justify-between items-center mb-2">
-          <h2 className="text-sm font-medium text-gray-500">{title}</h2>
-          <span className="p-2 rounded-full bg-white border">{icon}</span>
-        </div>
-        <p className={`text-2xl font-bold ${textColor}`}>{value}</p>
-        {subtitle && (
-          <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
-        )}
-      </CardContent>
-    </Card>
   );
 };
 

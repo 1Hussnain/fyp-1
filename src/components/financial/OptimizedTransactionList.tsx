@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowUp, ArrowDown, Edit2, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
-import { TransactionWithCategory, Category } from "@/services/optimizedFinancialService";
+import { TransactionWithCategory, Category } from "@/types/database";
 import { motion } from "framer-motion";
 
 interface OptimizedTransactionListProps {

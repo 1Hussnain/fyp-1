@@ -1,47 +1,41 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { useGoals } from "@/hooks/useGoals";
-import GoalCard from "@/components/goals/GoalCard";
-import { Goal } from "@/hooks/useGoals";
+import GoalCard from "./GoalCard";
+import { FinancialGoal } from "@/types/database";
 
 interface GoalsListProps {
-  goals: Goal[];
-  handleAddSavings: (goalId: string, amount?: number) => void;
-  handleDeleteGoal: (goalId: string) => void;
+  goals: FinancialGoal[];
+  onUpdateGoal: (id: string, updates: Partial<FinancialGoal>) => void;
+  onDeleteGoal: (id: string) => void;
 }
 
-const GoalsList: React.FC<GoalsListProps> = ({ goals, handleAddSavings, handleDeleteGoal }) => {
-  const { getProgress, daysLeft } = useGoals();
-  
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-  
+const GoalsList: React.FC<GoalsListProps> = ({ goals, onUpdateGoal, onDeleteGoal }) => {
+  if (goals.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-500">No goals yet. Create your first financial goal!</p>
+      </div>
+    );
+  }
+
   return (
-    <motion.div 
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-      variants={container}
-      initial="hidden"
-      animate="show"
-    >
-      {goals.map((goal) => (
-        <GoalCard
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {goals.map((goal, index) => (
+        <motion.div
           key={goal.id}
-          goal={goal}
-          progress={getProgress(goal)}
-          daysLeft={daysLeft(goal.deadline)}
-          onAddSavings={handleAddSavings}
-          onDeleteGoal={handleDeleteGoal}
-        />
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: index * 0.1 }}
+        >
+          <GoalCard
+            goal={goal}
+            onUpdateGoal={onUpdateGoal}
+            onDeleteGoal={onDeleteGoal}
+          />
+        </motion.div>
       ))}
-    </motion.div>
+    </div>
   );
 };
 

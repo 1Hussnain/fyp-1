@@ -1,16 +1,16 @@
 
 import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FinancialGoal, FinancialGoalInsert } from "@/types/database";
 import { Plus } from "lucide-react";
-import { FinancialGoal } from "@/services/optimizedFinancialService";
 
 interface OptimizedGoalFormProps {
-  onAddGoal: (data: Omit<FinancialGoal, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'is_completed'>) => Promise<boolean>;
+  onAddGoal: (data: Omit<FinancialGoalInsert, 'user_id'>) => Promise<{ success: boolean; error?: string }>;
 }
 
 const OptimizedGoalForm: React.FC<OptimizedGoalFormProps> = ({ onAddGoal }) => {
@@ -18,39 +18,41 @@ const OptimizedGoalForm: React.FC<OptimizedGoalFormProps> = ({ onAddGoal }) => {
     name: '',
     description: '',
     target_amount: '',
-    saved_amount: '0',
-    goal_type: 'other' as const,
+    deadline: '',
     priority: 'medium' as const,
-    deadline: ''
+    goal_type: 'savings' as const
   });
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.target_amount || !formData.deadline) return;
+    if (!formData.name || !formData.target_amount) return;
 
     setLoading(true);
-    const success = await onAddGoal({
+    
+    const goalData = {
       name: formData.name,
       description: formData.description || null,
       target_amount: parseFloat(formData.target_amount),
-      saved_amount: parseFloat(formData.saved_amount) || 0,
-      goal_type: formData.goal_type,
+      deadline: formData.deadline || null,
       priority: formData.priority,
-      deadline: formData.deadline
-    });
+      goal_type: formData.goal_type,
+      saved_amount: 0
+    };
 
-    if (success) {
+    const result = await onAddGoal(goalData);
+    
+    if (result.success) {
       setFormData({
         name: '',
         description: '',
         target_amount: '',
-        saved_amount: '0',
-        goal_type: 'other',
+        deadline: '',
         priority: 'medium',
-        deadline: ''
+        goal_type: 'savings'
       });
     }
+    
     setLoading(false);
   };
 
@@ -68,9 +70,9 @@ const OptimizedGoalForm: React.FC<OptimizedGoalFormProps> = ({ onAddGoal }) => {
             <Label htmlFor="name">Goal Name</Label>
             <Input
               id="name"
-              placeholder="e.g., Emergency Fund"
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="e.g., Emergency Fund"
               required
             />
           </div>
@@ -79,9 +81,9 @@ const OptimizedGoalForm: React.FC<OptimizedGoalFormProps> = ({ onAddGoal }) => {
             <Label htmlFor="description">Description (Optional)</Label>
             <Textarea
               id="description"
-              placeholder="Describe your goal..."
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="Describe your goal..."
               rows={2}
             />
           </div>
@@ -93,52 +95,32 @@ const OptimizedGoalForm: React.FC<OptimizedGoalFormProps> = ({ onAddGoal }) => {
                 id="target_amount"
                 type="number"
                 step="0.01"
-                placeholder="0.00"
                 value={formData.target_amount}
                 onChange={(e) => setFormData(prev => ({ ...prev, target_amount: e.target.value }))}
+                placeholder="0.00"
                 required
               />
             </div>
 
             <div>
-              <Label htmlFor="saved_amount">Initial Saved</Label>
+              <Label htmlFor="deadline">Deadline</Label>
               <Input
-                id="saved_amount"
-                type="number"
-                step="0.01"
-                placeholder="0.00"
-                value={formData.saved_amount}
-                onChange={(e) => setFormData(prev => ({ ...prev, saved_amount: e.target.value }))}
+                id="deadline"
+                type="date"
+                value={formData.deadline}
+                onChange={(e) => setFormData(prev => ({ ...prev, deadline: e.target.value }))}
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="goal_type">Goal Type</Label>
-              <Select 
-                value={formData.goal_type} 
-                onValueChange={(value: any) => setFormData(prev => ({ ...prev, goal_type: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="emergency">Emergency Fund</SelectItem>
-                  <SelectItem value="vacation">Vacation</SelectItem>
-                  <SelectItem value="investment">Investment</SelectItem>
-                  <SelectItem value="purchase">Purchase</SelectItem>
-                  <SelectItem value="debt">Debt Payoff</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
               <Label htmlFor="priority">Priority</Label>
               <Select 
                 value={formData.priority} 
-                onValueChange={(value: any) => setFormData(prev => ({ ...prev, priority: value }))}
+                onValueChange={(value: 'low' | 'medium' | 'high') => 
+                  setFormData(prev => ({ ...prev, priority: value }))
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -150,17 +132,27 @@ const OptimizedGoalForm: React.FC<OptimizedGoalFormProps> = ({ onAddGoal }) => {
                 </SelectContent>
               </Select>
             </div>
-          </div>
 
-          <div>
-            <Label htmlFor="deadline">Deadline</Label>
-            <Input
-              id="deadline"
-              type="date"
-              value={formData.deadline}
-              onChange={(e) => setFormData(prev => ({ ...prev, deadline: e.target.value }))}
-              required
-            />
+            <div>
+              <Label htmlFor="goal_type">Goal Type</Label>
+              <Select 
+                value={formData.goal_type} 
+                onValueChange={(value: string) => 
+                  setFormData(prev => ({ ...prev, goal_type: value }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="savings">Savings</SelectItem>
+                  <SelectItem value="investment">Investment</SelectItem>
+                  <SelectItem value="debt_repayment">Debt Repayment</SelectItem>
+                  <SelectItem value="purchase">Purchase</SelectItem>
+                  <SelectItem value="emergency_fund">Emergency Fund</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>

@@ -1,101 +1,86 @@
 
 import React from "react";
-import { motion } from "framer-motion";
-import { TrendingUp, TrendingDown, Minus, Lightbulb } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { useFinancialInsights, FinancialInsight } from "@/hooks/useFinancialInsights";
-import { FormattedTransaction } from "@/services/transactionService";
+import { Progress } from "@/components/ui/progress";
+import { TrendingUp, TrendingDown, Target, AlertTriangle } from "lucide-react";
+import { useTransactions } from "@/hooks/useTransactions";
 
 interface FinancialInsightsCardProps {
-  transactions: FormattedTransaction[];
-  budgetLimit: number;
+  totalIncome?: number;
+  totalExpenses?: number;
+  netSavings?: number;
+  savingsGoal?: number;
 }
 
 const FinancialInsightsCard: React.FC<FinancialInsightsCardProps> = ({
-  transactions,
-  budgetLimit
+  totalIncome = 0,
+  totalExpenses = 0,
+  netSavings = 0,
+  savingsGoal = 1000
 }) => {
-  const { insights } = useFinancialInsights(transactions, budgetLimit);
+  const { transactions } = useTransactions();
 
-  const getTrendIcon = (trend: FinancialInsight['trend']) => {
-    switch (trend) {
-      case 'up':
-        return TrendingUp;
-      case 'down':
-        return TrendingDown;
-      default:
-        return Minus;
-    }
-  };
+  // Calculate insights from transactions if props not provided
+  const calculatedIncome = totalIncome || transactions
+    .filter(t => t.type === "income")
+    .reduce((sum, t) => sum + Number(t.amount), 0);
 
-  const getTrendColor = (trend: FinancialInsight['trend'], type: FinancialInsight['type']) => {
-    if (type === 'savings_rate') {
-      return trend === 'up' ? 'text-green-500' : trend === 'down' ? 'text-red-500' : 'text-gray-500';
-    }
-    return trend === 'up' ? 'text-red-500' : trend === 'down' ? 'text-green-500' : 'text-gray-500';
-  };
+  const calculatedExpenses = totalExpenses || transactions
+    .filter(t => t.type === "expense")
+    .reduce((sum, t) => sum + Number(t.amount), 0);
 
-  const getBadgeVariant = (trend: FinancialInsight['trend'], type: FinancialInsight['type']) => {
-    if (type === 'savings_rate') {
-      return trend === 'up' ? 'default' : 'destructive';
+  const calculatedSavings = netSavings || (calculatedIncome - calculatedExpenses);
+  const savingsProgress = savingsGoal > 0 ? Math.min((calculatedSavings / savingsGoal) * 100, 100) : 0;
+
+  const insights = [
+    {
+      title: "Monthly Income",
+      value: `$${calculatedIncome.toFixed(2)}`,
+      icon: TrendingUp,
+      color: "text-green-600"
+    },
+    {
+      title: "Monthly Expenses",
+      value: `$${calculatedExpenses.toFixed(2)}`,
+      icon: TrendingDown,
+      color: "text-red-600"
+    },
+    {
+      title: "Net Savings",
+      value: `$${calculatedSavings.toFixed(2)}`,
+      icon: calculatedSavings >= 0 ? Target : AlertTriangle,
+      color: calculatedSavings >= 0 ? "text-green-600" : "text-red-600"
     }
-    return trend === 'up' ? 'destructive' : 'default';
-  };
+  ];
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Lightbulb className="h-5 w-5" />
-          Financial Insights
-        </CardTitle>
+        <CardTitle>Financial Insights</CardTitle>
       </CardHeader>
-      <CardContent>
-        {insights.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <p>Add more transactions to see insights</p>
+      <CardContent className="space-y-4">
+        {insights.map((insight) => (
+          <div key={insight.title} className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <insight.icon className={`h-4 w-4 ${insight.color}`} />
+              <span className="text-sm font-medium">{insight.title}</span>
+            </div>
+            <span className={`font-semibold ${insight.color}`}>
+              {insight.value}
+            </span>
           </div>
-        ) : (
-          <div className="space-y-4">
-            {insights.map((insight, index) => {
-              const TrendIcon = getTrendIcon(insight.trend);
-              return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="p-4 rounded-lg border bg-gray-50"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium text-sm">{insight.title}</h4>
-                        <Badge variant={getBadgeVariant(insight.trend, insight.type)} className="text-xs">
-                          <TrendIcon className="h-3 w-3 mr-1" />
-                          {insight.trend}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-gray-600">{insight.description}</p>
-                    </div>
-                    <div className={`text-lg font-bold ${getTrendColor(insight.trend, insight.type)}`}>
-                      {insight.type === 'savings_rate' || insight.type === 'budget_efficiency' || insight.type === 'spending_pattern'
-                        ? `${insight.value.toFixed(1)}%`
-                        : insight.value.toFixed(1)
-                      }
-                    </div>
-                  </div>
-                  {insight.recommendation && (
-                    <div className="mt-3 p-2 bg-yellow-50 rounded text-xs text-yellow-800">
-                      💡 {insight.recommendation}
-                    </div>
-                  )}
-                </motion.div>
-              );
-            })}
+        ))}
+        
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium">Savings Goal Progress</span>
+            <span className="text-sm text-gray-500">{savingsProgress.toFixed(1)}%</span>
           </div>
-        )}
+          <Progress value={savingsProgress} className="h-2" />
+          <div className="text-xs text-gray-500 text-center">
+            Goal: ${savingsGoal.toFixed(2)}
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

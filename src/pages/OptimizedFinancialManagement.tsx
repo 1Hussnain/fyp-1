@@ -9,6 +9,14 @@ import FinancialInsightsCard from "@/components/financial/FinancialInsightsCard"
 import { Loader2 } from "lucide-react";
 import { useMemo } from "react";
 
+interface CategoryData {
+  category: string;
+  amount: number;
+  color: string;
+  icon: string;
+  percentage: number;
+}
+
 const OptimizedFinancialManagement = () => {
   const {
     transactions,
@@ -22,7 +30,7 @@ const OptimizedFinancialManagement = () => {
   const { categories } = useCategories();
 
   // Calculate financial summary and category spending
-  const { summary, categorySpending } = useMemo(() => {
+  const { summary, categoryData } = useMemo(() => {
     const totalIncome = transactions
       .filter(t => t.type === "income")
       .reduce((sum, t) => sum + Number(t.amount), 0);
@@ -31,7 +39,7 @@ const OptimizedFinancialManagement = () => {
       .filter(t => t.type === "expense")
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
-    // Calculate category spending
+    // Calculate category spending with proper structure
     const categoryTotals: Record<string, number> = {};
     const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088fe', '#00C49F'];
     
@@ -42,11 +50,12 @@ const OptimizedFinancialManagement = () => {
         categoryTotals[categoryName] = (categoryTotals[categoryName] || 0) + Number(transaction.amount);
       });
 
-    const categorySpendingData = Object.entries(categoryTotals)
+    const categorySpendingData: CategoryData[] = Object.entries(categoryTotals)
       .map(([name, amount], index) => ({
-        name,
+        category: name,
         amount,
-        fill: colors[index % colors.length],
+        color: colors[index % colors.length],
+        icon: 'DollarSign', // Default icon
         percentage: totalExpenses > 0 ? Math.round((amount / totalExpenses) * 100) : 0
       }))
       .sort((a, b) => b.amount - a.amount);
@@ -58,7 +67,7 @@ const OptimizedFinancialManagement = () => {
         netIncome: totalIncome - totalExpenses,
         transactionCount: transactions.length
       },
-      categorySpending: categorySpendingData
+      categoryData: categorySpendingData
     };
   }, [transactions]);
 
@@ -112,16 +121,16 @@ const OptimizedFinancialManagement = () => {
 
         <div className="grid lg:grid-cols-2 gap-8">
           <OptimizedCategoryChart
-            data={categorySpending}
+            data={categoryData}
           />
           
           <div className="space-y-6">
             <CategoryManagementDialog />
             
             <FinancialInsightsCard 
-              income={summary.totalIncome}
-              expenses={summary.totalExpenses}
-              savings={summary.netIncome}
+              totalIncome={summary.totalIncome}
+              totalExpenses={summary.totalExpenses}
+              netSavings={summary.netIncome}
               savingsGoal={summary.netIncome}
             />
           </div>
