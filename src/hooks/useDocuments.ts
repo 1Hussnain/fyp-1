@@ -4,6 +4,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { documentService, folderService } from "@/services/supabase";
 import { Document, Folder } from "@/types/database";
 
+// Helper type guard function
+function isDocument(obj: any): obj is Document {
+  return (
+    obj &&
+    typeof obj === "object" &&
+    typeof obj.id === "string" &&
+    typeof obj.name === "string" &&
+    typeof obj.file_url === "string" &&
+    // folder_id can be string or null
+    ("folder_id" in obj ? typeof obj.folder_id === "string" || obj.folder_id === null : true) &&
+    typeof obj.user_id === "string" &&
+    ("size_bytes" in obj ? typeof obj.size_bytes === "number" || obj.size_bytes === null : true) &&
+    ("file_type" in obj ? typeof obj.file_type === "string" || obj.file_type === null : true) &&
+    ("deleted" in obj ? typeof obj.deleted === "boolean" : true) &&
+    typeof obj.uploaded_at === "string"
+  );
+}
+
 export const useDocuments = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
@@ -151,22 +169,23 @@ export const useDocuments = () => {
           table: "documents",
           filter: `user_id=eq.${user.id} AND deleted=is.false`
         }, (payload) => {
-          if (payload.eventType === "INSERT") {
+          // Type-safe, guarded update
+          if (payload.eventType === "INSERT" && isDocument(payload.new)) {
             setDocuments((curr) => [
-              payload.new as Document,
+              payload.new,
               ...curr
             ]);
-          } else if (payload.eventType === "UPDATE") {
+          } else if (payload.eventType === "UPDATE" && isDocument(payload.new)) {
             setDocuments((curr) =>
               curr.map((doc) =>
-                doc.id === (payload.new as Document).id
-                  ? (payload.new as Document)
+                doc.id === payload.new.id
+                  ? payload.new
                   : doc
               )
             );
-          } else if (payload.eventType === "DELETE") {
+          } else if (payload.eventType === "DELETE" && isDocument(payload.old)) {
             setDocuments((curr) =>
-              curr.filter((doc) => doc.id !== (payload.old as Document).id)
+              curr.filter((doc) => doc.id !== payload.old.id)
             );
           }
         })
