@@ -1,136 +1,113 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from '@/components/ui/toaster';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { ThemeProvider } from '@/contexts/ThemeContext';
-import ErrorBoundary from '@/components/ErrorBoundary';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import AppLayout from '@/components/layout/AppLayout';
-import LandingPage from '@/pages/LandingPage';
-import Index from '@/pages/Index';
-import Dashboard from '@/pages/Dashboard';
-import GoalsTracker from '@/pages/GoalsTracker';
-import BudgetSummary from '@/pages/BudgetSummary';
-import FinanceChat from '@/pages/FinanceChat';
-import DocumentViewer from '@/pages/DocumentViewer';
-import Settings from '@/pages/Settings';
-import NotFound from '@/pages/NotFound';
-import FinancialManagement from '@/pages/FinancialManagement';
-import OptimizedFinancialManagement from '@/pages/OptimizedFinancialManagement';
-import OptimizedGoalsTracker from '@/pages/OptimizedGoalsTracker';
-import UpdatePassword from '@/pages/UpdatePassword';
 
-function App() {
-  return (
-    <ErrorBoundary showDetails={import.meta.env.DEV}>
-      <BrowserRouter>
-        <ThemeProvider>
-          <AuthProvider>
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/login" element={<Index />} />
-              <Route path="/dashboard" element={
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AdminRoute from "./components/AdminRoute";
+import AdminLayout from "./components/admin/AdminLayout";
+import Index from "./pages/Index";
+import Dashboard from "./pages/Dashboard";
+import FinancialManagement from "./pages/FinancialManagement";
+import GoalsTracker from "./pages/GoalsTracker";
+import BudgetSummary from "./pages/BudgetSummary";
+import FinanceChat from "./pages/FinanceChat";
+import DocumentViewer from "./pages/DocumentViewer";
+import Settings from "./pages/Settings";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import UserManagement from "./pages/admin/UserManagement";
+
+const queryClient = new QueryClient();
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route
+              path="/dashboard"
+              element={
                 <ProtectedRoute>
-                  <AppLayout pageTitle="Dashboard">
-                    <ErrorBoundary fallback={
-                      <div className="p-8 text-center">
-                        <p>Unable to load dashboard. Please refresh the page.</p>
-                      </div>
-                    }>
-                      <Dashboard />
-                    </ErrorBoundary>
-                  </AppLayout>
+                  <Dashboard />
                 </ProtectedRoute>
-              } />
-              <Route path="/financial-management" element={
+              }
+            />
+            <Route
+              path="/transactions"
+              element={
                 <ProtectedRoute>
-                  <AppLayout pageTitle="Financial Management">
-                    <ErrorBoundary fallback={
-                      <div className="p-8 text-center">
-                        <p>Unable to load financial management. Please refresh the page.</p>
-                      </div>
-                    }>
-                      <OptimizedFinancialManagement />
-                    </ErrorBoundary>
-                  </AppLayout>
+                  <FinancialManagement />
                 </ProtectedRoute>
-              } />
-              <Route path="/budget-tracker" element={<Navigate to="/financial-management" replace />} />
-              <Route path="/income-expenses" element={<Navigate to="/financial-management" replace />} />
-              <Route path="/goals-tracker" element={
+              }
+            />
+            <Route
+              path="/goals"
+              element={
                 <ProtectedRoute>
-                  <AppLayout pageTitle="Goals Tracker">
-                    <ErrorBoundary fallback={
-                      <div className="p-8 text-center">
-                        <p>Unable to load goals tracker. Please refresh the page.</p>
-                      </div>
-                    }>
-                      <OptimizedGoalsTracker />
-                    </ErrorBoundary>
-                  </AppLayout>
+                  <GoalsTracker />
                 </ProtectedRoute>
-              } />
-              <Route path="/budget-summary" element={
+              }
+            />
+            <Route
+              path="/budget"
+              element={
                 <ProtectedRoute>
-                  <AppLayout pageTitle="Budget Summary">
-                    <ErrorBoundary fallback={
-                      <div className="p-8 text-center">
-                        <p>Unable to load budget summary. Please refresh the page.</p>
-                      </div>
-                    }>
-                      <BudgetSummary />
-                    </ErrorBoundary>
-                  </AppLayout>
+                  <BudgetSummary />
                 </ProtectedRoute>
-              } />
-              <Route path="/finance-chat" element={
+              }
+            />
+            <Route
+              path="/chat"
+              element={
                 <ProtectedRoute>
-                  <AppLayout pageTitle="Finance Chat">
-                    <ErrorBoundary fallback={
-                      <div className="p-8 text-center">
-                        <p>Unable to load finance chat. Please refresh the page.</p>
-                      </div>
-                    }>
-                      <FinanceChat />
-                    </ErrorBoundary>
-                  </AppLayout>
+                  <FinanceChat />
                 </ProtectedRoute>
-              } />
-              <Route path="/document-viewer" element={
+              }
+            />
+            <Route
+              path="/documents"
+              element={
                 <ProtectedRoute>
-                  <AppLayout pageTitle="Document Viewer">
-                    <ErrorBoundary fallback={
-                      <div className="p-8 text-center">
-                        <p>Unable to load document viewer. Please refresh the page.</p>
-                      </div>
-                    }>
-                      <DocumentViewer />
-                    </ErrorBoundary>
-                  </AppLayout>
+                  <DocumentViewer />
                 </ProtectedRoute>
-              } />
-              <Route path="/settings" element={
+              }
+            />
+            <Route
+              path="/settings"
+              element={
                 <ProtectedRoute>
-                  <AppLayout pageTitle="Settings">
-                    <ErrorBoundary fallback={
-                      <div className="p-8 text-center">
-                        <p>Unable to load settings. Please refresh the page.</p>
-                      </div>
-                    }>
-                      <Settings />
-                    </ErrorBoundary>
-                  </AppLayout>
+                  <Settings />
                 </ProtectedRoute>
-              } />
-              <Route path="/update-password" element={<UpdatePassword />} />
-              <Route path="*" element={<AppLayout><NotFound /></AppLayout>} />
-            </Routes>
-            <Toaster />
-          </AuthProvider>
-        </ThemeProvider>
-      </BrowserRouter>
-    </ErrorBoundary>
-  );
-}
+              }
+            />
+            
+            {/* Admin Routes */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminRoute>
+                    <AdminLayout />
+                  </AdminRoute>
+                </ProtectedRoute>
+              }
+            >
+              <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="users" element={<UserManagement />} />
+              <Route path="analytics" element={<div>Analytics Page (Coming Soon)</div>} />
+              <Route path="settings" element={<div>Admin Settings (Coming Soon)</div>} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
+  </QueryClientProvider>
+);
 
 export default App;
