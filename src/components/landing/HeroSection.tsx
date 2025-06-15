@@ -1,24 +1,21 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, ArrowRight } from "lucide-react";
-
 const HeroSection = () => {
-  return (
-    <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+  return <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <motion.div initial={{
-            opacity: 0,
-            x: -50
-          }} animate={{
-            opacity: 1,
-            x: 0
-          }} transition={{
-            duration: 0.8
-          }}>
+          opacity: 0,
+          x: -50
+        }} animate={{
+          opacity: 1,
+          x: 0
+        }} transition={{
+          duration: 0.8
+        }}>
             <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
               Smart Financial
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-blue-600 block">
@@ -31,7 +28,7 @@ const HeroSection = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link to="/login">
-                <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white shadow-lg">
+                <Button size="lg" className="text-white shadow-lg bg-sky-700 hover:bg-sky-600">
                   Start Your Journey
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
@@ -40,15 +37,15 @@ const HeroSection = () => {
           </motion.div>
           
           <motion.div initial={{
-            opacity: 0,
-            x: 50
-          }} animate={{
-            opacity: 1,
-            x: 0
-          }} transition={{
-            duration: 0.8,
-            delay: 0.2
-          }} className="relative">
+          opacity: 0,
+          x: 50
+        }} animate={{
+          opacity: 1,
+          x: 0
+        }} transition={{
+          duration: 0.8,
+          delay: 0.2
+        }} className="relative">
             <div className="relative z-10 bg-white/80 backdrop-blur-lg rounded-2xl p-8 border border-gray-200 shadow-xl">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -77,8 +74,6 @@ const HeroSection = () => {
           </motion.div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default HeroSection;
