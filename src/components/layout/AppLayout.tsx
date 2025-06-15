@@ -7,11 +7,13 @@ import EnhancedTopNav from "../Dashboard/EnhancedTopNav";
 interface AppLayoutProps {
   children: React.ReactNode;
   pageTitle?: string;
+  isAdmin?: boolean;
 }
 
 const AppLayout: React.FC<AppLayoutProps> = ({
   children,
-  pageTitle
+  pageTitle,
+  isAdmin = false
 }) => {
   const location = useLocation();
 
@@ -22,7 +24,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 w-full transition-colors duration-200">
-      <Sidebar />
+      <Sidebar isAdmin={isAdmin} />
       <div className="flex-1 flex flex-col min-w-0 ml-0 md:ml-64">
         <div className="sticky top-0 z-30">
           <EnhancedTopNav />

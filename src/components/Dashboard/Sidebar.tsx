@@ -2,17 +2,21 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { BarChart3, Wallet, Target, FileText, PieChart, Settings, MessageSquare, Home, Menu, X } from "lucide-react";
+import { BarChart3, Wallet, Target, FileText, PieChart, Settings, MessageSquare, Home, Menu, X, Users, Activity, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-const Sidebar = () => {
+interface SidebarProps {
+  isAdmin?: boolean;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ isAdmin = false }) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [activeItem, setActiveItem] = useState("Dashboard");
   const [isOpen, setIsOpen] = useState(false);
 
-  const navItems = [
+  const regularNavItems = [
     { name: "Home", icon: Home, path: "/" },
     { name: "Dashboard", icon: BarChart3, path: "/dashboard" },
     { name: "Financial Management", icon: Wallet, path: "/transactions" },
@@ -22,6 +26,16 @@ const Sidebar = () => {
     { name: "Finance Chat", icon: MessageSquare, path: "/chat" },
     { name: "Settings", icon: Settings, path: "/settings" }
   ];
+
+  const adminNavItems = [
+    { name: "Dashboard", icon: BarChart3, path: "/admin/dashboard" },
+    { name: "User Management", icon: Users, path: "/admin/users" },
+    { name: "Analytics", icon: Activity, path: "/admin/analytics" },
+    { name: "Admin Settings", icon: Settings, path: "/admin/settings" },
+    { name: "Back to App", icon: Home, path: "/dashboard" }
+  ];
+
+  const navItems = isAdmin ? adminNavItems : regularNavItems;
 
   const handleNavigation = (item: string, path: string) => {
     setActiveItem(item);
@@ -71,7 +85,10 @@ const Sidebar = () => {
                 className="fixed left-0 top-0 h-full w-64 bg-white dark:bg-gray-900 shadow-xl z-50 overflow-y-auto"
               >
                 <div className="p-4 border-b dark:border-gray-700">
-                  <h1 className="text-xl font-bold text-blue-600 dark:text-blue-400">FinanceAI</h1>
+                  <h1 className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                    {isAdmin ? "Admin Panel" : "FinanceAI"}
+                  </h1>
+                  {isAdmin && <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Administration</p>}
                 </div>
                 <div className="p-4">
                   <ul className="space-y-2">
@@ -107,8 +124,12 @@ const Sidebar = () => {
       className="w-64 bg-white dark:bg-gray-900 shadow-lg h-screen fixed top-0 left-0 z-20 overflow-y-auto border-r dark:border-gray-700"
     >
       <div className="p-6 border-b dark:border-gray-700">
-        <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400">FinanceAI</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Smart Financial Management</p>
+        <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+          {isAdmin ? "Admin Panel" : "FinanceAI"}
+        </h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          {isAdmin ? "System Administration" : "Smart Financial Management"}
+        </p>
       </div>
       <div className="p-4">
         <ul className="space-y-1">

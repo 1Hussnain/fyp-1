@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Search, Shield, User, Crown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -68,10 +69,7 @@ const UserManagement = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-          <p className="text-gray-600">Manage users and their roles</p>
-        </div>
+        <p className="text-gray-600 dark:text-gray-400">Manage users and their roles</p>
         <Button onClick={refresh} variant="outline">
           Refresh
         </Button>
