@@ -1,81 +1,114 @@
 
+/**
+ * Optimized Budget Hook
+ * 
+ * Provides budget management with:
+ * - Real-time updates with proper subscription handling
+ * - Error recovery and retry logic
+ * - Performance optimizations
+ * - Proper loading states
+ */
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Budget } from "@/types/database";
 import { useRealtime } from './useRealtime';
+import { useErrorRecovery } from './useErrorRecovery';
 
 export const useBudget = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { executeWithRetry } = useErrorRecovery();
+  
   const [budgetLimit, setBudgetLimit] = useState<number>(0);
   const [currentSpent, setCurrentSpent] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (user) {
-      fetchCurrentBudget();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
-
+  /**
+   * Fetch current budget with error recovery
+   */
   const fetchCurrentBudget = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     try {
-      const currentDate = new Date();
-      const { data, error } = await supabase
-        .from('budgets')
-        .select('*')
-        .eq('user_id', user?.id)
-        .eq('month', currentDate.getMonth() + 1)
-        .eq('year', currentDate.getFullYear());
+      setLoading(true);
+      setError(null);
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching budget:', error);
-        return;
-      }
+      const result = await executeWithRetry(async () => {
+        const currentDate = new Date();
+        const { data, error } = await supabase
+          .from('budgets')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('month', currentDate.getMonth() + 1)
+          .eq('year', currentDate.getFullYear());
 
-      // Always treat as array
-      const budgetsArray = Array.isArray(data) ? data : (data ? [data] : []);
-      setBudgets(budgetsArray);
-      if (budgetsArray.length > 0) {
-        setBudgetLimit(Number(budgetsArray[0].monthly_limit || 0));
-        setCurrentSpent(Number(budgetsArray[0].current_spent || 0));
-      } else {
-        setBudgetLimit(0);
-        setCurrentSpent(0);
+        if (error && error.code !== 'PGRST116') {
+          throw error;
+        }
+
+        return { success: true, data: data || [] };
+      }, 'Loading budget data');
+
+      if (result.success) {
+        const budgetsArray = Array.isArray(result.data) ? result.data : (result.data ? [result.data] : []);
+        setBudgets(budgetsArray);
+        
+        if (budgetsArray.length > 0) {
+          setBudgetLimit(Number(budgetsArray[0].monthly_limit || 0));
+          setCurrentSpent(Number(budgetsArray[0].current_spent || 0));
+        } else {
+          setBudgetLimit(0);
+          setCurrentSpent(0);
+        }
       }
-    } catch (error) {
-      console.error('Error fetching budget:', error);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load budget';
+      setError(errorMessage);
+      console.error('Error fetching budget:', err);
     } finally {
       setLoading(false);
     }
   };
 
+  /**
+   * Update budget limit with error recovery
+   */
   const updateBudgetLimit = async (newLimit: number) => {
-    try {
-      const currentDate = new Date();
-      const { error } = await supabase
-        .from('budgets')
-        .upsert({
-          user_id: user?.id,
-          monthly_limit: newLimit,
-          current_spent: currentSpent,
-          month: currentDate.getMonth() + 1,
-          year: currentDate.getFullYear(),
-          updated_at: new Date().toISOString()
-        });
+    if (!user) return;
 
-      if (error) throw error;
+    try {
+      await executeWithRetry(async () => {
+        const currentDate = new Date();
+        const { error } = await supabase
+          .from('budgets')
+          .upsert({
+            user_id: user.id,
+            monthly_limit: newLimit,
+            current_spent: currentSpent,
+            month: currentDate.getMonth() + 1,
+            year: currentDate.getFullYear(),
+            updated_at: new Date().toISOString()
+          });
+
+        if (error) throw error;
+        return { success: true };
+      }, 'Updating budget limit');
 
       setBudgetLimit(newLimit);
       toast({
         title: "Budget Updated",
         description: `Budget limit set to $${newLimit}`,
       });
-    } catch (error) {
-      console.error('Error updating budget:', error);
+    } catch (err) {
+      console.error('Error updating budget:', err);
       toast({
         title: "Error",
         description: "Failed to update budget limit",
@@ -84,49 +117,68 @@ export const useBudget = () => {
     }
   };
 
+  /**
+   * Update spent amount with error recovery
+   */
   const updateSpent = async (newSpent: number) => {
-    try {
-      const currentDate = new Date();
-      const { error } = await supabase
-        .from('budgets')
-        .upsert({
-          user_id: user?.id,
-          monthly_limit: budgetLimit,
-          current_spent: newSpent,
-          month: currentDate.getMonth() + 1,
-          year: currentDate.getFullYear(),
-          updated_at: new Date().toISOString()
-        });
+    if (!user) return;
 
-      if (error) throw error;
+    try {
+      await executeWithRetry(async () => {
+        const currentDate = new Date();
+        const { error } = await supabase
+          .from('budgets')
+          .upsert({
+            user_id: user.id,
+            monthly_limit: budgetLimit,
+            current_spent: newSpent,
+            month: currentDate.getMonth() + 1,
+            year: currentDate.getFullYear(),
+            updated_at: new Date().toISOString()
+          });
+
+        if (error) throw error;
+        return { success: true };
+      }, 'Updating spent amount');
 
       setCurrentSpent(newSpent);
-    } catch (error) {
-      console.error('Error updating spent amount:', error);
+    } catch (err) {
+      console.error('Error updating spent amount:', err);
     }
   };
 
-  // Add realtime updates for budgets
+  // Initial data fetch
+  useEffect(() => {
+    fetchCurrentBudget();
+  }, [user]);
+
+  // Setup real-time updates for budgets
   useRealtime<Budget>("budgets", user?.id || null, (allBudgets: Budget[]) => {
-    // Only update state if this month/year, as budgetLimit and currentSpent show this month's values
+    // Filter for current month/year
     const currentDate = new Date();
     const filtered = allBudgets.filter(
       (b) =>
         b.month === currentDate.getMonth() + 1 &&
         b.year === currentDate.getFullYear()
     );
+    
     setBudgets(filtered);
-    if (filtered.length) {
+    
+    if (filtered.length > 0) {
       setBudgetLimit(Number(filtered[0].monthly_limit || 0));
       setCurrentSpent(Number(filtered[0].current_spent || 0));
     } else {
       setBudgetLimit(0);
       setCurrentSpent(0);
     }
+  }, {
+    enableDebounce: true,
+    debounceMs: 300,
+    enableRetry: true
   });
 
   const remaining = budgetLimit - currentSpent;
-  const overBudget = currentSpent > budgetLimit;
+  const overBudget = currentSpent > budgetLimit && budgetLimit > 0;
 
   return {
     budgetLimit,
@@ -134,7 +186,9 @@ export const useBudget = () => {
     remaining,
     overBudget,
     loading,
+    error,
     updateBudgetLimit,
-    updateSpent
+    updateSpent,
+    refetch: fetchCurrentBudget
   };
 };
