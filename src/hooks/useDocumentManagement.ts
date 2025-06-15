@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { toast } from "@/components/ui/sonner";
 import { useDocuments } from "./useDocuments";
-import { Document } from "@/services/database";
+import { Document } from "@/types/database";
 
 interface DocumentForm {
   file: File | null;
@@ -23,17 +23,6 @@ export const useDocumentManagement = (
     docType: "Bank Statement",
     note: "",
   });
-
-  // Determine file type icon
-  const getFileTypeInfo = (fileName: string) => {
-    const ext = fileName.split('.').pop()?.toLowerCase();
-    if (ext === 'pdf') {
-      return { type: "pdf" };
-    } else if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext || '')) {
-      return { type: "image" };
-    }
-    return { type: "other" };
-  };
 
   // Handle document input changes
   const handleDocumentChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -70,16 +59,13 @@ export const useDocumentManagement = (
   // Delete document
   const handleDeleteDocument = async (id: string) => {
     if (confirm("Are you sure you want to delete this document?")) {
-      const result = await deleteDocument(id);
+      await deleteDocument(id);
       
-      if (result.success) {
-        // If deleted document was selected in preview, close preview
-        if (selectedDoc?.id === id) {
-          setSelectedDoc(null);
-        }
-        return true;
+      // If deleted document was selected in preview, close preview
+      if (selectedDoc?.id === id) {
+        setSelectedDoc(null);
       }
-      return false;
+      return true;
     }
     return false;
   };

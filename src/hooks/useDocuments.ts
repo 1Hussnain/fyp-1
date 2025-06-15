@@ -2,17 +2,12 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  getDocuments,
-  getFolders,
-  createFolder,
-  deleteDocument,
-  uploadDocument,
-} from "@/services/database";
+import { documentService, folderService } from "@/services/supabase";
+import { Document, Folder } from "@/types/database";
 
 export const useDocuments = () => {
-  const [documents, setDocuments] = useState<any[]>([]);
-  const [folders, setFolders] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [folders, setFolders] = useState<Folder[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -24,9 +19,15 @@ export const useDocuments = () => {
   const fetchDocuments = async () => {
     setLoading(true);
     try {
-      const { data, error } = await getDocuments();
-      if (error) throw error;
-      setDocuments(data || []);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const result = await documentService.getAll(user.id);
+      if (result.success) {
+        setDocuments(result.data || []);
+      } else {
+        throw new Error(result.error);
+      }
     } catch (error: any) {
       toast({
         title: "Error fetching documents",
@@ -39,19 +40,22 @@ export const useDocuments = () => {
   };
 
   const fetchFolders = async () => {
-    setLoading(true);
     try {
-      const { data, error } = await getFolders();
-      if (error) throw error;
-      setFolders(data || []);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const result = await folderService.getAll(user.id);
+      if (result.success) {
+        setFolders(result.data || []);
+      } else {
+        throw new Error(result.error);
+      }
     } catch (error: any) {
       toast({
         title: "Error fetching folders",
         description: error.message,
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -59,12 +63,17 @@ export const useDocuments = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
-      await createFolder({ name: folderName, user_id: user.id });
-      toast({
-        title: "Folder created",
-        description: "Folder created successfully",
-      });
-      fetchFolders();
+      
+      const result = await folderService.create({ name: folderName, user_id: user.id });
+      if (result.success) {
+        toast({
+          title: "Folder created",
+          description: "Folder created successfully",
+        });
+        fetchFolders();
+      } else {
+        throw new Error(result.error);
+      }
     } catch (error: any) {
       toast({
         title: "Error creating folder",
@@ -76,12 +85,16 @@ export const useDocuments = () => {
 
   const deleteExistingDocument = async (documentId: string) => {
     try {
-      await deleteDocument(documentId);
-      toast({
-        title: "Document deleted",
-        description: "Document deleted successfully",
-      });
-      fetchDocuments();
+      const result = await documentService.delete(documentId);
+      if (result.success) {
+        toast({
+          title: "Document deleted",
+          description: "Document deleted successfully",
+        });
+        fetchDocuments();
+      } else {
+        throw new Error(result.error);
+      }
     } catch (error: any) {
       toast({
         title: "Error deleting document",
@@ -93,13 +106,18 @@ export const useDocuments = () => {
 
   const uploadDoc = async (file: File) => {
     try {
-      const result = await uploadDocument(file);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const result = await documentService.upload(file, user.id);
       if (result.success) {
         toast({
           title: "Document uploaded",
           description: "Document uploaded successfully",
         });
         fetchDocuments();
+      } else {
+        throw new Error(result.error);
       }
       return result;
     } catch (error: any) {
@@ -108,7 +126,7 @@ export const useDocuments = () => {
         description: error.message,
         variant: "destructive",
       });
-      return { success: false, error };
+      return { success: false, error: error.message };
     }
   };
 

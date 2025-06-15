@@ -1,28 +1,68 @@
 
 import React from "react";
-import { useOptimizedFinancial } from "@/hooks/useOptimizedFinancial";
-import { useBudgetAnalytics } from "@/hooks/useBudgetAnalytics";
+import { useTransactions } from "@/hooks/useTransactions";
+import { useCategories } from "@/hooks/useCategories";
 import OptimizedTransactionTable, { TransactionWithCategory as TableTransactionWithCategory } from "@/components/financial/OptimizedTransactionTable";
 import OptimizedCategoryChart from "@/components/financial/OptimizedCategoryChart";
 import CategoryManagementDialog from "@/components/financial/CategoryManagementDialog";
 import FinancialInsightsCard from "@/components/financial/FinancialInsightsCard";
 import { Loader2 } from "lucide-react";
+import { useMemo } from "react";
 
 const OptimizedFinancialManagement = () => {
   const {
     transactions,
-    categories,
-    loading,
-    summary,
-    categorySpending,
+    loading: transactionsLoading,
     addTransaction,
     updateTransaction,
     deleteTransaction,
     refetch
-  } = useOptimizedFinancial();
+  } = useTransactions();
 
-  // Remove destructure of goals/addGoal/updateGoal/deleteGoal from useBudgetAnalytics as these do not exist.
-  useBudgetAnalytics();
+  const { categories } = useCategories();
+
+  // Calculate financial summary and category spending
+  const { summary, categorySpending } = useMemo(() => {
+    const totalIncome = transactions
+      .filter(t => t.type === "income")
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+    
+    const totalExpenses = transactions
+      .filter(t => t.type === "expense")
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+
+    // Calculate category spending
+    const categoryTotals: Record<string, number> = {};
+    const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088fe', '#00C49F'];
+    
+    transactions
+      .filter(t => t.type === "expense")
+      .forEach(transaction => {
+        const categoryName = transaction.categories?.name || 'Uncategorized';
+        categoryTotals[categoryName] = (categoryTotals[categoryName] || 0) + Number(transaction.amount);
+      });
+
+    const categorySpendingData = Object.entries(categoryTotals)
+      .map(([name, amount], index) => ({
+        name,
+        amount,
+        fill: colors[index % colors.length],
+        percentage: totalExpenses > 0 ? Math.round((amount / totalExpenses) * 100) : 0
+      }))
+      .sort((a, b) => b.amount - a.amount);
+
+    return {
+      summary: {
+        totalIncome,
+        totalExpenses,
+        netIncome: totalIncome - totalExpenses,
+        transactionCount: transactions.length
+      },
+      categorySpending: categorySpendingData
+    };
+  }, [transactions]);
+
+  const loading = transactionsLoading;
 
   // Convert transaction types for table to match expected union type
   const normalizedTransactions: TableTransactionWithCategory[] = transactions.map(t => ({
@@ -43,12 +83,6 @@ const OptimizedFinancialManagement = () => {
   const handleDeleteTransaction = async (id: string) => {
     const result = await deleteTransaction(id);
     return result.success;
-  };
-
-  const handleAddCategory = async (data: any) => {
-    // For now, return true - this would need to be implemented
-    console.log('Add category:', data);
-    return true;
   };
 
   if (loading) {
@@ -77,21 +111,18 @@ const OptimizedFinancialManagement = () => {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
-          {/* Remove onAddCategory as it's not in OptimizedCategoryChart prop types */}
           <OptimizedCategoryChart
             data={categorySpending}
           />
           
           <div className="space-y-6">
-            {/* Remove onAddCategory as it's not in CategoryManagementDialog prop types */}
             <CategoryManagementDialog />
             
-            {/* Fix the props for FinancialInsightsCard */}
             <FinancialInsightsCard 
-              totalIncome={summary.totalIncome}
-              totalExpenses={summary.totalExpenses}
+              income={summary.totalIncome}
+              expenses={summary.totalExpenses}
+              savings={summary.netIncome}
               savingsGoal={summary.netIncome}
-              currentSavings={summary.netIncome}
             />
           </div>
         </div>

@@ -1,7 +1,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { useGoalsDB } from "@/hooks/useGoalsDB";
+import { useGoals } from "@/hooks/useGoals";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +17,7 @@ const OptimizedGoalsTracker = () => {
     addGoal,
     updateGoal,
     deleteGoal
-  } = useGoalsDB();
+  } = useGoals();
 
   // Calculate active and completed goals from the goals array
   const activeGoals = goals.filter(goal => !goal.is_completed && (Number(goal.saved_amount ?? 0) / Number(goal.target_amount ?? 1)) * 100 < 100);
