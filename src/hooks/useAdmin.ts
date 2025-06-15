@@ -11,7 +11,6 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { adminUserService, adminAnalyticsService } from '@/services/supabase/admin';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useAdmin = () => {
@@ -50,8 +49,10 @@ export const useAdmin = () => {
 
   return {
     isAdmin,
-    loading,
-    ...adminUserService,
-    ...adminAnalyticsService
+    loading
   };
 };
+
+// Re-export the specialized hooks for backward compatibility
+export { useAdminUsers } from './useAdminUsers';
+export { useAdminAnalytics } from './useAdminAnalytics';

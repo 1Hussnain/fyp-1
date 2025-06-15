@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Users, TrendingUp, Target, Activity } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAdminAnalytics } from '@/hooks/useAdmin';
+import { useAdminAnalytics } from '@/hooks/useAdminAnalytics';
 
 const AdminDashboard = () => {
   const { systemAnalytics, loading, error } = useAdminAnalytics();

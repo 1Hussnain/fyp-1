@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Search, Shield, User, Crown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useAdminUsers } from '@/hooks/useAdmin';
+import { useAdminUsers } from '@/hooks/useAdminUsers';
 import { AppRole, UserWithRoles } from '@/types/database';
 
 const UserManagement = () => {
