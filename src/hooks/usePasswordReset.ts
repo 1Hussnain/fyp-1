@@ -9,11 +9,12 @@ export const usePasswordReset = () => {
   const [email, setEmail] = useState('');
   const { toast } = useToast();
 
+  // Remove sendOTP custom logic, use built-in reset
   const sendOTP = async (userEmail: string) => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('send-password-reset-otp', {
-        body: { email: userEmail }
+      const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
+        redirectTo: `${window.location.origin}/update-password`, // Or your custom reset page
       });
 
       if (error) throw error;
@@ -21,16 +22,16 @@ export const usePasswordReset = () => {
       setEmail(userEmail);
       setOtpSent(true);
       toast({
-        title: "OTP Sent",
-        description: "Please check your email for the 4-digit verification code.",
+        title: "Reset Link Sent",
+        description: "Please check your email for the password reset link.",
       });
 
       return { success: true };
     } catch (error: any) {
-      console.error('Error sending OTP:', error);
+      console.error('Error sending reset email:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to send OTP",
+        description: error.message || "Failed to send reset email",
         variant: "destructive",
       });
       return { success: false, error: error.message };
@@ -39,40 +40,14 @@ export const usePasswordReset = () => {
     }
   };
 
-  const verifyOTPAndResetPassword = async (otpCode: string, newPassword: string) => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('verify-otp-and-reset-password', {
-        body: { 
-          email,
-          otpCode,
-          newPassword 
-        }
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Password updated successfully. You can now sign in with your new password.",
-      });
-
-      // Reset state
-      setOtpSent(false);
-      setEmail('');
-
-      return { success: true };
-    } catch (error: any) {
-      console.error('Error verifying OTP:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to verify OTP and reset password",
-        variant: "destructive",
-      });
-      return { success: false, error: error.message };
-    } finally {
-      setLoading(false);
-    }
+  // Remove custom OTP verification/reset logic; not needed for Supabase native reset
+  const verifyOTPAndResetPassword = async (_otpCode: string, _newPassword: string) => {
+    toast({
+      title: "Not supported",
+      description: "Please use the reset link sent to your email to change your password.",
+      variant: "destructive",
+    });
+    return { success: false, error: "Native reset does not require code verification." };
   };
 
   const resetState = () => {
