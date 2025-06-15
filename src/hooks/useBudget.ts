@@ -12,7 +12,7 @@ export const useBudget = () => {
   const [budgetLimit, setBudgetLimit] = useState<number>(0);
   const [currentSpent, setCurrentSpent] = useState<number>(0);
   const [loading, setLoading] = useState(true);
-  const [budgets, setBudgets] = useState<Budget[]>([]); // hold all relevant budgets
+  const [budgets, setBudgets] = useState<Budget[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -36,12 +36,15 @@ export const useBudget = () => {
         return;
       }
 
-      // data could be array or null
-      const main = Array.isArray(data) && data.length ? data[0] : data;
-      if (main) {
-        setBudgetLimit(Number(main.monthly_limit || 0));
-        setCurrentSpent(Number(main.current_spent || 0));
-        setBudgets(Array.isArray(data) ? data : data ? [data] : []);
+      // Always treat as array
+      const budgetsArray = Array.isArray(data) ? data : (data ? [data] : []);
+      setBudgets(budgetsArray);
+      if (budgetsArray.length > 0) {
+        setBudgetLimit(Number(budgetsArray[0].monthly_limit || 0));
+        setCurrentSpent(Number(budgetsArray[0].current_spent || 0));
+      } else {
+        setBudgetLimit(0);
+        setCurrentSpent(0);
       }
     } catch (error) {
       console.error('Error fetching budget:', error);
@@ -104,7 +107,7 @@ export const useBudget = () => {
   };
 
   // Add realtime updates for budgets
-  useRealtime<Budget>("budgets", user?.id || null, (allBudgets) => {
+  useRealtime<Budget>("budgets", user?.id || null, (allBudgets: Budget[]) => {
     // Only update state if this month/year, as budgetLimit and currentSpent show this month's values
     const currentDate = new Date();
     const filtered = allBudgets.filter(
@@ -112,10 +115,13 @@ export const useBudget = () => {
         b.month === currentDate.getMonth() + 1 &&
         b.year === currentDate.getFullYear()
     );
+    setBudgets(filtered);
     if (filtered.length) {
       setBudgetLimit(Number(filtered[0].monthly_limit || 0));
       setCurrentSpent(Number(filtered[0].current_spent || 0));
-      setBudgets(filtered);
+    } else {
+      setBudgetLimit(0);
+      setCurrentSpent(0);
     }
   });
 

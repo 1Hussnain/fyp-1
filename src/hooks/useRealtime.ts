@@ -25,14 +25,14 @@ export function useRealtime<T extends { id: string }>(
     const channel = supabase
       .channel(`${table}-changes`)
       .on(
-        "postgres_changes",
+        "postgres_changes" as any, // Type system workaround for SDK signature
         {
           event: "*",
           schema: "public",
           table,
           filter: `user_id=eq.${userId}`,
         },
-        (payload: Payload<T>) => {
+        (payload: any) => {
           if (payload.eventType === "INSERT") {
             setState((prev) => [payload.new, ...prev.filter((item) => item.id !== payload.new.id)]);
           } else if (payload.eventType === "UPDATE") {
