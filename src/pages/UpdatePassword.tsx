@@ -1,5 +1,6 @@
+
 import React, { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,21 +9,45 @@ import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
 
 const UpdatePassword = () => {
   const [loading, setLoading] = useState(false);
-  const [stage, setStage] = useState<"form" | "success" | "error">("form");
+  const [stage, setStage] = useState<"verifying" | "form" | "success" | "error">("verifying");
   const [errorMsg, setErrorMsg] = useState("");
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
 
-  // Check that hash exists in the URL (provided by Supabase)
   useEffect(() => {
-    const hash = window.location.hash;
-    if (!hash.includes("type=recovery")) {
+    // If the URL doesn't have a recovery token, fail immediately.
+    if (!window.location.hash.includes("type=recovery")) {
       setStage("error");
-      setErrorMsg("Invalid or missing reset token. Please request a new link from the login page.");
+      setErrorMsg("Invalid or missing password reset link. Please use the link from your email.");
+      return;
     }
-  }, []);
+
+    // This timer handles cases where the link is invalid and Supabase never sends a SIGNED_IN event.
+    const timer = setTimeout(() => {
+      setStage((currentStage) => {
+        if (currentStage === "verifying") {
+          setErrorMsg("The password reset link has expired or is invalid. Please request a new one.");
+          return "error";
+        }
+        return currentStage;
+      });
+    }, 5000); // 5-second timeout
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // This is the success case. The token was valid and a session is now active.
+      if (event === "SIGNED_IN" && session) {
+        clearTimeout(timer); // We don't need the fallback timer anymore.
+        setStage("form");
+        subscription.unsubscribe(); // Unsubscribe to avoid memory leaks.
+      }
+    });
+
+    return () => {
+      subscription?.unsubscribe();
+      clearTimeout(timer);
+    };
+  }, []); // Run only once on mount
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +69,7 @@ const UpdatePassword = () => {
       } else {
         setStage("success");
         toast.success("Password updated! You can now log in.");
+        await supabase.auth.signOut(); // Sign out to force a fresh login
         setTimeout(() => {
           navigate("/login", { replace: true });
         }, 2500);
@@ -55,6 +81,16 @@ const UpdatePassword = () => {
       setLoading(false);
     }
   };
+
+  if (stage === "verifying") {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[40vh]">
+        <Loader2 size={48} className="text-blue-500 animate-spin mb-4" />
+        <h2 className="text-2xl font-semibold mb-2">Verifying Reset Link...</h2>
+        <p className="text-gray-600">Please wait a moment.</p>
+      </div>
+    );
+  }
 
   if (stage === "success") {
     return (
