@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -9,12 +8,15 @@ export const usePasswordReset = () => {
   const [email, setEmail] = useState('');
   const { toast } = useToast();
 
+  // Define your deployed app's URL for password reset redirection
+  const DEPLOYED_URL = "https://your-production-url.com/update-password"; // CHANGE TO YOUR DEPLOYED DOMAIN!
+
   // Remove sendOTP custom logic, use built-in reset
   const sendOTP = async (userEmail: string) => {
     setLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
-        redirectTo: `${window.location.origin}/update-password`, // Or your custom reset page
+        redirectTo: DEPLOYED_URL, // <-- This now points to your production update-password page
       });
 
       if (error) throw error;
