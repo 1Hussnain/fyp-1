@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   Dialog,
@@ -50,7 +51,7 @@ const CategoryManagementDialog = () => {
     }
 
     resetForm();
-    refetch();
+    // No need to call refetch() - real-time updates will handle this
   };
 
   const resetForm = () => {
@@ -75,13 +76,13 @@ const CategoryManagementDialog = () => {
 
   const handleDelete = async (category: any) => {
     await deleteCategory(category.id);
-    refetch();
+    // No need to call refetch() - real-time updates will handle this
   };
 
   const handleBudgetChange = async (category: any, value: string) => {
     // Save immediately on blur/enter/done
     await updateCategory(category.id, { budget: value ? parseFloat(value) : null });
-    refetch();
+    // No need to call refetch() - real-time updates will handle this
   };
 
   const colorOptions = [

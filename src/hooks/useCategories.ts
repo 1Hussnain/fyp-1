@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { categoryService } from '@/services/supabase';
 import { Category, CategoryInsert } from '@/types/database';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useCategories = () => {
   const { toast } = useToast();
@@ -29,7 +30,6 @@ export const useCategories = () => {
     const result = await categoryService.create(categoryData);
 
     if (result.success) {
-      await fetchCategories();
       toast({
         title: "Success",
         description: "Category added successfully",
@@ -49,7 +49,6 @@ export const useCategories = () => {
     const result = await categoryService.update(id, updates);
 
     if (result.success) {
-      await fetchCategories();
       toast({
         title: "Success",
         description: "Category updated successfully",
@@ -69,7 +68,6 @@ export const useCategories = () => {
     const result = await categoryService.delete(id);
 
     if (result.success) {
-      await fetchCategories();
       toast({
         title: "Success",
         description: "Category deleted successfully",
@@ -87,6 +85,27 @@ export const useCategories = () => {
 
   useEffect(() => {
     fetchCategories();
+
+    // Set up real-time subscription for categories
+    const channel = supabase
+      .channel('categories-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'categories'
+        },
+        () => {
+          console.log('Categories changed, refetching...');
+          fetchCategories();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return {
