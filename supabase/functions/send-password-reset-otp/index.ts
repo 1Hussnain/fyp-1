@@ -33,14 +33,13 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Initialize Resend
-    const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
-
     // Generate 4-digit OTP
     const otpCode = Math.floor(1000 + Math.random() * 9000).toString();
     
     // Set expiration to 10 minutes from now
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+    console.log('Generated OTP:', otpCode, 'for email:', email);
 
     // Store OTP in database
     const { error: insertError } = await supabase
@@ -58,6 +57,18 @@ const handler = async (req: Request): Promise<Response> => {
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
+
+    // Initialize Resend with API key
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    if (!resendApiKey) {
+      console.error('RESEND_API_KEY not found');
+      return new Response(
+        JSON.stringify({ error: "Email service not configured" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const resend = new Resend(resendApiKey);
 
     // Send OTP via email
     try {
@@ -78,7 +89,7 @@ const handler = async (req: Request): Promise<Response> => {
         `,
       });
 
-      console.log('OTP email sent successfully:', emailResponse);
+      console.log('Email sent successfully:', emailResponse);
 
       return new Response(
         JSON.stringify({ 
@@ -94,7 +105,7 @@ const handler = async (req: Request): Promise<Response> => {
     } catch (emailError: any) {
       console.error('Error sending email:', emailError);
       return new Response(
-        JSON.stringify({ error: "Failed to send OTP email" }),
+        JSON.stringify({ error: "Failed to send OTP email", details: emailError.message }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
