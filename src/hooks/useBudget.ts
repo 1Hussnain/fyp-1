@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Budget } from "@/types/database";
+import { useRealtime } from './useRealtime';
 
 export const useBudget = () => {
   const { user } = useAuth();
@@ -10,11 +12,13 @@ export const useBudget = () => {
   const [budgetLimit, setBudgetLimit] = useState<number>(0);
   const [currentSpent, setCurrentSpent] = useState<number>(0);
   const [loading, setLoading] = useState(true);
+  const [budgets, setBudgets] = useState<Budget[]>([]); // hold all relevant budgets
 
   useEffect(() => {
     if (user) {
       fetchCurrentBudget();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const fetchCurrentBudget = async () => {
@@ -23,18 +27,21 @@ export const useBudget = () => {
       const { data, error } = await supabase
         .from('budgets')
         .select('*')
+        .eq('user_id', user?.id)
         .eq('month', currentDate.getMonth() + 1)
-        .eq('year', currentDate.getFullYear())
-        .maybeSingle();
+        .eq('year', currentDate.getFullYear());
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching budget:', error);
         return;
       }
 
-      if (data) {
-        setBudgetLimit(Number(data.monthly_limit || 0));
-        setCurrentSpent(Number(data.current_spent || 0));
+      // data could be array or null
+      const main = Array.isArray(data) && data.length ? data[0] : data;
+      if (main) {
+        setBudgetLimit(Number(main.monthly_limit || 0));
+        setCurrentSpent(Number(main.current_spent || 0));
+        setBudgets(Array.isArray(data) ? data : data ? [data] : []);
       }
     } catch (error) {
       console.error('Error fetching budget:', error);
@@ -95,6 +102,22 @@ export const useBudget = () => {
       console.error('Error updating spent amount:', error);
     }
   };
+
+  // Add realtime updates for budgets
+  useRealtime<Budget>("budgets", user?.id || null, (allBudgets) => {
+    // Only update state if this month/year, as budgetLimit and currentSpent show this month's values
+    const currentDate = new Date();
+    const filtered = allBudgets.filter(
+      (b) =>
+        b.month === currentDate.getMonth() + 1 &&
+        b.year === currentDate.getFullYear()
+    );
+    if (filtered.length) {
+      setBudgetLimit(Number(filtered[0].monthly_limit || 0));
+      setCurrentSpent(Number(filtered[0].current_spent || 0));
+      setBudgets(filtered);
+    }
+  });
 
   const remaining = budgetLimit - currentSpent;
   const overBudget = currentSpent > budgetLimit;

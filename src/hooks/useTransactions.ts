@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { transactionService } from '@/services/supabase';
 import { TransactionWithCategory, TransactionInsert, TransactionUpdate } from '@/types/database';
+import { useRealtime } from './useRealtime';
 
 export const useTransactions = () => {
   const { user } = useAuth();
@@ -13,10 +14,10 @@ export const useTransactions = () => {
 
   const fetchTransactions = async () => {
     if (!user) return;
-    
+
     setLoading(true);
     const result = await transactionService.getAll(user.id);
-    
+
     if (result.success) {
       setTransactions(result.data || []);
     } else {
@@ -38,7 +39,6 @@ export const useTransactions = () => {
     });
 
     if (result.success) {
-      await fetchTransactions();
       toast({
         title: "Success",
         description: "Transaction added successfully",
@@ -50,7 +50,6 @@ export const useTransactions = () => {
         variant: "destructive",
       });
     }
-
     return result;
   };
 
@@ -58,7 +57,6 @@ export const useTransactions = () => {
     const result = await transactionService.update(id, updates);
 
     if (result.success) {
-      await fetchTransactions();
       toast({
         title: "Success",
         description: "Transaction updated successfully",
@@ -70,7 +68,6 @@ export const useTransactions = () => {
         variant: "destructive",
       });
     }
-
     return result;
   };
 
@@ -78,7 +75,6 @@ export const useTransactions = () => {
     const result = await transactionService.delete(id);
 
     if (result.success) {
-      await fetchTransactions();
       toast({
         title: "Success",
         description: "Transaction deleted successfully",
@@ -90,13 +86,15 @@ export const useTransactions = () => {
         variant: "destructive",
       });
     }
-
     return result;
   };
 
   useEffect(() => {
     fetchTransactions();
   }, [user]);
+
+  // Add realtime updates
+  useRealtime<TransactionWithCategory>("transactions", user?.id || null, setTransactions);
 
   return {
     transactions,
