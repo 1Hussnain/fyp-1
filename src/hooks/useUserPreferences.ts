@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { getUserPreferences, saveUserPreferences, Preferences } from '@/services/database';
+import { preferencesService, Preferences } from '@/services/supabase';
 import { toast } from '@/components/ui/sonner';
 
 export const useUserPreferences = () => {
@@ -15,7 +15,7 @@ export const useUserPreferences = () => {
   const loadPreferences = async () => {
     try {
       setLoading(true);
-      const { data, error } = await getUserPreferences();
+      const { data, error } = await preferencesService.get();
       
       if (error && error.code !== 'PGRST116') { // Ignore "no rows" error
         console.error('Error loading preferences:', error);
@@ -34,7 +34,7 @@ export const useUserPreferences = () => {
   const updatePreferences = async (newPreferences: Partial<Preferences>) => {
     try {
       setSaving(true);
-      const { data, error } = await saveUserPreferences(newPreferences);
+      const { data, error } = await preferencesService.save(newPreferences);
       
       if (error) {
         toast.error('Failed to save preferences');
