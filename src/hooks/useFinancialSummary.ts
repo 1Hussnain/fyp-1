@@ -10,12 +10,14 @@
 
 import { useMemo } from "react";
 import { useTransactions } from "./useTransactions";
+import { TransactionWithCategory } from "@/types/database";
 
 interface FinancialSummary {
   totalIncome: number;
   totalExpenses: number;
   netIncome: number;
   transactionCount: number;
+  transactions: TransactionWithCategory[];
   loading: boolean;
   error: string | null;
 }
@@ -69,8 +71,8 @@ export const useFinancialSummary = (): FinancialSummary => {
 
   return {
     ...summary,
+    transactions,
     loading,
-    error,
-    transactions
+    error
   };
 };

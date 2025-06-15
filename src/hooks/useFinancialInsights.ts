@@ -2,8 +2,18 @@
 import { useMemo } from "react";
 import { useTransactions } from "./useTransactions";
 
-export const useFinancialInsights = () => {
-  const { transactions } = useTransactions();
+interface FinancialInsights {
+  monthlyIncome: number;
+  monthlyExpenses: number;
+  monthlySavings: number;
+  topSpendingCategories: [string, number][];
+  transactionCount: number;
+  loading: boolean;
+  error: string | null;
+}
+
+export const useFinancialInsights = (): FinancialInsights => {
+  const { transactions, loading, error } = useTransactions();
 
   const insights = useMemo(() => {
     const currentMonth = new Date().getMonth();
@@ -33,7 +43,7 @@ export const useFinancialInsights = () => {
         }, {} as Record<string, number>)
     )
     .sort(([,a], [,b]) => b - a)
-    .slice(0, 3);
+    .slice(0, 3) as [string, number][];
 
     return {
       monthlyIncome,
@@ -44,5 +54,9 @@ export const useFinancialInsights = () => {
     };
   }, [transactions]);
 
-  return insights;
+  return {
+    ...insights,
+    loading,
+    error
+  };
 };
