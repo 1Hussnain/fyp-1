@@ -14,7 +14,7 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { realtimeManager } from '@/services/realtimeManager';
+import { realtimeManager } from '@/services/realtime';
 
 type Table = "transactions" | "financial_goals" | "budgets" | "categories";
 type UpdateHandler<T> = (payload: any) => void;
