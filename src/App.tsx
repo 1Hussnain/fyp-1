@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
@@ -19,6 +18,7 @@ import NotFound from '@/pages/NotFound';
 import FinancialManagement from '@/pages/FinancialManagement';
 import OptimizedFinancialManagement from '@/pages/OptimizedFinancialManagement';
 import OptimizedGoalsTracker from '@/pages/OptimizedGoalsTracker';
+import UpdatePassword from '@/pages/UpdatePassword';
 
 function App() {
   return (
@@ -122,6 +122,7 @@ function App() {
                   </AppLayout>
                 </ProtectedRoute>
               } />
+              <Route path="/update-password" element={<UpdatePassword />} />
               <Route path="*" element={<AppLayout><NotFound /></AppLayout>} />
             </Routes>
             <Toaster />
