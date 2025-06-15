@@ -21,21 +21,28 @@ export const adminUserService = {
    */
   async getAllUsers(): Promise<ServiceResponse<UserWithRoles[]>> {
     try {
-      const { data, error } = await supabase
+      // First get all profiles
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          user_roles (
-            role,
-            assigned_at,
-            assigned_by
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (profilesError) throw profilesError;
 
-      return { success: true, data: data || [] };
+      // Then get all user roles
+      const { data: userRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('*');
+
+      if (rolesError) throw rolesError;
+
+      // Combine the data
+      const usersWithRoles: UserWithRoles[] = (profiles || []).map(profile => ({
+        ...profile,
+        user_roles: (userRoles || []).filter(role => role.user_id === profile.id)
+      }));
+
+      return { success: true, data: usersWithRoles };
     } catch (err) {
       console.error('[adminUserService] Error fetching users:', err);
       return { 
