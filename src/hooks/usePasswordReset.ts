@@ -8,8 +8,8 @@ export const usePasswordReset = () => {
   const [email, setEmail] = useState('');
   const { toast } = useToast();
 
-  // Change this to your deployed site domain!
-  const RESET_URL = "https://your-production-url.com/update-password";
+  // For local development, use the localhost URL for password reset
+  const RESET_URL = "http://localhost:3000/update-password";
 
   const sendResetEmail = async (userEmail: string) => {
     setLoading(true);
