@@ -1,29 +1,16 @@
 
 import React from "react";
-
-export interface TransactionWithCategory {
-  id: string;
-  amount: number;
-  date: string;
-  type: "income" | "expense";
-  description?: string | null;
-  category_id?: string | null;
-  categories?: { name: string };
-}
+import { TransactionWithCategory } from "@/types/database";
 
 interface OptimizedTransactionTableProps {
   transactions: TransactionWithCategory[];
-  categories: { id: string; name: string }[];
-  onAddTransaction: (transaction: any) => Promise<boolean>;
-  onEditTransaction: (id: string, updates: any) => Promise<boolean>;
+  onUpdateTransaction: (id: string, updates: any) => Promise<boolean>;
   onDeleteTransaction: (id: string) => Promise<boolean>;
 }
 
 const OptimizedTransactionTable: React.FC<OptimizedTransactionTableProps> = ({
   transactions,
-  categories,
-  onAddTransaction,
-  onEditTransaction,
+  onUpdateTransaction,
   onDeleteTransaction,
 }) => {
   return (
@@ -51,7 +38,7 @@ const OptimizedTransactionTable: React.FC<OptimizedTransactionTableProps> = ({
                 <button
                   className="text-blue-500 hover:underline mr-2"
                   onClick={() =>
-                    onEditTransaction(t.id, {
+                    onUpdateTransaction(t.id, {
                       // This would usually open a dialog/modal, but here we just call the handler for demo
                       ...t,
                     })

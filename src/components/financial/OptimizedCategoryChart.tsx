@@ -1,34 +1,28 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
-
-interface CategoryData {
-  category: string;
-  amount: number;
-  color: string;
-  icon: string;
-}
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { CategorySpending } from "@/types/database";
 
 interface OptimizedCategoryChartProps {
-  data: CategoryData[];
+  categorySpending: CategorySpending[];
+  totalExpenses: number;
 }
 
-const OptimizedCategoryChart: React.FC<OptimizedCategoryChartProps> = ({ data }) => {
-  const totalAmount = data.reduce((sum, item) => sum + item.amount, 0);
+const OptimizedCategoryChart: React.FC<OptimizedCategoryChartProps> = ({ categorySpending, totalExpenses }) => {
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
-      const percentage = ((data.amount / totalAmount) * 100).toFixed(1);
+      const percentage = totalExpenses > 0 ? ((data.amount / totalExpenses) * 100).toFixed(1) : "0.0";
       return (
         <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border">
           <div className="flex items-center gap-2 mb-1">
             <div 
               className="w-3 h-3 rounded-full" 
-              style={{ backgroundColor: data.color }}
+              style={{ backgroundColor: data.fill }}
             />
-            <span className="font-medium">{data.category}</span>
+            <span className="font-medium">{data.name}</span>
           </div>
           <p className="text-sm">
             <span className="font-semibold">${data.amount.toFixed(2)}</span>
@@ -40,7 +34,7 @@ const OptimizedCategoryChart: React.FC<OptimizedCategoryChartProps> = ({ data })
     return null;
   };
 
-  if (data.length === 0) {
+  if (!categorySpending || categorySpending.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -65,16 +59,17 @@ const OptimizedCategoryChart: React.FC<OptimizedCategoryChartProps> = ({ data })
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
-                data={data}
+                data={categorySpending}
                 cx="50%"
                 cy="50%"
                 innerRadius={40}
                 outerRadius={80}
                 paddingAngle={2}
                 dataKey="amount"
+                nameKey="name"
               >
-                {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
+                {categorySpending.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.fill} />
                 ))}
               </Pie>
               <Tooltip content={<CustomTooltip />} />
@@ -83,16 +78,16 @@ const OptimizedCategoryChart: React.FC<OptimizedCategoryChartProps> = ({ data })
         </div>
         
         <div className="mt-4 space-y-2">
-          {data.slice(0, 5).map((item, index) => {
-            const percentage = ((item.amount / totalAmount) * 100).toFixed(1);
+          {categorySpending.slice(0, 5).map((item, index) => {
+            const percentage = totalExpenses > 0 ? ((item.amount / totalExpenses) * 100).toFixed(1) : "0.0";
             return (
               <div key={index} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div 
                     className="w-3 h-3 rounded-full" 
-                    style={{ backgroundColor: item.color }}
+                    style={{ backgroundColor: item.fill }}
                   />
-                  <span className="text-sm font-medium">{item.category}</span>
+                  <span className="text-sm font-medium">{item.name}</span>
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   ${item.amount.toFixed(2)} ({percentage}%)

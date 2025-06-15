@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useOptimizedFinancial } from "@/hooks/useOptimizedFinancial";
 import { Loader2 } from "lucide-react";
@@ -75,7 +74,6 @@ const OptimizedFinancialManagement = () => {
           transactions={transactions}
           onUpdateTransaction={updateTransaction}
           onDeleteTransaction={deleteTransaction}
-          categories={categories}
         />
       </div>
     </div>
