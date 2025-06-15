@@ -55,7 +55,7 @@ const CategoryManagementDialog = () => {
   const resetForm = () => {
     setFormData({
       name: "",
-      type: "expense",
+      type: "expense" as "income" | "expense",
       color: "#3B82F6",
       budget: ""
     });
@@ -66,7 +66,7 @@ const CategoryManagementDialog = () => {
     setEditingCategory(category);
     setFormData({
       name: category.name,
-      type: category.type,
+      type: category.type as "income" | "expense",
       color: category.color,
       budget: category.budget?.toString() || ""
     });
