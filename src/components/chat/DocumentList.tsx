@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import { X, FileText, FileImage, Eye, Trash2 } from "lucide-react";
@@ -32,7 +31,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
     return { type: "other", icon: <FileText className="text-gray-500" /> };
   };
 
-  if (documents.length === 0) return null;
+  if (!documents || documents.length === 0) return null;
 
   return (
     <motion.div

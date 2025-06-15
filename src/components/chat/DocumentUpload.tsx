@@ -32,8 +32,15 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
   const { extractTextFromFile, isExtracting, extractionStage } = useTextExtraction();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    if (e.target.name === "file" && e.target instanceof HTMLInputElement && e.target.files?.[0]) {
+      const file = e.target.files[0];
+      if (file.size > 5 * 1024 * 1024) {
+        alert("File size exceeds 5MB. Please select a smaller file.");
+        e.target.value = "";
+        return;
+      }
+    }
     handleDocumentChange(e);
-    // Reset extracted text when file changes
     setExtractedText('');
     setShowExtractedText(false);
   };
