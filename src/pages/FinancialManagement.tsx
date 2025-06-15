@@ -101,12 +101,7 @@ const FinancialManagement = () => {
               <h3 className="text-xl font-semibold text-gray-800">Transaction Management</h3>
               
               <TransactionFilter
-                filter={{
-                  ...filter,
-                  type: filter.type || 'all',
-                  startDate: new Date(),
-                  endDate: new Date()
-                }}
+                filter={filter}
                 onFilterChange={handleFilterChange}
                 onResetFilters={handleResetFilters}
               />

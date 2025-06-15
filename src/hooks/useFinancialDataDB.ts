@@ -1,4 +1,3 @@
-
 import { useTransactions } from "./useTransactions";
 import { useCategories } from "./useCategories";
 import { useMemo } from "react";
@@ -71,6 +70,12 @@ export const useFinancialDataDB = () => {
     console.log('Budget limit change:', e.target.value);
   };
 
+  const filter = {
+    type: 'all' as 'all' | 'income' | 'expense',
+    startDate: undefined as Date | undefined,
+    endDate: undefined as Date | undefined,
+  };
+
   return {
     transactions,
     allTransactions: transactions,
@@ -83,7 +88,7 @@ export const useFinancialDataDB = () => {
     loading: transactionsLoading,
     error: null,
     categoryTotalsArray: summary.categoryTotalsArray,
-    filter: {},
+    filter,
     handleBudgetLimitChange,
     handleAddTransaction,
     handleEditTransaction,
