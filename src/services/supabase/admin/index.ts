@@ -14,6 +14,9 @@ export { adminAnalyticsService } from './analyticsService';
 export { logAdminActivity } from './activityService';
 
 // Re-export for backwards compatibility
+import { adminUserService } from './userService';
+import { adminAnalyticsService } from './analyticsService';
+
 export const adminService = {
   user: adminUserService,
   analytics: adminAnalyticsService
