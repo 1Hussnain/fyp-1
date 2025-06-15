@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -24,15 +23,6 @@ export const usePasswordReset = () => {
         title: "OTP Sent",
         description: "Please check your email for the 4-digit verification code.",
       });
-
-      // For testing purposes, show the OTP in console
-      if (data?.otp) {
-        console.log('Generated OTP:', data.otp);
-        toast({
-          title: "Test Mode",
-          description: `OTP: ${data.otp} (This is for testing only)`,
-        });
-      }
 
       return { success: true };
     } catch (error: any) {
