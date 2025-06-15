@@ -169,23 +169,20 @@ export const useDocuments = () => {
           table: "documents",
           filter: `user_id=eq.${user.id} AND deleted=is.false`
         }, (payload) => {
-          // Type-safe, guarded update
           if (payload.eventType === "INSERT" && isDocument(payload.new)) {
             setDocuments((curr) => [
               payload.new,
-              ...curr
-            ]);
+              ...curr,
+            ] as Document[]);
           } else if (payload.eventType === "UPDATE" && isDocument(payload.new)) {
             setDocuments((curr) =>
               curr.map((doc) =>
-                doc.id === payload.new.id
-                  ? payload.new
-                  : doc
-              )
+                doc.id === payload.new.id ? payload.new : doc
+              ) as Document[]
             );
           } else if (payload.eventType === "DELETE" && isDocument(payload.old)) {
             setDocuments((curr) =>
-              curr.filter((doc) => doc.id !== payload.old.id)
+              curr.filter((doc) => doc.id !== payload.old.id) as Document[]
             );
           }
         })
