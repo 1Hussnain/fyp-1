@@ -79,6 +79,7 @@ export type Database = {
       }
       categories: {
         Row: {
+          budget: number | null
           color: string | null
           created_at: string | null
           icon: string | null
@@ -89,6 +90,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          budget?: number | null
           color?: string | null
           created_at?: string | null
           icon?: string | null
@@ -99,6 +101,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          budget?: number | null
           color?: string | null
           created_at?: string | null
           icon?: string | null

@@ -46,6 +46,29 @@ export const categoryService = {
     }
   },
 
+  async update(id: string, updates: Partial<Category>): Promise<ServiceResponse<Category>> {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return {
+        success: true,
+        data
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  },
+
   async delete(id: string): Promise<ServiceResponse<void>> {
     try {
       const { error } = await supabase

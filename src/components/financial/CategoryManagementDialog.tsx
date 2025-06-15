@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Dialog,
@@ -14,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, RotateCcw } from "lucide-react";
-import { useCategoryManagement, SpendingCategory } from "@/hooks/useCategoryManagement";
+import { useCategories } from "@/hooks/useCategories";
 
 const CategoryManagementDialog = () => {
   const {
@@ -22,11 +21,11 @@ const CategoryManagementDialog = () => {
     addCategory,
     updateCategory,
     deleteCategory,
-    resetToDefaults
-  } = useCategoryManagement();
+    refetch
+  } = useCategories();
 
   const [isOpen, setIsOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<SpendingCategory | null>(null);
+  const [editingCategory, setEditingCategory] = useState<any | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     type: "expense" as "income" | "expense",
@@ -34,23 +33,24 @@ const CategoryManagementDialog = () => {
     budget: ""
   });
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.name.trim()) return;
 
     const categoryData = {
       name: formData.name.trim(),
       type: formData.type,
       color: formData.color,
-      budget: formData.budget ? parseFloat(formData.budget) : undefined
+      budget: formData.budget ? parseFloat(formData.budget) : null
     };
 
     if (editingCategory) {
-      updateCategory(editingCategory.id, categoryData);
+      await updateCategory(editingCategory.id, categoryData);
     } else {
-      addCategory(categoryData);
+      await addCategory(categoryData as any);
     }
 
     resetForm();
+    refetch();
   };
 
   const resetForm = () => {
@@ -63,7 +63,7 @@ const CategoryManagementDialog = () => {
     setEditingCategory(null);
   };
 
-  const handleEdit = (category: SpendingCategory) => {
+  const handleEdit = (category: any) => {
     setEditingCategory(category);
     setFormData({
       name: category.name,
@@ -73,8 +73,15 @@ const CategoryManagementDialog = () => {
     });
   };
 
-  const handleDelete = (category: SpendingCategory) => {
-    deleteCategory(category.id);
+  const handleDelete = async (category: any) => {
+    await deleteCategory(category.id);
+    refetch();
+  };
+
+  const handleBudgetChange = async (category: any, value: string) => {
+    // Save immediately on blur/enter/done
+    await updateCategory(category.id, { budget: value ? parseFloat(value) : null });
+    refetch();
   };
 
   const colorOptions = [
@@ -112,7 +119,6 @@ const CategoryManagementDialog = () => {
                   placeholder="e.g. Groceries, Rent"
                 />
               </div>
-
               <div>
                 <Label>Type</Label>
                 <RadioGroup
@@ -132,7 +138,6 @@ const CategoryManagementDialog = () => {
                   </div>
                 </RadioGroup>
               </div>
-
               <div>
                 <Label>Color</Label>
                 <div className="flex gap-2 mt-2">
@@ -149,7 +154,6 @@ const CategoryManagementDialog = () => {
                   ))}
                 </div>
               </div>
-
               <div>
                 <Label htmlFor="budget">Monthly Budget (Optional)</Label>
                 <Input
@@ -163,7 +167,6 @@ const CategoryManagementDialog = () => {
                 />
               </div>
             </div>
-
             <div className="flex gap-2">
               <Button 
                 onClick={handleSave}
@@ -178,17 +181,15 @@ const CategoryManagementDialog = () => {
               )}
             </div>
           </div>
-
           {/* Categories List */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h4 className="font-medium">Existing Categories</h4>
-              <Button variant="outline" size="sm" onClick={resetToDefaults}>
+              <Button variant="outline" size="sm" onClick={refetch}>
                 <RotateCcw className="mr-2 h-4 w-4" />
-                Reset to Defaults
+                Refresh
               </Button>
             </div>
-
             <div className="grid gap-2 max-h-60 overflow-y-auto">
               {categories.map((category) => (
                 <div
@@ -206,25 +207,37 @@ const CategoryManagementDialog = () => {
                         <Badge variant={category.type === 'income' ? 'default' : 'secondary'}>
                           {category.type}
                         </Badge>
-                        {category.isDefault && (
+                        {category.is_system && (
                           <Badge variant="outline" className="text-xs">
                             Default
                           </Badge>
                         )}
-                        {category.budget && (
-                          <span className="text-xs text-gray-500">
-                            Budget: ${category.budget}
-                          </span>
-                        )}
+                        <span className="text-xs text-gray-500 flex items-center gap-1">
+                          Budget:&nbsp;
+                          <Input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            defaultValue={category.budget ?? ""}
+                            className="h-6 w-20 px-2 py-0 text-xs"
+                            onBlur={e => handleBudgetChange(category, e.target.value)}
+                            onKeyDown={e => {
+                              if (e.key === "Enter") {
+                                (e.target as HTMLInputElement).blur();
+                              }
+                            }}
+                            disabled={category.is_system}
+                          />
+                        </span>
                       </div>
                     </div>
                   </div>
-                  
                   <div className="flex gap-1">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleEdit(category)}
+                      disabled={category.is_system}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -232,7 +245,7 @@ const CategoryManagementDialog = () => {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDelete(category)}
-                      disabled={category.isDefault}
+                      disabled={category.is_system}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

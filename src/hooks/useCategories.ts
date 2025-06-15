@@ -9,10 +9,10 @@ export const useCategories = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Fetch only user & system categories, already enforced at DB level by RLS
   const fetchCategories = async () => {
     setLoading(true);
     const result = await categoryService.getAll();
-    
     if (result.success) {
       setCategories(result.data || []);
     } else {
@@ -38,6 +38,26 @@ export const useCategories = () => {
       toast({
         title: "Error",
         description: result.error || "Failed to add category",
+        variant: "destructive",
+      });
+    }
+
+    return result;
+  };
+
+  const updateCategory = async (id: string, updates: Partial<Category>) => {
+    const result = await categoryService.update(id, updates);
+
+    if (result.success) {
+      await fetchCategories();
+      toast({
+        title: "Success",
+        description: "Category updated successfully",
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: result.error || "Failed to update category",
         variant: "destructive",
       });
     }
@@ -73,6 +93,7 @@ export const useCategories = () => {
     categories,
     loading,
     addCategory,
+    updateCategory,
     deleteCategory,
     refetch: fetchCategories
   };
