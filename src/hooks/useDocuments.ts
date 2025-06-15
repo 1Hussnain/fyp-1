@@ -152,13 +152,22 @@ export const useDocuments = () => {
           filter: `user_id=eq.${user.id} AND deleted=is.false`
         }, (payload) => {
           if (payload.eventType === "INSERT") {
-            setDocuments((curr) => [payload.new, ...curr]);
+            setDocuments((curr) => [
+              payload.new as Document,
+              ...curr
+            ]);
           } else if (payload.eventType === "UPDATE") {
             setDocuments((curr) =>
-              curr.map((doc) => doc.id === payload.new.id ? payload.new : doc)
+              curr.map((doc) =>
+                doc.id === (payload.new as Document).id
+                  ? (payload.new as Document)
+                  : doc
+              )
             );
           } else if (payload.eventType === "DELETE") {
-            setDocuments((curr) => curr.filter((doc) => doc.id !== payload.old.id));
+            setDocuments((curr) =>
+              curr.filter((doc) => doc.id !== (payload.old as Document).id)
+            );
           }
         })
         .subscribe();
