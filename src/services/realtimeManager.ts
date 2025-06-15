@@ -118,8 +118,8 @@ class RealtimeSubscriptionManager {
             filter: `user_id=eq.${subscription.userId}`
           },
           (payload) => {
-            // Add type safety for payload data
-            const recordId = payload.new?.id || payload.old?.id || 'unknown';
+            // Add type safety for payload data with proper casting
+            const recordId = (payload.new as any)?.id || (payload.old as any)?.id || 'unknown';
             console.log(`[RealtimeManager] ${table} update:`, payload.eventType, recordId);
             
             // Broadcast to all handlers for this subscription
