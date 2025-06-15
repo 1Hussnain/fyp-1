@@ -33,10 +33,9 @@ const FinancialManagement = () => {
     handleResetFilters
   } = useFinancialDataDB();
 
-  // Simple bulk import handler that converts the data format
+  // Updated: add explicit typing for importedData to avoid type errors
   const handleBulkImportWrapper = async (importedData: any[]) => {
-    // Convert incoming data to correct format, but patch to allow for correct typing
-    const convertedTransactions = importedData.map(item => ({
+    const convertedTransactions = importedData.map((item: any) => ({
       type: (item.type || 'expense') as 'income' | 'expense',
       category_id: item.category_id || null,
       amount: item.amount || 0,
