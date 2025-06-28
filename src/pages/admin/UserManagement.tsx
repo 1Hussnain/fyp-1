@@ -24,10 +24,10 @@ const UserManagement = () => {
 
   const getRoleColor = (role: AppRole) => {
     switch (role) {
-      case 'admin': return 'bg-red-100 text-red-800';
-      case 'moderator': return 'bg-yellow-100 text-yellow-800';
-      case 'user': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'admin': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+      case 'moderator': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+      case 'user': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
     }
   };
 
@@ -103,8 +103,8 @@ const UserManagement = () => {
                         : user.email
                       }
                     </CardTitle>
-                    <p className="text-sm text-gray-600">{user.email}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{user.email}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-500">
                       Joined: {new Date(user.created_at || '').toLocaleDateString()}
                     </p>
                   </div>
@@ -119,7 +119,7 @@ const UserManagement = () => {
                       );
                     })}
                     {userRoles.length === 0 && (
-                      <Badge className="bg-gray-100 text-gray-800">
+                      <Badge className="bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
                         <User className="w-3 h-3 mr-1" />
                         user
                       </Badge>
@@ -133,19 +133,19 @@ const UserManagement = () => {
                     <div className="text-2xl font-bold text-blue-600">
                       {userStats?.total_transactions || 0}
                     </div>
-                    <div className="text-sm text-gray-600">Transactions</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Transactions</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-green-600">
                       ${(userStats?.total_income || 0).toLocaleString()}
                     </div>
-                    <div className="text-sm text-gray-600">Income</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Income</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-purple-600">
                       {userStats?.total_goals || 0}
                     </div>
-                    <div className="text-sm text-gray-600">Goals</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Goals</div>
                   </div>
                 </div>
 
@@ -176,7 +176,7 @@ const UserManagement = () => {
 
       {filteredUsers.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-500">No users found matching your search.</p>
+          <p className="text-gray-500 dark:text-gray-400">No users found matching your search.</p>
         </div>
       )}
     </div>

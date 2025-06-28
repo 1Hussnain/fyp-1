@@ -1,3 +1,4 @@
+
 import React from "react";
 import { motion } from "framer-motion";
 import { useFinancialDataDB } from "@/hooks/useFinancialDataDB";
@@ -54,7 +55,7 @@ const FinancialManagement = () => {
 
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto px-6 py-8 space-y-8 flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
           <p className="text-gray-600">Loading your financial data...</p>
@@ -64,64 +65,63 @@ const FinancialManagement = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-8 space-y-8">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <DataMigration />
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="space-y-8"
+    >
+      <DataMigration />
 
-        {/* Budget Limit Setting */}
-        <BudgetLimit 
-          budgetLimit={budgetLimit}
-          onBudgetLimitChange={handleBudgetLimitChange}
-        />
+      {/* Budget Limit Setting */}
+      <BudgetLimit 
+        budgetLimit={budgetLimit}
+        onBudgetLimitChange={handleBudgetLimitChange}
+      />
 
-        {/* Summary Cards */}
-        <SummaryCards
-          income={income}
-          expenses={expenses}
-          remaining={remaining}
-          overBudget={overBudget}
-          closeToLimit={closeToLimit}
-        />
+      {/* Summary Cards */}
+      <SummaryCards
+        income={income}
+        expenses={expenses}
+        remaining={remaining}
+        overBudget={overBudget}
+        closeToLimit={closeToLimit}
+      />
 
-        {/* Overview Content */}
-        <div className="space-y-6">
-          <UnifiedTransactionForm onAddTransaction={handleAddTransaction} />
+      {/* Overview Content */}
+      <div className="space-y-6">
+        <UnifiedTransactionForm onAddTransaction={handleAddTransaction} />
+        
+        <div className="grid lg:grid-cols-2 gap-8">
+          <CategoryBreakdown 
+            categoryTotalsArray={categoryTotalsArray}
+            expenses={expenses}
+          />
           
-          <div className="grid lg:grid-cols-2 gap-8">
-            <CategoryBreakdown 
-              categoryTotalsArray={categoryTotalsArray}
-              expenses={expenses}
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Transaction Management</h3>
+            
+            <TransactionFilter
+              filter={filter}
+              onFilterChange={handleFilterChange}
+              onResetFilters={handleResetFilters}
             />
             
-            <div className="space-y-6">
-              <h3 className="text-xl font-semibold text-gray-800">Transaction Management</h3>
-              
-              <TransactionFilter
-                filter={filter}
-                onFilterChange={handleFilterChange}
-                onResetFilters={handleResetFilters}
-              />
-              
-              <TransactionHistory 
-                transactions={transactions.map(t => ({
-                  ...t,
-                  type: t.type as 'income' | 'expense',
-                  category: t.categories?.name || 'Uncategorized'
-                }))}
-                onEditTransaction={handleEditTransaction}
-                onDeleteTransaction={handleDeleteTransaction}
-                onBulkImport={handleBulkImportWrapper}
-                onAddRecurring={handleAddRecurringWrapper}
-              />
-            </div>
+            <TransactionHistory 
+              transactions={transactions.map(t => ({
+                ...t,
+                type: t.type as 'income' | 'expense',
+                category: t.categories?.name || 'Uncategorized'
+              }))}
+              onEditTransaction={handleEditTransaction}
+              onDeleteTransaction={handleDeleteTransaction}
+              onBulkImport={handleBulkImportWrapper}
+              onAddRecurring={handleAddRecurringWrapper}
+            />
           </div>
         </div>
-      </motion.div>
-    </div>
+      </div>
+    </motion.div>
   );
 };
 

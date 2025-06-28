@@ -5,7 +5,6 @@ import { useGoals } from "@/hooks/useGoals";
 import GoalCreationForm from "@/components/goals/GoalCreationForm";
 import GoalsList from "@/components/goals/GoalsList";
 import MotivationalTips from "@/components/goals/MotivationalTips";
-import AppLayout from "@/components/layout/AppLayout";
 
 const GoalsTracker = () => {
   const {
@@ -65,39 +64,35 @@ const GoalsTracker = () => {
 
   if (loading) {
     return (
-      <AppLayout pageTitle="Financial Goals">
-        <div className="text-center">Loading goals...</div>
-      </AppLayout>
+      <div className="text-center">Loading goals...</div>
     );
   }
 
   return (
-    <AppLayout pageTitle="Financial Goals">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1 space-y-6">
-            {/* Pass the required form handling props */}
-            <GoalCreationForm
-              formData={formData}
-              handleFormChange={handleFormChange}
-              handleAddGoal={handleAddGoal}
-            />
-            <MotivationalTips goals={goals} />
-          </div>
-          <div className="lg:col-span-2">
-            <GoalsList
-              goals={goals}
-              onUpdateGoal={handleUpdateGoal}
-              onDeleteGoal={handleDeleteGoal}
-            />
-          </div>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="grid lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-1 space-y-6">
+          {/* Pass the required form handling props */}
+          <GoalCreationForm
+            formData={formData}
+            handleFormChange={handleFormChange}
+            handleAddGoal={handleAddGoal}
+          />
+          <MotivationalTips goals={goals} />
         </div>
-      </motion.div>
-    </AppLayout>
+        <div className="lg:col-span-2">
+          <GoalsList
+            goals={goals}
+            onUpdateGoal={handleUpdateGoal}
+            onDeleteGoal={handleDeleteGoal}
+          />
+        </div>
+      </div>
+    </motion.div>
   );
 };
 

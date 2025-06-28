@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Search, User, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,11 +7,22 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useNavigate } from "react-router-dom";
 import NotificationCenter from "./NotificationCenter";
 
 const EnhancedTopNav = () => {
   const { user } = useAuth();
   const { isDarkMode, toggleDarkMode } = useTheme();
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      // Navigate to transactions page with search filter
+      navigate(`/transactions?search=${encodeURIComponent(searchTerm)}`);
+    }
+  };
 
   return (
     <motion.div
@@ -24,13 +35,15 @@ const EnhancedTopNav = () => {
           <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 hidden sm:block">
             Financial Dashboard
           </h2>
-          <div className="relative max-w-md flex-1 sm:flex-initial">
+          <form onSubmit={handleSearch} className="relative max-w-md flex-1 sm:flex-initial">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 h-4 w-4" />
             <Input
               placeholder="Search transactions, goals..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 w-full sm:w-64 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
             />
-          </div>
+          </form>
         </div>
 
         <div className="flex items-center gap-3">

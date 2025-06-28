@@ -547,23 +547,24 @@ export type Database = {
     }
     Functions: {
       has_role: {
-        Args: {
-          _user_id: string
-          _role: Database["public"]["Enums"]["app_role"]
-        }
+        Args:
+          | Record<PropertyKey, never>
+          | { _user_id: string; _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
       }
       is_admin: {
-        Args: { user_id?: string }
+        Args: Record<PropertyKey, never> | { user_id?: string }
         Returns: boolean
       }
       log_admin_activity: {
-        Args: {
-          action_type: string
-          target_type?: string
-          target_id?: string
-          details?: Json
-        }
+        Args:
+          | Record<PropertyKey, never>
+          | {
+              action_type: string
+              target_type?: string
+              target_id?: string
+              details?: Json
+            }
         Returns: string
       }
       refresh_user_analytics: {

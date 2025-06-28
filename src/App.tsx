@@ -8,7 +8,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
-import AdminLayout from "./components/admin/AdminLayout";
+import AppLayout from "./components/layout/AppLayout";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import FinancialManagement from "./pages/FinancialManagement";
@@ -32,11 +32,15 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
+              
+              {/* Regular app routes with AppLayout */}
               <Route
                 path="/dashboard"
                 element={
                   <ProtectedRoute>
-                    <Dashboard />
+                    <AppLayout pageTitle="Dashboard">
+                      <Dashboard />
+                    </AppLayout>
                   </ProtectedRoute>
                 }
               />
@@ -44,7 +48,9 @@ const App = () => (
                 path="/transactions"
                 element={
                   <ProtectedRoute>
-                    <FinancialManagement />
+                    <AppLayout pageTitle="Financial Management">
+                      <FinancialManagement />
+                    </AppLayout>
                   </ProtectedRoute>
                 }
               />
@@ -52,7 +58,9 @@ const App = () => (
                 path="/goals"
                 element={
                   <ProtectedRoute>
-                    <GoalsTracker />
+                    <AppLayout pageTitle="Financial Goals">
+                      <GoalsTracker />
+                    </AppLayout>
                   </ProtectedRoute>
                 }
               />
@@ -60,7 +68,9 @@ const App = () => (
                 path="/budget"
                 element={
                   <ProtectedRoute>
-                    <BudgetSummary />
+                    <AppLayout pageTitle="Budget Summary">
+                      <BudgetSummary />
+                    </AppLayout>
                   </ProtectedRoute>
                 }
               />
@@ -68,7 +78,9 @@ const App = () => (
                 path="/chat"
                 element={
                   <ProtectedRoute>
-                    <FinanceChat />
+                    <AppLayout pageTitle="Finance Chat">
+                      <FinanceChat />
+                    </AppLayout>
                   </ProtectedRoute>
                 }
               />
@@ -76,7 +88,9 @@ const App = () => (
                 path="/documents"
                 element={
                   <ProtectedRoute>
-                    <DocumentViewer />
+                    <AppLayout pageTitle="Documents">
+                      <DocumentViewer />
+                    </AppLayout>
                   </ProtectedRoute>
                 }
               />
@@ -84,27 +98,62 @@ const App = () => (
                 path="/settings"
                 element={
                   <ProtectedRoute>
-                    <Settings />
+                    <AppLayout pageTitle="Settings">
+                      <Settings />
+                    </AppLayout>
                   </ProtectedRoute>
                 }
               />
               
-              {/* Admin Routes */}
+              {/* Admin routes with AppLayout */}
               <Route
-                path="/admin"
+                path="/admin/dashboard"
                 element={
                   <ProtectedRoute>
                     <AdminRoute>
-                      <AdminLayout />
+                      <AppLayout pageTitle="Admin Dashboard" isAdmin={true}>
+                        <AdminDashboard />
+                      </AppLayout>
                     </AdminRoute>
                   </ProtectedRoute>
                 }
-              >
-                <Route path="dashboard" element={<AdminDashboard />} />
-                <Route path="users" element={<UserManagement />} />
-                <Route path="analytics" element={<div>Analytics Page (Coming Soon)</div>} />
-                <Route path="settings" element={<div>Admin Settings (Coming Soon)</div>} />
-              </Route>
+              />
+              <Route
+                path="/admin/users"
+                element={
+                  <ProtectedRoute>
+                    <AdminRoute>
+                      <AppLayout pageTitle="User Management" isAdmin={true}>
+                        <UserManagement />
+                      </AppLayout>
+                    </AdminRoute>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/analytics"
+                element={
+                  <ProtectedRoute>
+                    <AdminRoute>
+                      <AppLayout pageTitle="Analytics" isAdmin={true}>
+                        <div>Analytics Page (Coming Soon)</div>
+                      </AppLayout>
+                    </AdminRoute>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/settings"
+                element={
+                  <ProtectedRoute>
+                    <AdminRoute>
+                      <AppLayout pageTitle="Admin Settings" isAdmin={true}>
+                        <div>Admin Settings (Coming Soon)</div>
+                      </AppLayout>
+                    </AdminRoute>
+                  </ProtectedRoute>
+                }
+              />
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
