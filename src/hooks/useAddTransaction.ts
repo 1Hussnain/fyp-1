@@ -23,13 +23,26 @@ export const useAddTransaction = () => {
     if (!user) return { success: false, error: 'User not authenticated' };
 
     try {
-      console.log('[useAddTransaction] Adding new transaction:', transactionData.description);
+      console.log('[useAddTransaction] Adding new transaction:', {
+        type: transactionData.type,
+        amount: transactionData.amount,
+        description: transactionData.description
+      });
+
+      // Ensure proper data structure
+      const cleanTransactionData: TransactionInsert = {
+        type: transactionData.type,
+        amount: Number(transactionData.amount),
+        description: transactionData.description || null,
+        category_id: transactionData.category_id || null,
+        date: transactionData.date || new Date().toISOString().split('T')[0],
+        user_id: user.id
+      };
+
+      console.log('[useAddTransaction] Clean transaction data:', cleanTransactionData);
 
       const result = await executeWithRetry(
-        () => transactionService.create({
-          ...transactionData,
-          user_id: user.id
-        }),
+        () => transactionService.create(cleanTransactionData),
         'Adding transaction'
       );
 
