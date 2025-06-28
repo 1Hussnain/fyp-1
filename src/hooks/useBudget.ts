@@ -153,24 +153,28 @@ export const useBudget = () => {
   }, [user]);
 
   // Setup real-time updates for budgets
-  useRealtime<Budget>("budgets", user?.id || null, (allBudgets: Budget[]) => {
-    // Filter for current month/year
-    const currentDate = new Date();
-    const filtered = allBudgets.filter(
-      (b) =>
-        b.month === currentDate.getMonth() + 1 &&
-        b.year === currentDate.getFullYear()
-    );
-    
-    setBudgets(filtered);
-    
-    if (filtered.length > 0) {
-      setBudgetLimit(Number(filtered[0].monthly_limit || 0));
-      setCurrentSpent(Number(filtered[0].current_spent || 0));
-    } else {
-      setBudgetLimit(0);
-      setCurrentSpent(0);
-    }
+  useRealtime<Budget>("budgets", user?.id || null, (updater) => {
+    updater((allBudgets: Budget[]) => {
+      // Filter for current month/year
+      const currentDate = new Date();
+      const filtered = allBudgets.filter(
+        (b) =>
+          b.month === currentDate.getMonth() + 1 &&
+          b.year === currentDate.getFullYear()
+      );
+      
+      setBudgets(filtered);
+      
+      if (filtered.length > 0) {
+        setBudgetLimit(Number(filtered[0].monthly_limit || 0));
+        setCurrentSpent(Number(filtered[0].current_spent || 0));
+      } else {
+        setBudgetLimit(0);
+        setCurrentSpent(0);
+      }
+
+      return filtered;
+    });
   }, {
     enableDebounce: true,
     debounceMs: 300,
