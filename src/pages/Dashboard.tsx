@@ -1,6 +1,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import { usePerformanceOptimized } from "@/hooks/usePerformanceOptimized";
 import EnhancedSummaryCards from "@/components/Dashboard/EnhancedSummaryCards";
 import EnhancedGoalsOverview from "@/components/Dashboard/EnhancedGoalsOverview";
 import RecentTransactions from "@/components/Dashboard/RecentTransactions";
@@ -9,6 +10,8 @@ import EnhancedBudgetAlerts from "@/components/Dashboard/EnhancedBudgetAlerts";
 import EnhancedReceiptUpload from "@/components/Dashboard/EnhancedReceiptUpload";
 
 const Dashboard = () => {
+  usePerformanceOptimized('Dashboard');
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}

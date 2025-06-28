@@ -2,6 +2,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { useFinancialDataDB } from "@/hooks/useFinancialDataDB";
+import { usePerformanceOptimized } from "@/hooks/usePerformanceOptimized";
 import BudgetLimit from "@/components/budget-tracker/BudgetLimit";
 import SummaryCards from "@/components/budget-tracker/SummaryCards";
 import UnifiedTransactionForm from "@/components/financial/UnifiedTransactionForm";
@@ -9,9 +10,11 @@ import CategoryBreakdown from "@/components/budget-tracker/CategoryBreakdown";
 import TransactionFilter from "@/components/financial/TransactionFilter";
 import TransactionHistory from "@/components/financial/TransactionHistory";
 import DataMigration from "@/components/DataMigration";
-import { Loader2 } from "lucide-react";
+import FastLoadingSpinner from "@/components/ui/FastLoadingSpinner";
 
 const FinancialManagement = () => {
+  usePerformanceOptimized('FinancialManagement');
+  
   const {
     transactions,
     allTransactions,
@@ -34,32 +37,11 @@ const FinancialManagement = () => {
     handleResetFilters
   } = useFinancialDataDB();
 
-  // Updated: add explicit typing for importedData to avoid type errors
-  const handleBulkImportWrapper = async (importedData: any[]) => {
-    const convertedTransactions = importedData.map((item: any) => ({
-      type: (item.type || 'expense') as 'income' | 'expense',
-      category_id: item.category_id || null,
-      amount: item.amount || 0,
-      description: item.description || null,
-      date: item.date || new Date().toISOString().split('T')[0],
-      user_id: item.user_id || '',
-      categories: item.categories || { name: 'Uncategorized' }
-    }));
-
-    await handleBulkImport(convertedTransactions);
-  };
-
-  const handleAddRecurringWrapper = async (recurringData: any) => {
-    await handleAddRecurring(recurringData, "monthly", 1);
-  };
-
+  // Improved loading state with better UX
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading your financial data...</p>
-        </div>
+        <FastLoadingSpinner size="lg" text="Loading your financial data..." />
       </div>
     );
   }
@@ -115,8 +97,8 @@ const FinancialManagement = () => {
               }))}
               onEditTransaction={handleEditTransaction}
               onDeleteTransaction={handleDeleteTransaction}
-              onBulkImport={handleBulkImportWrapper}
-              onAddRecurring={handleAddRecurringWrapper}
+              onBulkImport={handleBulkImport}
+              onAddRecurring={handleAddRecurring}
             />
           </div>
         </div>
