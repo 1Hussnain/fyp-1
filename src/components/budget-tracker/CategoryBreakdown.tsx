@@ -2,7 +2,7 @@
 import React from "react";
 
 interface CategoryItem {
-  category: string;
+  name: string;
   amount: number;
 }
 
@@ -20,10 +20,10 @@ const CategoryBreakdown: React.FC<CategoryBreakdownProps> = ({ categoryTotalsArr
     <div className="bg-white p-6 rounded-xl shadow mb-6">
       <h3 className="text-lg font-semibold mb-4">Expense Categories</h3>
       <div className="space-y-3">
-        {categoryTotalsArray.map(({ category, amount }) => (
-          <div key={category} className="space-y-1">
+        {categoryTotalsArray.map(({ name, amount }) => (
+          <div key={name} className="space-y-1">
             <div className="flex justify-between text-sm">
-              <span>{category}</span>
+              <span>{name}</span>
               <span className="font-medium">${amount.toFixed(2)}</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">

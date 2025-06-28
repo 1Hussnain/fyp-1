@@ -46,6 +46,11 @@ const FinancialManagement = () => {
     );
   }
 
+  // Wrapper function to handle recurring transactions with proper signature
+  const handleRecurringTransaction = (recurringData: any, frequency?: string, count?: number) => {
+    return handleAddRecurring(recurringData, frequency || 'monthly', count || 1);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -98,7 +103,7 @@ const FinancialManagement = () => {
               onEditTransaction={handleEditTransaction}
               onDeleteTransaction={handleDeleteTransaction}
               onBulkImport={handleBulkImport}
-              onAddRecurring={handleAddRecurring}
+              onAddRecurring={handleRecurringTransaction}
             />
           </div>
         </div>
