@@ -124,11 +124,12 @@ const SystemHealth = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const getStatusColor = (status: HealthCheck['status']) => {
+  const getStatusColor = (status: HealthCheck['status'] | 'unknown') => {
     switch (status) {
       case 'healthy': return 'text-green-600 bg-green-100';
       case 'warning': return 'text-yellow-600 bg-yellow-100';
       case 'error': return 'text-red-600 bg-red-100';
+      case 'unknown':
       default: return 'text-gray-600 bg-gray-100';
     }
   };
@@ -148,7 +149,7 @@ const SystemHealth = () => {
       : healthChecks.some(check => check.status === 'error')
       ? 'error'
       : 'warning'
-    : 'unknown';
+    : 'warning'; // Changed from 'unknown' to 'warning' for no health checks
 
   return (
     <Card>
