@@ -3,6 +3,7 @@
  * Enhanced Real-time Hook with Performance Optimizations
  * 
  * Provides real-time updates with:
+ * - Proper channel cleanup to prevent multiple subscriptions
  * - Debounced updates to prevent excessive re-renders
  * - Connection retry logic with exponential backoff
  * - Optimistic updates for better UX
@@ -23,6 +24,9 @@ interface RealtimeOptions {
   enableOptimisticUpdates?: boolean;
 }
 
+// Global channel tracking to prevent duplicate subscriptions
+const activeChannels = new Map<string, any>();
+
 export const useRealtime = <T>(
   table: Table,
   userId: string | null,
@@ -38,10 +42,9 @@ export const useRealtime = <T>(
     enableOptimisticUpdates = true
   } = options;
 
-  const channelRef = useRef<any>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const retryCountRef = useRef(0);
-  const isSubscribedRef = useRef(false);
+  const channelKeyRef = useRef<string>('');
 
   // Debounced update function
   const debouncedUpdate = useCallback((updater: (current: T[]) => T[]) => {
@@ -87,16 +90,23 @@ export const useRealtime = <T>(
     });
   }, [table, debouncedUpdate]);
 
-  // Setup subscription with retry logic
+  // Setup subscription with proper cleanup
   const setupSubscription = useCallback(() => {
-    if (!user || !userId || isSubscribedRef.current) return;
+    if (!user || !userId) return;
 
-    const channelName = `${table}_${userId}_${Date.now()}`;
+    const channelKey = `${table}_${userId}`;
+    channelKeyRef.current = channelKey;
     
+    // Check if channel already exists
+    if (activeChannels.has(channelKey)) {
+      console.log(`[useRealtime] Channel ${channelKey} already exists, skipping creation`);
+      return;
+    }
+
     console.log(`[useRealtime] Setting up subscription for ${table} with user ${userId}`);
 
     const channel = supabase
-      .channel(channelName)
+      .channel(channelKey)
       .on(
         'postgres_changes',
         {
@@ -111,36 +121,37 @@ export const useRealtime = <T>(
         console.log(`[useRealtime] ${table} subscription status:`, status);
         
         if (status === 'SUBSCRIBED') {
-          isSubscribedRef.current = true;
           retryCountRef.current = 0;
+          activeChannels.set(channelKey, channel);
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          isSubscribedRef.current = false;
+          activeChannels.delete(channelKey);
           
           if (enableRetry && retryCountRef.current < maxRetries) {
-            const retryDelay = Math.pow(2, retryCountRef.current) * 1000; // Exponential backoff
+            const retryDelay = Math.pow(2, retryCountRef.current) * 1000;
             console.log(`[useRealtime] Retrying ${table} subscription in ${retryDelay}ms (attempt ${retryCountRef.current + 1})`);
             
             setTimeout(() => {
               retryCountRef.current++;
-              if (channelRef.current) {
-                supabase.removeChannel(channelRef.current);
-              }
+              cleanupSubscription();
               setupSubscription();
             }, retryDelay);
           }
         }
       });
 
-    channelRef.current = channel;
   }, [user, userId, table, handleRealtimeEvent, enableRetry, maxRetries]);
 
   // Cleanup subscription
   const cleanupSubscription = useCallback(() => {
-    if (channelRef.current) {
+    const channelKey = channelKeyRef.current;
+    
+    if (channelKey && activeChannels.has(channelKey)) {
       console.log(`[useRealtime] Cleaning up ${table} subscription`);
-      supabase.removeChannel(channelRef.current);
-      channelRef.current = null;
-      isSubscribedRef.current = false;
+      const channel = activeChannels.get(channelKey);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+      activeChannels.delete(channelKey);
     }
 
     if (debounceTimerRef.current) {
