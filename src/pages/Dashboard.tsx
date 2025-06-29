@@ -6,7 +6,11 @@ import DashboardOverview from "@/components/Dashboard/DashboardOverview";
 const Dashboard = () => {
   usePerformanceOptimized('Dashboard');
 
-  return <DashboardOverview />;
+  return (
+    <div className="min-h-screen">
+      <DashboardOverview />
+    </div>
+  );
 };
 
 export default Dashboard;

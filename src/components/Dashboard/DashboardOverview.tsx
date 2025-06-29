@@ -29,27 +29,38 @@ const DashboardOverview = () => {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="space-y-6"
-    >
+    <div className="space-y-6">
       {/* Welcome Message */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-lg shadow-lg">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-lg shadow-lg"
+      >
         <h1 className="text-2xl font-bold mb-2">
           Welcome back, {user.email?.split('@')[0] || 'User'}!
         </h1>
         <p className="text-blue-100">
           Here's your financial overview for today.
         </p>
-      </div>
+      </motion.div>
 
       {/* Summary Cards */}
-      <EnhancedSummaryCards />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+      >
+        <EnhancedSummaryCards />
+      </motion.div>
       
       {/* Main Content Grid */}
-      <div className="grid lg:grid-cols-3 gap-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="grid lg:grid-cols-3 gap-6"
+      >
         <div className="lg:col-span-2 space-y-6">
           <EnhancedGoalsOverview />
           <RecentTransactions />
@@ -60,8 +71,8 @@ const DashboardOverview = () => {
           <EnhancedBudgetAlerts />
           <EnhancedReceiptUpload />
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 };
 

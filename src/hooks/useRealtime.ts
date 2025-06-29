@@ -26,6 +26,7 @@ interface RealtimeOptions {
 
 // Global channel tracking to prevent duplicate subscriptions
 const activeChannels = new Map<string, any>();
+const channelSubscribers = new Map<string, number>();
 
 export const useRealtime = <T>(
   table: Table,
@@ -45,11 +46,12 @@ export const useRealtime = <T>(
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const retryCountRef = useRef(0);
   const channelKeyRef = useRef<string>('');
+  const isActiveRef = useRef(true);
 
   // Debounced update function
   const debouncedUpdate = useCallback((updater: (current: T[]) => T[]) => {
-    if (!enableDebounce) {
-      updateData(updater);
+    if (!isActiveRef.current || !enableDebounce) {
+      if (isActiveRef.current) updateData(updater);
       return;
     }
 
@@ -58,12 +60,16 @@ export const useRealtime = <T>(
     }
 
     debounceTimerRef.current = setTimeout(() => {
-      updateData(updater);
+      if (isActiveRef.current) {
+        updateData(updater);
+      }
     }, debounceMs);
   }, [updateData, enableDebounce, debounceMs]);
 
   // Handle real-time events
   const handleRealtimeEvent = useCallback((payload: any) => {
+    if (!isActiveRef.current) return;
+    
     console.log(`[useRealtime] ${table} event:`, payload.eventType, payload.new || payload.old);
 
     const { eventType, new: newRecord, old: oldRecord } = payload;
@@ -92,21 +98,25 @@ export const useRealtime = <T>(
 
   // Setup subscription with proper cleanup
   const setupSubscription = useCallback(() => {
-    if (!user || !userId) return;
+    if (!user || !userId || !isActiveRef.current) return;
 
     const channelKey = `${table}_${userId}`;
     channelKeyRef.current = channelKey;
     
-    // Check if channel already exists
-    if (activeChannels.has(channelKey)) {
-      console.log(`[useRealtime] Channel ${channelKey} already exists, skipping creation`);
+    // Increment subscriber count
+    const currentCount = channelSubscribers.get(channelKey) || 0;
+    channelSubscribers.set(channelKey, currentCount + 1);
+    
+    // If channel already exists and has active subscribers, don't create a new one
+    if (activeChannels.has(channelKey) && currentCount > 0) {
+      console.log(`[useRealtime] Channel ${channelKey} already exists with ${currentCount} subscribers`);
       return;
     }
 
     console.log(`[useRealtime] Setting up subscription for ${table} with user ${userId}`);
 
     const channel = supabase
-      .channel(channelKey)
+      .channel(`${channelKey}_${Date.now()}`) // Add timestamp to ensure uniqueness
       .on(
         'postgres_changes',
         {
@@ -124,16 +134,21 @@ export const useRealtime = <T>(
           retryCountRef.current = 0;
           activeChannels.set(channelKey, channel);
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          activeChannels.delete(channelKey);
+          // Clean up failed channel
+          if (activeChannels.has(channelKey)) {
+            activeChannels.delete(channelKey);
+          }
           
-          if (enableRetry && retryCountRef.current < maxRetries) {
+          if (enableRetry && retryCountRef.current < maxRetries && isActiveRef.current) {
             const retryDelay = Math.pow(2, retryCountRef.current) * 1000;
             console.log(`[useRealtime] Retrying ${table} subscription in ${retryDelay}ms (attempt ${retryCountRef.current + 1})`);
             
             setTimeout(() => {
-              retryCountRef.current++;
-              cleanupSubscription();
-              setupSubscription();
+              if (isActiveRef.current) {
+                retryCountRef.current++;
+                cleanupSubscription();
+                setupSubscription();
+              }
             }, retryDelay);
           }
         }
@@ -145,13 +160,22 @@ export const useRealtime = <T>(
   const cleanupSubscription = useCallback(() => {
     const channelKey = channelKeyRef.current;
     
-    if (channelKey && activeChannels.has(channelKey)) {
-      console.log(`[useRealtime] Cleaning up ${table} subscription`);
-      const channel = activeChannels.get(channelKey);
-      if (channel) {
-        supabase.removeChannel(channel);
+    if (channelKey) {
+      // Decrement subscriber count
+      const currentCount = channelSubscribers.get(channelKey) || 0;
+      const newCount = Math.max(0, currentCount - 1);
+      channelSubscribers.set(channelKey, newCount);
+      
+      // Only remove channel if no more subscribers
+      if (newCount === 0 && activeChannels.has(channelKey)) {
+        console.log(`[useRealtime] Cleaning up ${table} subscription - no more subscribers`);
+        const channel = activeChannels.get(channelKey);
+        if (channel) {
+          supabase.removeChannel(channel);
+        }
+        activeChannels.delete(channelKey);
+        channelSubscribers.delete(channelKey);
       }
-      activeChannels.delete(channelKey);
     }
 
     if (debounceTimerRef.current) {
@@ -162,13 +186,19 @@ export const useRealtime = <T>(
 
   // Setup and cleanup effects
   useEffect(() => {
+    isActiveRef.current = true;
     setupSubscription();
-    return cleanupSubscription;
+    
+    return () => {
+      isActiveRef.current = false;
+      cleanupSubscription();
+    };
   }, [setupSubscription, cleanupSubscription]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      isActiveRef.current = false;
       cleanupSubscription();
     };
   }, [cleanupSubscription]);
