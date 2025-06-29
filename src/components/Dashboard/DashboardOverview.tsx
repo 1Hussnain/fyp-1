@@ -8,9 +8,10 @@ import QuickActions from './QuickActions';
 import EnhancedBudgetAlerts from './EnhancedBudgetAlerts';
 import EnhancedReceiptUpload from './EnhancedReceiptUpload';
 import { useAuth } from '@/contexts/AuthContext';
+import { Shield, User } from 'lucide-react';
 
 const DashboardOverview = () => {
-  const { user, loading } = useAuth();
+  const { user, isAdmin, loading } = useAuth();
 
   if (loading) {
     return (
@@ -28,21 +29,46 @@ const DashboardOverview = () => {
     );
   }
 
+  const getUserName = () => {
+    const firstName = user.user_metadata?.first_name;
+    if (firstName) return firstName;
+    return user.email?.split('@')[0] || 'User';
+  };
+
   return (
     <div className="space-y-6">
-      {/* Welcome Message */}
+      {/* Enhanced Welcome Message */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-lg shadow-lg"
+        className={`text-white p-6 rounded-lg shadow-lg ${
+          isAdmin 
+            ? 'bg-gradient-to-r from-red-600 to-pink-600' 
+            : 'bg-gradient-to-r from-blue-600 to-purple-600'
+        }`}
       >
-        <h1 className="text-2xl font-bold mb-2">
-          Welcome back, {user.email?.split('@')[0] || 'User'}!
-        </h1>
-        <p className="text-blue-100">
-          Here's your financial overview for today.
+        <div className="flex items-center gap-3 mb-2">
+          {isAdmin ? (
+            <Shield className="h-6 w-6" />
+          ) : (
+            <User className="h-6 w-6" />
+          )}
+          <h1 className="text-2xl font-bold">
+            Welcome back, {getUserName()}!
+          </h1>
+        </div>
+        <p className={isAdmin ? 'text-red-100' : 'text-blue-100'}>
+          {isAdmin 
+            ? 'You have administrative access. Monitor system performance and manage users.'
+            : 'Here\'s your financial overview for today.'
+          }
         </p>
+        {isAdmin && (
+          <div className="mt-3 text-sm text-red-100">
+            💡 Switch to Admin Mode using the toggle above to access management features.
+          </div>
+        )}
       </motion.div>
 
       {/* Summary Cards */}

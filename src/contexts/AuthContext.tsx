@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,6 +18,7 @@ interface AuthContextType {
   user: User | null;
   profile: Profile | null;
   session: Session | null;
+  isAdmin: boolean;
   loading: boolean;
   signUp: (email: string, password: string, metadata?: any) => Promise<any>;
   signIn: (email: string, password: string) => Promise<any>;
@@ -48,6 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Fetch user profile from our profiles table
@@ -71,6 +72,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Check admin status
+  const checkAdminStatus = async (userId: string) => {
+    try {
+      const { data, error } = await supabase.rpc('is_admin');
+      if (error) {
+        console.error('Error checking admin status:', error);
+        return false;
+      }
+      return data || false;
+    } catch (err) {
+      console.error('Error checking admin status:', err);
+      return false;
+    }
+  };
+
+  // Smart redirect after login
+  const handlePostLoginRedirect = (isAdminUser: boolean) => {
+    const currentPath = window.location.pathname;
+    
+    // Don't redirect if already on the right page
+    if (currentPath === '/' || currentPath.startsWith('/auth')) {
+      if (isAdminUser) {
+        window.location.href = '/admin/dashboard';
+      } else {
+        window.location.href = '/dashboard';
+      }
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -81,14 +111,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Defer profile fetching to prevent deadlocks
+          // Defer profile and admin status fetching to prevent deadlocks
           setTimeout(async () => {
-            const userProfile = await fetchUserProfile(session.user.id);
+            const [userProfile, adminStatus] = await Promise.all([
+              fetchUserProfile(session.user.id),
+              checkAdminStatus(session.user.id)
+            ]);
+            
             setProfile(userProfile);
+            setIsAdmin(adminStatus);
             setLoading(false);
+
+            // Handle post-login redirect for SIGNED_IN event
+            if (event === 'SIGNED_IN') {
+              handlePostLoginRedirect(adminStatus);
+            }
           }, 0);
         } else {
           setProfile(null);
+          setIsAdmin(false);
           setLoading(false);
         }
       }
@@ -101,8 +142,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (session?.user) {
         setTimeout(async () => {
-          const userProfile = await fetchUserProfile(session.user.id);
+          const [userProfile, adminStatus] = await Promise.all([
+            fetchUserProfile(session.user.id),
+            checkAdminStatus(session.user.id)
+          ]);
           setProfile(userProfile);
+          setIsAdmin(adminStatus);
           setLoading(false);
         }, 0);
       } else {
@@ -197,6 +242,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       setProfile(null);
       setSession(null);
+      setIsAdmin(false);
       
       window.location.href = '/';
     } catch (error) {
@@ -246,6 +292,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     profile,
     session,
+    isAdmin,
     loading,
     signUp,
     signIn,
