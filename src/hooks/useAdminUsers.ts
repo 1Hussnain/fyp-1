@@ -6,12 +6,12 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { adminUserService } from '@/services/supabase/admin';
-import { UserWithRoles, UserAnalytics, AppRole } from '@/types/database';
+import { UserWithRoles, AppRole } from '@/types/database';
 
 export const useAdminUsers = () => {
   const { toast } = useToast();
   const [users, setUsers] = useState<UserWithRoles[]>([]);
-  const [analytics, setAnalytics] = useState<UserAnalytics[]>([]);
+  const [analytics, setAnalytics] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
