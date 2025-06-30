@@ -7,11 +7,11 @@ import RecentTransactions from './RecentTransactions';
 import QuickActions from './QuickActions';
 import EnhancedBudgetAlerts from './EnhancedBudgetAlerts';
 import EnhancedReceiptUpload from './EnhancedReceiptUpload';
-import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Shield, User } from 'lucide-react';
 
 const DashboardOverview = () => {
-  const { user, isAdmin, loading } = useSimpleAuth();
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -34,6 +34,9 @@ const DashboardOverview = () => {
     if (firstName) return firstName;
     return user.email?.split('@')[0] || 'User';
   };
+
+  // Simple admin check
+  const isAdmin = user.email?.includes('admin') || user.user_metadata?.role === 'admin';
 
   return (
     <div className="space-y-6">
