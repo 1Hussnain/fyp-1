@@ -11,7 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Shield, User } from 'lucide-react';
 
 const DashboardOverview = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin, adminLoading } = useAuth();
 
   if (loading) {
     return (
@@ -34,9 +34,6 @@ const DashboardOverview = () => {
     if (firstName) return firstName;
     return user.email?.split('@')[0] || 'User';
   };
-
-  // Simple admin check
-  const isAdmin = user.email?.includes('admin') || user.user_metadata?.role === 'admin';
 
   return (
     <div className="space-y-6">
@@ -67,7 +64,7 @@ const DashboardOverview = () => {
             : 'Here\'s your financial overview for today.'
           }
         </p>
-        {isAdmin && (
+        {isAdmin && !adminLoading && (
           <div className="mt-3 text-sm text-red-100">
             💡 Switch to Admin Mode using the toggle above to access management features.
           </div>

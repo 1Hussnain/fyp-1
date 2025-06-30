@@ -4,14 +4,15 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Shield, User, ArrowLeftRight } from 'lucide-react';
-import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AdminRoleToggle = () => {
-  const { isAdmin } = useSimpleAuth();
+  const { isAdmin, adminLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
-  if (!isAdmin) return null;
+  // Don't show if not admin or still loading
+  if (!isAdmin || adminLoading) return null;
 
   const isInAdminMode = location.pathname.startsWith('/admin');
 
@@ -19,7 +20,7 @@ const AdminRoleToggle = () => {
     if (isInAdminMode) {
       navigate('/dashboard');
     } else {
-      navigate('/admin/dashboard');
+      navigate('/admin');
     }
   };
 

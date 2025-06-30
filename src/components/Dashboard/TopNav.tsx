@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const TopNav = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -43,9 +43,6 @@ const TopNav = () => {
     if (firstName) return firstName;
     return user?.email || "User";
   };
-
-  // Simple admin check
-  const isAdmin = user?.email?.includes('admin') || user?.user_metadata?.role === 'admin';
 
   return (
     <motion.div
