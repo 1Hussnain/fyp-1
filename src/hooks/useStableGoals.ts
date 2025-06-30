@@ -61,13 +61,16 @@ export const useStableGoals = () => {
           setGoals(currentGoals => {
             switch (eventType) {
               case 'INSERT':
-                return [...currentGoals, newRecord];
+                const newGoal = newRecord as FinancialGoal;
+                return [...currentGoals, newGoal];
               case 'UPDATE':
+                const updatedGoal = newRecord as FinancialGoal;
                 return currentGoals.map(goal => 
-                  goal.id === newRecord.id ? newRecord : goal
+                  goal.id === updatedGoal.id ? updatedGoal : goal
                 );
               case 'DELETE':
-                return currentGoals.filter(goal => goal.id !== oldRecord.id);
+                const deletedGoal = oldRecord as FinancialGoal;
+                return currentGoals.filter(goal => goal.id !== deletedGoal.id);
               default:
                 return currentGoals;
             }
