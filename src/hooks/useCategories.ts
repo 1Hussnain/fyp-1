@@ -1,42 +1,18 @@
 
-/**
- * Categories Hook
- * 
- * Provides category management functionality with:
- * - CRUD operations for categories
- * - Real-time updates through centralized subscription manager
- * - Error handling with user-friendly toast notifications
- * - Support for both user-created and system categories
- * 
- * Note: Categories are shared between users for system categories,
- * and private for user-created categories (enforced by RLS policies)
- */
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { categoryService } from '@/services/supabase';
 import { Category, CategoryInsert } from '@/types/database';
-import { useSharedRealtime } from './useSharedRealtime';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
-/**
- * Main categories hook providing CRUD operations and real-time updates
- * @returns Object with categories data, loading states, and CRUD functions
- */
 export const useCategories = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   
-  // State management for categories
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
-  /**
-   * Fetch all categories (user + system) - RLS policies handle filtering
-   * Categories are automatically filtered by the database to show:
-   * - System categories (available to all users)
-   * - User's private categories
-   */
   const fetchCategories = async () => {
     try {
       setLoading(true);
@@ -67,11 +43,6 @@ export const useCategories = () => {
     }
   };
 
-  /**
-   * Add a new category with validation and error handling
-   * @param categoryData - Category data to create
-   * @returns Promise with success status and error details
-   */
   const addCategory = async (categoryData: CategoryInsert) => {
     try {
       console.log('[useCategories] Adding new category:', categoryData.name);
@@ -83,7 +54,6 @@ export const useCategories = () => {
           title: "Success",
           description: "Category added successfully",
         });
-        // Real-time subscription will handle the state update automatically
       } else {
         toast({
           title: "Error",
@@ -104,12 +74,6 @@ export const useCategories = () => {
     }
   };
 
-  /**
-   * Update an existing category
-   * @param id - Category ID to update
-   * @param updates - Partial category data to update
-   * @returns Promise with success status and error details
-   */
   const updateCategory = async (id: string, updates: Partial<Category>) => {
     try {
       console.log('[useCategories] Updating category:', id);
@@ -121,7 +85,6 @@ export const useCategories = () => {
           title: "Success",
           description: "Category updated successfully",
         });
-        // Real-time subscription will handle the state update automatically
       } else {
         toast({
           title: "Error",
@@ -142,11 +105,6 @@ export const useCategories = () => {
     }
   };
 
-  /**
-   * Delete a category with validation
-   * @param id - Category ID to delete
-   * @returns Promise with success status and error details
-   */
   const deleteCategory = async (id: string) => {
     try {
       console.log('[useCategories] Deleting category:', id);
@@ -158,7 +116,6 @@ export const useCategories = () => {
           title: "Success",
           description: "Category deleted successfully",
         });
-        // Real-time subscription will handle the state update automatically
       } else {
         toast({
           title: "Error",
@@ -179,16 +136,11 @@ export const useCategories = () => {
     }
   };
 
-  /**
-   * Handle real-time updates for categories
-   * Processes INSERT, UPDATE, and DELETE events from the centralized manager
-   */
   const handleCategoryUpdate = (payload: any) => {
     console.log('[useCategories] Real-time update:', payload.eventType, payload.new?.name);
     
     if (payload.eventType === "INSERT" && payload.new) {
       setCategories(prev => {
-        // Prevent duplicates
         const exists = prev.some(cat => cat.id === payload.new.id);
         if (exists) return prev;
         return [payload.new, ...prev];
@@ -206,15 +158,31 @@ export const useCategories = () => {
     }
   };
 
-  // Initial data fetch on component mount
   useEffect(() => {
     console.log('[useCategories] Initializing categories');
     fetchCategories();
   }, []);
 
-  // Setup real-time subscription using centralized manager
-  // This prevents duplicate subscriptions and ensures proper cleanup
-  useSharedRealtime('categories', user?.id || null, handleCategoryUpdate);
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel(`categories_${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'categories'
+        },
+        handleCategoryUpdate
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
 
   return {
     categories,

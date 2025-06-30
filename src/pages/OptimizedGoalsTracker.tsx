@@ -4,7 +4,7 @@ import { usePerformanceOptimized } from "@/hooks/usePerformanceOptimized";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Target, AlertCircle } from "lucide-react";
-import { useStableGoals } from "@/hooks/useStableGoals";
+import { useGoals } from "@/hooks/useGoals";
 import OptimizedGoalsTabs from "@/components/goals/OptimizedGoalsTabs";
 import OptimizedGoalsHeader from "@/components/goals/OptimizedGoalsHeader";
 import FastLoadingSpinner from "@/components/ui/FastLoadingSpinner";
@@ -12,7 +12,7 @@ import FastLoadingSpinner from "@/components/ui/FastLoadingSpinner";
 const OptimizedGoalsTracker = () => {
   usePerformanceOptimized('OptimizedGoalsTracker');
 
-  const { goals, loading, error, updateGoal, deleteGoal } = useStableGoals();
+  const { goals, loading, error, updateGoal, deleteGoal } = useGoals();
 
   if (loading) {
     return (

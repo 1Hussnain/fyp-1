@@ -5,13 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useSimpleGoals } from "@/hooks/useSimpleGoals";
+import { useGoals } from "@/hooks/useGoals";
 import { Target, TrendingUp, Calendar, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import FastLoadingSpinner from "@/components/ui/FastLoadingSpinner";
 
 const EnhancedGoalsOverview = () => {
-  const { goals, loading } = useSimpleGoals();
+  const { goals, loading } = useGoals();
   const navigate = useNavigate();
 
   if (loading) {
