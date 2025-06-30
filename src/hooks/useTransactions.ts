@@ -34,18 +34,23 @@ export const useTransactions = () => {
     deleteTransaction
   } = useTransactionOperations();
 
-  // Setup real-time updates using centralized subscription manager
-  useRealtime(
-    "transactions", 
-    user?.id || null, 
-    setTransactions,
-    {
-      enableDebounce: true,
-      debounceMs: 200,
-      enableRetry: true,
-      maxRetries: 3
+  // Handle real-time updates
+  const handleRealtimeUpdate = (payload: any) => {
+    console.log('[useTransactions] Realtime update:', payload);
+    
+    if (payload.eventType === 'INSERT') {
+      setTransactions(prev => [payload.new, ...prev]);
+    } else if (payload.eventType === 'UPDATE') {
+      setTransactions(prev => prev.map(transaction => 
+        transaction.id === payload.new.id ? payload.new : transaction
+      ));
+    } else if (payload.eventType === 'DELETE') {
+      setTransactions(prev => prev.filter(transaction => transaction.id !== payload.old.id));
     }
-  );
+  };
+
+  // Setup real-time updates
+  useRealtime("transactions", user?.id || null, handleRealtimeUpdate);
 
   return {
     transactions,

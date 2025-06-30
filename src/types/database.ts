@@ -23,14 +23,12 @@ export type DocumentInsert = Database['public']['Tables']['documents']['Insert']
 export type Folder = Database['public']['Tables']['folders']['Row'];
 export type FolderInsert = Database['public']['Tables']['folders']['Insert'];
 
-// New admin-related types
+// Admin-related types
 export type UserRole = Database['public']['Tables']['user_roles']['Row'];
 export type UserRoleInsert = Database['public']['Tables']['user_roles']['Insert'];
 
 export type AdminActivity = Database['public']['Tables']['admin_activities']['Row'];
 export type AdminActivityInsert = Database['public']['Tables']['admin_activities']['Insert'];
-
-export type UserAnalytics = Database['public']['Views']['user_analytics']['Row'];
 
 // Extended types with relationships
 export type TransactionWithCategory = Transaction & {
