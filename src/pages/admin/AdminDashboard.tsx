@@ -3,11 +3,11 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Users, Activity, Settings } from 'lucide-react';
 import AdminAnalytics from '@/components/admin/AdminAnalytics';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const AdminDashboard = () => {
-  const { user } = useAuth();
+  const { user } = useSimpleAuth();
 
   const getUserName = () => {
     const firstName = user?.user_metadata?.first_name;

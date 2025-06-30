@@ -4,162 +4,123 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext";
-import { ThemeProvider } from "./contexts/ThemeContext";
-import ProtectedRoute from "./components/ProtectedRoute";
-import AdminRoute from "./components/AdminRoute";
-import AppLayout from "./components/layout/AppLayout";
+import { SimpleAuthProvider } from "@/contexts/SimpleAuthContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import AdminRoute from "@/components/AdminRoute";
+import AppLayout from "@/components/layout/AppLayout";
+
+// Pages
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
-import FinancialManagement from "./pages/FinancialManagement";
-import GoalsTracker from "./pages/GoalsTracker";
+import OptimizedFinancialManagement from "./pages/OptimizedFinancialManagement";
+import OptimizedGoalsTracker from "./pages/OptimizedGoalsTracker";
 import BudgetSummary from "./pages/BudgetSummary";
 import FinanceChat from "./pages/FinanceChat";
 import DocumentViewer from "./pages/DocumentViewer";
 import Settings from "./pages/Settings";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import UserManagement from "./pages/admin/UserManagement";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              
-              {/* Regular app routes with AppLayout */}
-              <Route
-                path="/dashboard"
-                element={
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <SimpleAuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                {/* Public routes */}
+                <Route path="/" element={<Index />} />
+                
+                {/* Protected routes */}
+                <Route path="/dashboard" element={
                   <ProtectedRoute>
-                    <AppLayout pageTitle="Dashboard">
+                    <AppLayout>
                       <Dashboard />
                     </AppLayout>
                   </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/transactions"
-                element={
+                } />
+                
+                <Route path="/transactions" element={
                   <ProtectedRoute>
-                    <AppLayout pageTitle="Financial Management">
-                      <FinancialManagement />
+                    <AppLayout>
+                      <OptimizedFinancialManagement />
                     </AppLayout>
                   </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/goals"
-                element={
+                } />
+                
+                <Route path="/goals" element={
                   <ProtectedRoute>
-                    <AppLayout pageTitle="Financial Goals">
-                      <GoalsTracker />
+                    <AppLayout>
+                      <OptimizedGoalsTracker />
                     </AppLayout>
                   </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/budget"
-                element={
+                } />
+                
+                <Route path="/budget" element={
                   <ProtectedRoute>
-                    <AppLayout pageTitle="Budget Summary">
+                    <AppLayout>
                       <BudgetSummary />
                     </AppLayout>
                   </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/chat"
-                element={
+                } />
+                
+                <Route path="/chat" element={
                   <ProtectedRoute>
-                    <AppLayout pageTitle="Finance Chat">
+                    <AppLayout>
                       <FinanceChat />
                     </AppLayout>
                   </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/documents"
-                element={
+                } />
+                
+                <Route path="/documents" element={
                   <ProtectedRoute>
-                    <AppLayout pageTitle="Documents">
+                    <AppLayout>
                       <DocumentViewer />
                     </AppLayout>
                   </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/settings"
-                element={
+                } />
+                
+                <Route path="/settings" element={
                   <ProtectedRoute>
-                    <AppLayout pageTitle="Settings">
+                    <AppLayout>
                       <Settings />
                     </AppLayout>
                   </ProtectedRoute>
-                }
-              />
-              
-              {/* Admin routes with AppLayout */}
-              <Route
-                path="/admin/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <AdminRoute>
-                      <AppLayout pageTitle="Admin Dashboard" isAdmin={true}>
-                        <AdminDashboard />
-                      </AppLayout>
-                    </AdminRoute>
+                } />
+                
+                {/* Admin routes */}
+                <Route path="/admin/dashboard" element={
+                  <AdminRoute>
+                    <AppLayout>
+                      <AdminDashboard />
+                    </AppLayout>
+                  </AdminRoute>
+                } />
+                
+                <Route path="/admin/users" element={
+                  <AdminRoute>
+                    <AppLayout>
+                      <UserManagement />
+                    </AppLayout>
                   </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/users"
-                element={
-                  <ProtectedRoute>
-                    <AdminRoute>
-                      <AppLayout pageTitle="User Management" isAdmin={true}>
-                        <UserManagement />
-                      </AppLayout>
-                    </AdminRoute>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/analytics"
-                element={
-                  <ProtectedRoute>
-                    <AdminRoute>
-                      <AppLayout pageTitle="Analytics" isAdmin={true}>
-                        <div>Analytics Page (Coming Soon)</div>
-                      </AppLayout>
-                    </AdminRoute>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/settings"
-                element={
-                  <ProtectedRoute>
-                    <AdminRoute>
-                      <AppLayout pageTitle="Admin Settings" isAdmin={true}>
-                        <div>Admin Settings (Coming Soon)</div>
-                      </AppLayout>
-                    </AdminRoute>
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+                } />
+                
+                {/* 404 route */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </SimpleAuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;

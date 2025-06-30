@@ -7,11 +7,11 @@ import RecentTransactions from './RecentTransactions';
 import QuickActions from './QuickActions';
 import EnhancedBudgetAlerts from './EnhancedBudgetAlerts';
 import EnhancedReceiptUpload from './EnhancedReceiptUpload';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
 import { Shield, User } from 'lucide-react';
 
 const DashboardOverview = () => {
-  const { user, isAdmin, loading } = useAuth();
+  const { user, isAdmin, loading } = useSimpleAuth();
 
   if (loading) {
     return (

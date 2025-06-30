@@ -3,7 +3,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Bell, ChevronDown, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAuth } from "@/contexts/AuthContext";
+import { useSimpleAuth } from "@/contexts/SimpleAuthContext";
 import { toast } from "@/components/ui/sonner";
 import { useNavigate } from "react-router-dom";
 import AdminRoleToggle from "../AdminRoleToggle";
@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const TopNav = () => {
-  const { user, isAdmin, signOut } = useAuth();
+  const { user, isAdmin, signOut } = useSimpleAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {

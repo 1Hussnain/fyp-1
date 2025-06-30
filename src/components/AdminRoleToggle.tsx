@@ -4,10 +4,10 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Shield, User, ArrowLeftRight } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
 
 const AdminRoleToggle = () => {
-  const { isAdmin } = useAuth();
+  const { isAdmin } = useSimpleAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
