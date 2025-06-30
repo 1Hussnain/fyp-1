@@ -7,6 +7,7 @@ import ProtectedPageWrapper from './ProtectedPageWrapper';
 
 // Pages
 import Index from '@/pages/Index';
+import LoginPage from '@/pages/LoginPage';
 import Dashboard from '@/pages/Dashboard';
 import EnhancedDashboard from '@/pages/EnhancedDashboard';
 import GoalsTracker from '@/pages/GoalsTracker';
@@ -19,11 +20,14 @@ import DocumentViewer from '@/pages/DocumentViewer';
 import FinanceChat from '@/pages/FinanceChat';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
 import UserManagement from '@/pages/admin/UserManagement';
+import UpdatePassword from '@/pages/UpdatePassword';
 
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
       <Route path="/" element={<Index />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/update-password" element={<UpdatePassword />} />
       
       {/* Protected Routes */}
       <Route 

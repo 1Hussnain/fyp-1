@@ -106,14 +106,14 @@ const LoginForm = () => {
 
   if (confirmationSent) {
     return (
-      <div className="text-center space-y-4">
-        <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
-        <h2 className="text-2xl font-semibold text-gray-900">Check Your Email</h2>
+      <div className="text-center space-y-4 p-4">
+        <CheckCircle className="w-12 h-12 sm:w-16 sm:h-16 text-green-500 mx-auto" />
+        <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Check Your Email</h2>
         <div className="space-y-3">
-          <p className="text-gray-600">
-            We've sent a confirmation link to <strong>{email}</strong>
+          <p className="text-gray-600 text-sm sm:text-base">
+            We've sent a confirmation link to <strong className="break-all">{email}</strong>
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-xs sm:text-sm text-gray-500">
             Click the link in your email to activate your account, then come back here to sign in.
           </p>
         </div>
@@ -124,7 +124,8 @@ const LoginForm = () => {
               setConfirmationSent(false);
               setIsLogin(true);
             }}
-            className="w-full"
+            className="w-full h-10 sm:h-11"
+            size="default"
           >
             Back to Sign In
           </Button>
@@ -134,15 +135,15 @@ const LoginForm = () => {
   }
 
   return (
-    <>
-      <h2 className="text-2xl font-semibold mb-6 text-center">
+    <div className="space-y-4 sm:space-y-6">
+      <h2 className="text-xl sm:text-2xl font-semibold text-center text-gray-900">
         {isLogin ? "Welcome Back" : "Create Account"}
       </h2>
       
       <form className="space-y-4" onSubmit={handleSubmit}>
-        <div className="space-y-2">
+        <div className="space-y-3 sm:space-y-4">
           {!isLogin && (
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               <Input 
                 placeholder="First Name" 
                 type="text" 
@@ -151,6 +152,7 @@ const LoginForm = () => {
                 onChange={(e) => setFirstName(e.target.value)}
                 aria-label="First name"
                 disabled={loading}
+                className="h-10 sm:h-11 text-sm sm:text-base"
               />
               <Input 
                 placeholder="Last Name" 
@@ -160,6 +162,7 @@ const LoginForm = () => {
                 onChange={(e) => setLastName(e.target.value)}
                 aria-label="Last name"
                 disabled={loading}
+                className="h-10 sm:h-11 text-sm sm:text-base"
               />
             </div>
           )}
@@ -172,7 +175,7 @@ const LoginForm = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               aria-label="Email address"
-              className="pr-4"
+              className="h-10 sm:h-11 text-sm sm:text-base pr-4"
               disabled={loading}
             />
           </div>
@@ -185,20 +188,20 @@ const LoginForm = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               aria-label="Password"
-              className="pr-10"
+              className="h-10 sm:h-11 text-sm sm:text-base pr-10"
               disabled={loading}
               minLength={6}
             />
             <button 
               type="button"
               onClick={togglePasswordVisibility}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? (
-                <EyeOff size={18} />
+                <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" />
               ) : (
-                <Eye size={18} />
+                <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
               )}
             </button>
           </div>
@@ -206,7 +209,7 @@ const LoginForm = () => {
         
         {isLogin && (
           <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
-            <p className="text-sm text-blue-800">
+            <p className="text-xs sm:text-sm text-blue-800">
               <strong>Note:</strong> If you just signed up, please check your email and click the confirmation link before trying to sign in.
             </p>
           </div>
@@ -215,9 +218,10 @@ const LoginForm = () => {
         <motion.div
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.98 }}
+          className="w-full"
         >
           <Button 
-            className="w-full bg-blue-600 hover:bg-blue-700 transition-colors"
+            className="w-full h-10 sm:h-11 bg-blue-600 hover:bg-blue-700 transition-colors text-sm sm:text-base font-medium"
             type="submit"
             disabled={loading}
           >
@@ -232,36 +236,32 @@ const LoginForm = () => {
         
         <GoogleButton />
         
-        <p className="text-sm text-center mt-4">
-          {isLogin ? "Don't have an account? " : "Already have an account? "}
-          <a 
-            href="#" 
-            onClick={(e) => {
-              e.preventDefault();
-              toggleView();
-            }}
-            className="text-blue-600 hover:text-blue-800 font-medium"
-          >
-            {isLogin ? "Sign up" : "Sign in"}
-          </a>
-        </p>
-        
-        {isLogin && (
-          <p className="text-xs text-center text-gray-500">
-            <a 
-              href="#" 
-              onClick={(e) => {
-                e.preventDefault();
-                handleForgotPassword();
-              }}
-              className="hover:text-blue-600"
+        <div className="text-center space-y-2">
+          <p className="text-xs sm:text-sm">
+            {isLogin ? "Don't have an account? " : "Already have an account? "}
+            <button 
+              type="button"
+              onClick={toggleView}
+              className="text-blue-600 hover:text-blue-800 font-medium underline-offset-2 hover:underline transition-colors"
             >
-              Forgot password?
-            </a>
+              {isLogin ? "Sign up" : "Sign in"}
+            </button>
           </p>
-        )}
+          
+          {isLogin && (
+            <p className="text-xs text-gray-500">
+              <button 
+                type="button"
+                onClick={handleForgotPassword}
+                className="hover:text-blue-600 underline-offset-2 hover:underline transition-colors"
+              >
+                Forgot password?
+              </button>
+            </p>
+          )}
+        </div>
       </form>
-    </>
+    </div>
   );
 };
 
