@@ -3,12 +3,12 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTransactions } from "@/hooks/useTransactions";
-import { useSimpleGoals } from "@/hooks/useSimpleGoals";
+import { useGoals } from "@/hooks/useGoals";
 import { TrendingUp, TrendingDown, Target, DollarSign } from "lucide-react";
 
 const EnhancedSummaryCards = () => {
   const { transactions } = useTransactions();
-  const { goals } = useSimpleGoals();
+  const { goals } = useGoals();
 
   const totalIncome = transactions
     .filter(t => t.type === "income")

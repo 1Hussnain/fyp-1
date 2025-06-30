@@ -3,8 +3,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { transactionService } from '@/services/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { TransactionWithCategory, TransactionInsert, TransactionUpdate } from '@/types/database';
-import { useCleanRealtime } from './useCleanRealtime';
 
 export const useTransactions = () => {
   const { user } = useAuth();
@@ -41,31 +41,48 @@ export const useTransactions = () => {
     }
   }, [user]);
 
-  // Handle real-time updates
-  const handleRealtimeUpdate = useCallback((payload: any) => {
-    const { eventType, new: newRecord, old: oldRecord } = payload;
-    
-    setTransactions(prev => {
-      switch (eventType) {
-        case 'INSERT':
-          const newTransaction = newRecord as TransactionWithCategory;
-          return [newTransaction, ...prev];
-        case 'UPDATE':
-          const updatedTransaction = newRecord as TransactionWithCategory;
-          return prev.map(transaction => 
-            transaction.id === updatedTransaction.id ? updatedTransaction : transaction
-          );
-        case 'DELETE':
-          const deletedTransaction = oldRecord as TransactionWithCategory;
-          return prev.filter(transaction => transaction.id !== deletedTransaction.id);
-        default:
-          return prev;
-      }
-    });
-  }, []);
+  // Direct real-time subscription
+  useEffect(() => {
+    if (!user) return;
 
-  // Set up real-time subscription
-  useCleanRealtime('transactions', user?.id || null, handleRealtimeUpdate);
+    const channel = supabase
+      .channel(`transactions_${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'transactions',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          const { eventType, new: newRecord, old: oldRecord } = payload;
+          
+          setTransactions(prev => {
+            switch (eventType) {
+              case 'INSERT':
+                const newTransaction = newRecord as TransactionWithCategory;
+                return [newTransaction, ...prev];
+              case 'UPDATE':
+                const updatedTransaction = newRecord as TransactionWithCategory;
+                return prev.map(transaction => 
+                  transaction.id === updatedTransaction.id ? updatedTransaction : transaction
+                );
+              case 'DELETE':
+                const deletedTransaction = oldRecord as TransactionWithCategory;
+                return prev.filter(transaction => transaction.id !== deletedTransaction.id);
+              default:
+                return prev;
+            }
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
 
   // CRUD operations
   const addTransaction = async (transactionData: Omit<TransactionInsert, 'user_id'>) => {
