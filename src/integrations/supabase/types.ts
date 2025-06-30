@@ -521,6 +521,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assign_admin_role: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -543,6 +547,10 @@ export type Database = {
       refresh_user_analytics: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      remove_admin_role: {
+        Args: { target_user_id: string }
+        Returns: boolean
       }
     }
     Enums: {

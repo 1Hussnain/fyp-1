@@ -7,14 +7,14 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { goalService } from '@/services/supabase/goals';
 import { FinancialGoal, FinancialGoalInsert, FinancialGoalUpdate } from '@/types/database';
 import { useSimpleRealtime } from './useSimpleRealtime';
 
 export const useStableGoals = () => {
-  const { user } = useSimpleAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   
   const [goals, setGoals] = useState<FinancialGoal[]>([]);
