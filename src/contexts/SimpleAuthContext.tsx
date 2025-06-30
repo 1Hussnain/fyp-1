@@ -46,9 +46,11 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Fetch user profile
-  const fetchUserProfile = async (userId: string) => {
+  // Fetch user profile with better error handling
+  const fetchUserProfile = async (userId: string): Promise<Profile | null> => {
     try {
+      console.log('[SimpleAuth] Fetching profile for user:', userId);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -56,100 +58,135 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         .single();
 
       if (error) {
-        console.error('Error fetching profile:', error);
+        console.error('[SimpleAuth] Error fetching profile:', error);
         return null;
       }
 
+      console.log('[SimpleAuth] Profile fetched successfully');
       return data as Profile;
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('[SimpleAuth] Exception fetching profile:', error);
       return null;
     }
   };
 
-  // Check admin status
-  const checkAdminStatus = async () => {
+  // Check admin status with better error handling
+  const checkAdminStatus = async (): Promise<boolean> => {
     try {
+      console.log('[SimpleAuth] Checking admin status');
+      
       const { data, error } = await supabase.rpc('is_admin');
+      
       if (error) {
-        console.error('Error checking admin status:', error);
+        console.error('[SimpleAuth] Error checking admin status:', error);
         return false;
       }
-      return data || false;
+      
+      const adminStatus = data || false;
+      console.log('[SimpleAuth] Admin status:', adminStatus);
+      return adminStatus;
     } catch (err) {
-      console.error('Error checking admin status:', err);
+      console.error('[SimpleAuth] Exception checking admin status:', err);
       return false;
     }
   };
 
   useEffect(() => {
+    let isMounted = true;
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event);
+        if (!isMounted) return;
+        
+        console.log('[SimpleAuth] Auth state changed:', event);
         
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Use setTimeout to prevent potential deadlocks
+          // Use setTimeout to prevent potential deadlocks and ensure state updates happen
           setTimeout(async () => {
+            if (!isMounted) return;
+            
             try {
               const [userProfile, adminStatus] = await Promise.all([
                 fetchUserProfile(session.user.id),
                 checkAdminStatus()
               ]);
               
-              setProfile(userProfile);
-              setIsAdmin(adminStatus);
-              setLoading(false);
+              if (isMounted) {
+                setProfile(userProfile);
+                setIsAdmin(adminStatus);
+                setLoading(false);
+              }
 
-              // Smart redirect after login
-              if (event === 'SIGNED_IN') {
+              // Smart redirect after login - only for SIGNED_IN event
+              if (event === 'SIGNED_IN' && isMounted) {
                 const currentPath = window.location.pathname;
                 if (currentPath === '/' || currentPath.startsWith('/auth')) {
-                  window.location.href = adminStatus ? '/admin/dashboard' : '/dashboard';
+                  const redirectPath = adminStatus ? '/admin/dashboard' : '/dashboard';
+                  console.log('[SimpleAuth] Redirecting to:', redirectPath);
+                  window.location.href = redirectPath;
                 }
               }
             } catch (error) {
-              console.error('Error loading user data:', error);
-              setLoading(false);
+              console.error('[SimpleAuth] Error loading user data:', error);
+              if (isMounted) {
+                setLoading(false);
+              }
             }
           }, 100);
         } else {
-          setProfile(null);
-          setIsAdmin(false);
-          setLoading(false);
+          if (isMounted) {
+            setProfile(null);
+            setIsAdmin(false);
+            setLoading(false);
+          }
         }
       }
     );
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!isMounted) return;
+      
       if (session?.user) {
         setSession(session);
         setUser(session.user);
         
         setTimeout(async () => {
+          if (!isMounted) return;
+          
           try {
             const [userProfile, adminStatus] = await Promise.all([
               fetchUserProfile(session.user.id),
               checkAdminStatus()
             ]);
-            setProfile(userProfile);
-            setIsAdmin(adminStatus);
-            setLoading(false);
+            
+            if (isMounted) {
+              setProfile(userProfile);
+              setIsAdmin(adminStatus);
+              setLoading(false);
+            }
           } catch (error) {
-            console.error('Error loading user data:', error);
-            setLoading(false);
+            console.error('[SimpleAuth] Error loading initial user data:', error);
+            if (isMounted) {
+              setLoading(false);
+            }
           }
         }, 100);
       } else {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string, metadata?: any) => {
@@ -176,6 +213,7 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       
       return { data, error };
     } catch (error) {
+      console.error('[SimpleAuth] Sign up error:', error);
       return { data: null, error };
     }
   };
@@ -203,6 +241,7 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       
       return { data, error };
     } catch (error) {
+      console.error('[SimpleAuth] Sign in error:', error);
       return { data: null, error };
     }
   };
@@ -219,7 +258,7 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       
       window.location.href = '/';
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error('[SimpleAuth] Sign out error:', error);
       window.location.href = '/';
     }
   };
@@ -237,6 +276,7 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       
       return { data, error };
     } catch (error) {
+      console.error('[SimpleAuth] Google sign in error:', error);
       return { data: null, error };
     }
   };
@@ -257,6 +297,7 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       setProfile(data as Profile);
       return { data, error: null };
     } catch (error) {
+      console.error('[SimpleAuth] Update profile error:', error);
       return { data: null, error };
     }
   };

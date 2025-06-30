@@ -3,8 +3,8 @@ import React from "react";
 import { usePerformanceOptimized } from "@/hooks/usePerformanceOptimized";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Target } from "lucide-react";
-import { useSimpleGoals } from "@/hooks/useSimpleGoals";
+import { Plus, Target, AlertCircle } from "lucide-react";
+import { useStableGoals } from "@/hooks/useStableGoals";
 import OptimizedGoalsTabs from "@/components/goals/OptimizedGoalsTabs";
 import OptimizedGoalsHeader from "@/components/goals/OptimizedGoalsHeader";
 import FastLoadingSpinner from "@/components/ui/FastLoadingSpinner";
@@ -12,7 +12,7 @@ import FastLoadingSpinner from "@/components/ui/FastLoadingSpinner";
 const OptimizedGoalsTracker = () => {
   usePerformanceOptimized('OptimizedGoalsTracker');
 
-  const { goals, loading, error, updateGoal, deleteGoal } = useSimpleGoals();
+  const { goals, loading, error, updateGoal, deleteGoal } = useStableGoals();
 
   if (loading) {
     return (
@@ -28,7 +28,7 @@ const OptimizedGoalsTracker = () => {
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-red-600">
-              <Target className="h-5 w-5" />
+              <AlertCircle className="h-5 w-5" />
               Error Loading Goals
             </CardTitle>
           </CardHeader>
