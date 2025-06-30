@@ -1,16 +1,10 @@
 
-/**
- * Simplified Goals Hook
- * 
- * Uses the new simple real-time system and cleaner error handling
- */
-
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { goalService } from '@/services/supabase/goals';
 import { FinancialGoal, FinancialGoalInsert, FinancialGoalUpdate } from '@/types/database';
-import { useSimpleRealtime } from './useSimpleRealtime';
+import { useCleanRealtime } from './useCleanRealtime';
 
 export const useSimpleGoals = () => {
   const { user } = useAuth();
@@ -54,13 +48,16 @@ export const useSimpleGoals = () => {
     setGoals(currentGoals => {
       switch (eventType) {
         case 'INSERT':
-          return [...currentGoals, newRecord];
+          const newGoal = newRecord as FinancialGoal;
+          return [...currentGoals, newGoal];
         case 'UPDATE':
+          const updatedGoal = newRecord as FinancialGoal;
           return currentGoals.map(goal => 
-            goal.id === newRecord.id ? newRecord : goal
+            goal.id === updatedGoal.id ? updatedGoal : goal
           );
         case 'DELETE':
-          return currentGoals.filter(goal => goal.id !== oldRecord.id);
+          const deletedGoal = oldRecord as FinancialGoal;
+          return currentGoals.filter(goal => goal.id !== deletedGoal.id);
         default:
           return currentGoals;
       }
@@ -68,9 +65,9 @@ export const useSimpleGoals = () => {
   }, []);
 
   // Set up real-time subscription
-  useSimpleRealtime('financial_goals', user?.id || null, handleRealtimeUpdate);
+  useCleanRealtime('financial_goals', user?.id || null, handleRealtimeUpdate);
 
-  // Add new goal
+  // CRUD operations
   const addGoal = async (goalData: Omit<FinancialGoalInsert, 'user_id'>) => {
     if (!user) return { success: false, error: 'User not authenticated' };
 
@@ -105,7 +102,6 @@ export const useSimpleGoals = () => {
     }
   };
 
-  // Update goal
   const updateGoal = async (id: string, updates: FinancialGoalUpdate) => {
     try {
       const result = await goalService.update(id, updates);
@@ -135,7 +131,6 @@ export const useSimpleGoals = () => {
     }
   };
 
-  // Delete goal
   const deleteGoal = async (id: string) => {
     try {
       const result = await goalService.delete(id);
