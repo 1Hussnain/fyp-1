@@ -142,64 +142,11 @@ export const useGoals = () => {
     fetchGoals();
   }, [fetchGoals]);
 
-  // Simple real-time subscription
-  useEffect(() => {
-    if (!user) return;
-
-    let channel: any = null;
-
-    const setupChannel = () => {
-      try {
-        channel = supabase
-          .channel(`goals_realtime_${user.id}_${Date.now()}`)
-          .on(
-            'postgres_changes',
-            {
-              event: '*',
-              schema: 'public',
-              table: 'financial_goals',
-              filter: `user_id=eq.${user.id}`
-            },
-            (payload) => {
-              console.log('[useGoals] Real-time update:', payload.eventType);
-              
-              setGoals(currentGoals => {
-                switch (payload.eventType) {
-                  case 'INSERT':
-                    const newGoal = payload.new as FinancialGoal;
-                    if (currentGoals.some(g => g.id === newGoal.id)) return currentGoals;
-                    return [newGoal, ...currentGoals];
-                  case 'UPDATE':
-                    const updatedGoal = payload.new as FinancialGoal;
-                    return currentGoals.map(goal => 
-                      goal.id === updatedGoal.id ? updatedGoal : goal
-                    );
-                  case 'DELETE':
-                    const deletedGoal = payload.old as FinancialGoal;
-                    return currentGoals.filter(goal => goal.id !== deletedGoal.id);
-                  default:
-                    return currentGoals;
-                }
-              });
-            }
-          )
-          .subscribe((status) => {
-            console.log('[useGoals] Subscription status:', status);
-          });
-      } catch (error) {
-        console.error('[useGoals] Subscription error:', error);
-      }
-    };
-
-    setupChannel();
-
-    return () => {
-      if (channel) {
-        console.log('[useGoals] Cleaning up channel');
-        supabase.removeChannel(channel);
-      }
-    };
-  }, [user?.id]);
+  // Real-time subscription temporarily disabled to fix crashes
+  // useEffect(() => {
+  //   if (!user) return;
+  //   console.log('[useGoals] Real-time disabled');
+  // }, [user?.id]);
 
   return {
     goals,

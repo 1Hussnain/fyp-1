@@ -147,64 +147,11 @@ export const useTransactions = () => {
     fetchTransactions();
   }, [fetchTransactions]);
 
-  // Simple real-time subscription
-  useEffect(() => {
-    if (!user) return;
-
-    let channel: any = null;
-
-    const setupChannel = () => {
-      try {
-        channel = supabase
-          .channel(`transactions_realtime_${user.id}_${Date.now()}`)
-          .on(
-            'postgres_changes',
-            {
-              event: '*',
-              schema: 'public',
-              table: 'transactions',
-              filter: `user_id=eq.${user.id}`
-            },
-            (payload) => {
-              console.log('[useTransactions] Real-time update:', payload.eventType);
-              
-              setTransactions(prev => {
-                switch (payload.eventType) {
-                  case 'INSERT':
-                    const newTransaction = payload.new as TransactionWithCategory;
-                    if (prev.some(t => t.id === newTransaction.id)) return prev;
-                    return [newTransaction, ...prev];
-                  case 'UPDATE':
-                    const updatedTransaction = payload.new as TransactionWithCategory;
-                    return prev.map(transaction => 
-                      transaction.id === updatedTransaction.id ? updatedTransaction : transaction
-                    );
-                  case 'DELETE':
-                    const deletedTransaction = payload.old as TransactionWithCategory;
-                    return prev.filter(transaction => transaction.id !== deletedTransaction.id);
-                  default:
-                    return prev;
-                }
-              });
-            }
-          )
-          .subscribe((status) => {
-            console.log('[useTransactions] Subscription status:', status);
-          });
-      } catch (error) {
-        console.error('[useTransactions] Subscription error:', error);
-      }
-    };
-
-    setupChannel();
-
-    return () => {
-      if (channel) {
-        console.log('[useTransactions] Cleaning up channel');
-        supabase.removeChannel(channel);
-      }
-    };
-  }, [user?.id]);
+  // Real-time subscription temporarily disabled to fix crashes
+  // useEffect(() => {
+  //   if (!user) return;
+  //   console.log('[useTransactions] Real-time disabled');
+  // }, [user?.id]);
 
   return {
     transactions,
