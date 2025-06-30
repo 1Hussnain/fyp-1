@@ -1,12 +1,12 @@
 
 /**
- * Stable Goals Hook
+ * Stable Goals Hook - Optimized Version
  * 
- * Replaces the complex useSimpleGoals with a more stable version
- * that avoids dependency issues and provides better error handling.
+ * This hook provides stable goal management with proper memoization
+ * and error handling to prevent unnecessary re-renders.
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { goalService } from '@/services/supabase/goals';
@@ -20,20 +20,10 @@ export const useStableGoals = () => {
   const [goals, setGoals] = useState<FinancialGoal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // Use refs to prevent infinite re-renders
-  const hasFetchedRef = useRef(false);
-  const userIdRef = useRef<string | null>(null);
 
-  // Stable fetch function
+  // Fetch goals with stable reference
   const fetchGoals = useCallback(async () => {
-    if (!user?.id) {
-      setLoading(false);
-      return;
-    }
-
-    // Prevent duplicate fetches for same user
-    if (hasFetchedRef.current && userIdRef.current === user.id) {
+    if (!user) {
       setLoading(false);
       return;
     }
@@ -41,23 +31,18 @@ export const useStableGoals = () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('[useStableGoals] Fetching goals for user:', user.id);
 
       const result = await goalService.getAll(user.id);
 
       if (result.success) {
         setGoals(result.data || []);
-        hasFetchedRef.current = true;
-        userIdRef.current = user.id;
-        console.log('[useStableGoals] Successfully loaded', result.data?.length || 0, 'goals');
       } else {
         setError(result.error || 'Failed to load goals');
-        console.error('[useStableGoals] Error loading goals:', result.error);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       setError(errorMessage);
-      console.error('[useStableGoals] Exception loading goals:', err);
+      console.error('Error fetching goals:', err);
     } finally {
       setLoading(false);
     }
@@ -65,65 +50,30 @@ export const useStableGoals = () => {
 
   // Handle real-time updates with stable callback
   const handleRealtimeUpdate = useCallback((payload: any) => {
-    console.log('[useStableGoals] Realtime update:', payload.eventType);
-    
     const { eventType, new: newRecord, old: oldRecord } = payload;
     
     setGoals(currentGoals => {
       switch (eventType) {
         case 'INSERT':
-          // Avoid duplicates
-          if (currentGoals.some(goal => goal.id === newRecord.id)) {
-            return currentGoals;
-          }
           return [...currentGoals, newRecord];
-          
         case 'UPDATE':
           return currentGoals.map(goal => 
             goal.id === newRecord.id ? newRecord : goal
           );
-          
         case 'DELETE':
           return currentGoals.filter(goal => goal.id !== oldRecord.id);
-          
         default:
           return currentGoals;
       }
     });
   }, []);
 
-  // Set up real-time subscription with stable callback
+  // Set up real-time subscription
   useSimpleRealtime('financial_goals', user?.id || null, handleRealtimeUpdate);
 
-  // Reset state when user changes
-  useEffect(() => {
-    if (userIdRef.current !== user?.id) {
-      console.log('[useStableGoals] User changed, resetting state');
-      hasFetchedRef.current = false;
-      userIdRef.current = user?.id || null;
-      setGoals([]);
-      setError(null);
-      setLoading(true);
-    }
-  }, [user?.id]);
-
-  // Initial data fetch
-  useEffect(() => {
-    if (user?.id && !hasFetchedRef.current) {
-      fetchGoals();
-    }
-  }, [user?.id, fetchGoals]);
-
-  // CRUD operations with better error handling
-  const addGoal = async (goalData: Omit<FinancialGoalInsert, 'user_id'>) => {
-    if (!user?.id) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to add goals",
-        variant: "destructive",
-      });
-      return { success: false, error: 'User not authenticated' };
-    }
+  // CRUD operations with stable references
+  const addGoal = useCallback(async (goalData: Omit<FinancialGoalInsert, 'user_id'>) => {
+    if (!user) return { success: false, error: 'User not authenticated' };
 
     try {
       const result = await goalService.create({
@@ -154,9 +104,9 @@ export const useStableGoals = () => {
       });
       return { success: false, error: errorMessage };
     }
-  };
+  }, [user, toast]);
 
-  const updateGoal = async (id: string, updates: FinancialGoalUpdate) => {
+  const updateGoal = useCallback(async (id: string, updates: FinancialGoalUpdate) => {
     try {
       const result = await goalService.update(id, updates);
 
@@ -183,9 +133,9 @@ export const useStableGoals = () => {
       });
       return { success: false, error: errorMessage };
     }
-  };
+  }, [toast]);
 
-  const deleteGoal = async (id: string) => {
+  const deleteGoal = useCallback(async (id: string) => {
     try {
       const result = await goalService.delete(id);
 
@@ -212,7 +162,12 @@ export const useStableGoals = () => {
       });
       return { success: false, error: errorMessage };
     }
-  };
+  }, [toast]);
+
+  // Initial data fetch
+  useEffect(() => {
+    fetchGoals();
+  }, [fetchGoals]);
 
   return {
     goals,

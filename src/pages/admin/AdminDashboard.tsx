@@ -3,6 +3,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Users, Activity, Settings } from 'lucide-react';
 import AdminAnalytics from '@/components/admin/AdminAnalytics';
+import AdminSystemStatus from '@/components/admin/AdminSystemStatus';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -37,11 +38,20 @@ const AdminDashboard = () => {
         </div>
       </motion.div>
 
-      {/* Quick Stats Cards */}
+      {/* System Status Card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
+      >
+        <AdminSystemStatus />
+      </motion.div>
+
+      {/* Quick Stats Cards */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
         className="grid grid-cols-1 md:grid-cols-3 gap-6"
       >
         <Card className="border-red-200 dark:border-red-800">

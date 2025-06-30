@@ -18,11 +18,11 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Authorized admin emails - only these can become admin
+// Authorized admin emails - only these can become admin automatically
 const AUTHORIZED_ADMIN_EMAILS = [
+  'muhammadhassnainn@gmail.com',
   'admin@company.com',
   'superadmin@company.com',
-  // Add more authorized admin emails here
 ];
 
 export const useAuth = () => {
@@ -55,32 +55,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsAdmin(false);
       } else {
         setIsAdmin(data || false);
+        console.log('Admin status checked:', data);
       }
     } catch (err) {
       console.error('Error checking admin status:', err);
       setIsAdmin(false);
     } finally {
       setAdminLoading(false);
-    }
-  };
-
-  const assignAdminRole = async (userId: string) => {
-    try {
-      const { error } = await supabase
-        .from('user_roles')
-        .upsert({ 
-          user_id: userId, 
-          role: 'admin',
-          assigned_by: user?.id
-        });
-
-      if (error) {
-        console.error('Error assigning admin role:', error);
-      } else {
-        console.log('Admin role assigned successfully');
-      }
-    } catch (err) {
-      console.error('Error assigning admin role:', err);
     }
   };
 
@@ -165,8 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Only assign admin role if email is in authorized list
       if (data.user && AUTHORIZED_ADMIN_EMAILS.includes(email.toLowerCase())) {
-        console.log('Authorized admin email detected, will assign admin role after confirmation');
-        // Note: Admin role will be assigned after email confirmation in the handle_new_user trigger
+        console.log('Authorized admin email detected, admin role will be assigned after confirmation');
       }
       
       // Check if user needs email confirmation

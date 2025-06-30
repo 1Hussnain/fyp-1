@@ -9,12 +9,12 @@ interface AdminRouteProps {
 }
 
 const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin, adminLoading } = useAuth();
 
-  if (loading) {
+  if (loading || adminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="lg" text="Loading..." />
+        <LoadingSpinner size="lg" text="Verifying admin access..." />
       </div>
     );
   }
@@ -23,9 +23,6 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
     return <Navigate to="/" replace />;
   }
 
-  // Simple admin check - you might want to implement proper role checking
-  const isAdmin = user.email?.includes('admin') || user.user_metadata?.role === 'admin';
-  
   if (!isAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
