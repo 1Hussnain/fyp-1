@@ -68,39 +68,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     console.log('[AuthProvider] Initializing...');
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('[AuthProvider] Auth state changed:', event, session?.user?.id);
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-
-        // Check admin status after user is set
-        if (session?.user) {
-          setTimeout(() => {
-            checkAdminStatus();
-          }, 100);
-        } else {
-          setIsAdmin(false);
-        }
-      }
-    );
-
-    // Get initial session
+    // Get initial session first
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log('[AuthProvider] Initial session:', session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
 
+      // Check admin status after setting user
       if (session?.user) {
         setTimeout(() => {
           checkAdminStatus();
         }, 100);
       }
     });
+
+    // Set up auth state listener after getting initial session
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('[AuthProvider] Auth state changed:', event, session?.user?.id);
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        // Don't set loading false here if we're getting initial session
+        if (event !== 'INITIAL_SESSION') {
+          setLoading(false);
+        }
+
+        // Check admin status for new sessions
+        if (session?.user && event === 'SIGNED_IN') {
+          setTimeout(() => {
+            checkAdminStatus();
+          }, 100);
+        } else if (!session) {
+          setIsAdmin(false);
+        }
+      }
+    );
 
     return () => {
       console.log('[AuthProvider] Cleaning up subscription');
@@ -136,7 +141,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password,
         options: {
           data: metadata,
-          emailRedirectTo: `${window.location.origin}/goals`
+          emailRedirectTo: `${window.location.origin}/dashboard`
         }
       });
       
@@ -169,7 +174,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/goals`
+          redirectTo: `${window.location.origin}/dashboard`
         }
       });
       return { error };

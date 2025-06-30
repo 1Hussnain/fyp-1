@@ -1,17 +1,9 @@
 
-/**
- * Stable Goals Hook - Optimized Version
- * 
- * This hook provides stable goal management with proper memoization
- * and error handling to prevent unnecessary re-renders.
- */
-
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { goalService } from '@/services/supabase/goals';
 import { FinancialGoal, FinancialGoalInsert, FinancialGoalUpdate } from '@/types/database';
-import { useSimpleRealtime } from './useSimpleRealtime';
 
 export const useStableGoals = () => {
   const { user } = useAuth();
@@ -48,28 +40,45 @@ export const useStableGoals = () => {
     }
   }, [user?.id]);
 
-  // Handle real-time updates with stable callback
-  const handleRealtimeUpdate = useCallback((payload: any) => {
-    const { eventType, new: newRecord, old: oldRecord } = payload;
-    
-    setGoals(currentGoals => {
-      switch (eventType) {
-        case 'INSERT':
-          return [...currentGoals, newRecord];
-        case 'UPDATE':
-          return currentGoals.map(goal => 
-            goal.id === newRecord.id ? newRecord : goal
-          );
-        case 'DELETE':
-          return currentGoals.filter(goal => goal.id !== oldRecord.id);
-        default:
-          return currentGoals;
-      }
-    });
-  }, []);
+  // Simple real-time updates without external hook to avoid conflicts
+  useEffect(() => {
+    if (!user) return;
 
-  // Set up real-time subscription
-  useSimpleRealtime('financial_goals', user?.id || null, handleRealtimeUpdate);
+    const channel = supabase
+      .channel(`goals_${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'financial_goals',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          const { eventType, new: newRecord, old: oldRecord } = payload;
+          
+          setGoals(currentGoals => {
+            switch (eventType) {
+              case 'INSERT':
+                return [...currentGoals, newRecord];
+              case 'UPDATE':
+                return currentGoals.map(goal => 
+                  goal.id === newRecord.id ? newRecord : goal
+                );
+              case 'DELETE':
+                return currentGoals.filter(goal => goal.id !== oldRecord.id);
+              default:
+                return currentGoals;
+            }
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [user?.id]);
 
   // CRUD operations with stable references
   const addGoal = useCallback(async (goalData: Omit<FinancialGoalInsert, 'user_id'>) => {

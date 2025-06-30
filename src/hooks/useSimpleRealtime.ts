@@ -1,48 +1,45 @@
-
-/**
- * Ultra-Simple Realtime Hook
- * 
- * Completely rewritten to avoid all subscription conflicts and complexity.
- * One subscription per hook instance, automatic cleanup, no shared state.
- */
-
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
-type Table = "transactions" | "financial_goals" | "budgets" | "categories";
+// Global channel registry to prevent duplicate subscriptions
+const channelRegistry = new Map<string, RealtimeChannel>();
 
-/**
- * Simple, conflict-free hook for subscribing to realtime updates
- */
-export function useSimpleRealtime<T>(
-  table: Table,
+export const useSimpleRealtime = (
+  table: string,
   userId: string | null,
   onUpdate: (payload: any) => void
-) {
-  const channelRef = useRef<any>(null);
-  const cleanupRef = useRef<(() => void) | null>(null);
+) => {
+  const handlerRef = useRef(onUpdate);
+  const channelRef = useRef<RealtimeChannel | null>(null);
+
+  // Update handler ref when it changes
+  useEffect(() => {
+    handlerRef.current = onUpdate;
+  }, [onUpdate]);
+
+  const handleRealtimeUpdate = useCallback((payload: any) => {
+    if (handlerRef.current) {
+      handlerRef.current(payload);
+    }
+  }, []);
 
   useEffect(() => {
-    // Clear any existing subscription first
-    if (cleanupRef.current) {
-      cleanupRef.current();
-      cleanupRef.current = null;
-    }
-
-    // Don't subscribe if no user ID
     if (!userId) {
+      console.log(`[useSimpleRealtime] No user ID for ${table}, skipping subscription`);
       return;
     }
 
-    console.log(`[useSimpleRealtime] Creating fresh subscription for ${table}`);
+    const channelKey = `${table}_${userId}`;
+    console.log(`[useSimpleRealtime] Setting up ${table} subscription for user ${userId}`);
 
-    // Create a truly unique channel name with timestamp and random number
-    const channelName = `${table}_${userId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // Check if channel already exists
+    let channel = channelRegistry.get(channelKey);
     
-    try {
-      // Create channel and subscribe
-      channelRef.current = supabase
-        .channel(channelName)
+    if (!channel) {
+      // Create new channel
+      channel = supabase
+        .channel(`${table}_changes_${userId}`)
         .on(
           'postgres_changes',
           {
@@ -51,46 +48,50 @@ export function useSimpleRealtime<T>(
             table: table,
             filter: `user_id=eq.${userId}`
           },
-          (payload) => {
-            console.log(`[useSimpleRealtime] ${table} update:`, payload.eventType);
-            try {
-              onUpdate(payload);
-            } catch (error) {
-              console.error(`[useSimpleRealtime] Error in update handler:`, error);
-            }
-          }
-        )
-        .subscribe((status) => {
-          console.log(`[useSimpleRealtime] ${table} status:`, status);
-        });
+          handleRealtimeUpdate
+        );
 
-      // Store cleanup function
-      cleanupRef.current = () => {
-        if (channelRef.current) {
-          console.log(`[useSimpleRealtime] Cleaning up ${table} subscription`);
-          supabase.removeChannel(channelRef.current);
-          channelRef.current = null;
-        }
-      };
-    } catch (error) {
-      console.error(`[useSimpleRealtime] Error creating subscription:`, error);
+      // Subscribe to the channel
+      channel.subscribe((status) => {
+        console.log(`[useSimpleRealtime] ${table} status:`, status);
+      });
+
+      // Store in registry
+      channelRegistry.set(channelKey, channel);
+    } else {
+      // Add handler to existing channel
+      channel.on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: table,
+          filter: `user_id=eq.${userId}`
+        },
+        handleRealtimeUpdate
+      );
     }
 
-    // Cleanup function
-    return () => {
-      if (cleanupRef.current) {
-        cleanupRef.current();
-        cleanupRef.current = null;
-      }
-    };
-  }, [table, userId]); // Removed onUpdate from deps to prevent recreating subscriptions
+    channelRef.current = channel;
 
-  // Final cleanup on unmount
-  useEffect(() => {
     return () => {
-      if (cleanupRef.current) {
-        cleanupRef.current();
+      console.log(`[useSimpleRealtime] Cleaning up ${table} subscription`);
+      
+      if (channelRef.current) {
+        // Remove this specific handler but keep channel for other components
+        channelRef.current.off('postgres_changes', handleRealtimeUpdate);
+        
+        // Only unsubscribe and remove from registry if no other handlers
+        const hasOtherHandlers = channelRef.current.bindings?.postgres_changes?.length > 0;
+        
+        if (!hasOtherHandlers) {
+          channelRef.current.unsubscribe();
+          channelRegistry.delete(channelKey);
+          console.log(`[useSimpleRealtime] ${table} status: CLOSED`);
+        }
       }
     };
-  }, []);
-}
+  }, [userId, table, handleRealtimeUpdate]);
+
+  return channelRef.current;
+};
