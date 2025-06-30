@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { goalService } from '@/services/supabase/goals';
+import { supabase } from '@/integrations/supabase/client';
 import { FinancialGoal, FinancialGoalInsert, FinancialGoalUpdate } from '@/types/database';
 
 export const useStableGoals = () => {

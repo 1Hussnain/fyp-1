@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
@@ -58,18 +59,6 @@ export const useSimpleRealtime = (
 
       // Store in registry
       channelRegistry.set(channelKey, channel);
-    } else {
-      // Add handler to existing channel
-      channel.on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: table,
-          filter: `user_id=eq.${userId}`
-        },
-        handleRealtimeUpdate
-      );
     }
 
     channelRef.current = channel;
@@ -78,17 +67,10 @@ export const useSimpleRealtime = (
       console.log(`[useSimpleRealtime] Cleaning up ${table} subscription`);
       
       if (channelRef.current) {
-        // Remove this specific handler but keep channel for other components
-        channelRef.current.off('postgres_changes', handleRealtimeUpdate);
-        
-        // Only unsubscribe and remove from registry if no other handlers
-        const hasOtherHandlers = channelRef.current.bindings?.postgres_changes?.length > 0;
-        
-        if (!hasOtherHandlers) {
-          channelRef.current.unsubscribe();
-          channelRegistry.delete(channelKey);
-          console.log(`[useSimpleRealtime] ${table} status: CLOSED`);
-        }
+        const channelKey = `${table}_${userId}`;
+        channelRef.current.unsubscribe();
+        channelRegistry.delete(channelKey);
+        console.log(`[useSimpleRealtime] ${table} status: CLOSED`);
       }
     };
   }, [userId, table, handleRealtimeUpdate]);

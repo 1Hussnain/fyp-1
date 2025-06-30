@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTransactionFetching } from './useTransactionFetching';
 import { useTransactionState } from './useTransactionState';
 import { supabase } from '@/integrations/supabase/client';
+import { TransactionWithCategory } from '@/types/database';
 
 export const useTransactionData = () => {
   const { user } = useAuth();
@@ -87,13 +88,16 @@ export const useTransactionData = () => {
           console.log('[useTransactionData] Realtime update:', payload);
           
           if (payload.eventType === 'INSERT') {
-            setTransactions(prev => [payload.new, ...prev]);
+            const newTransaction = payload.new as TransactionWithCategory;
+            setTransactions(prev => [newTransaction, ...prev]);
           } else if (payload.eventType === 'UPDATE') {
+            const updatedTransaction = payload.new as TransactionWithCategory;
             setTransactions(prev => prev.map(transaction => 
-              transaction.id === payload.new.id ? payload.new : transaction
+              transaction.id === updatedTransaction.id ? updatedTransaction : transaction
             ));
           } else if (payload.eventType === 'DELETE') {
-            setTransactions(prev => prev.filter(transaction => transaction.id !== payload.old.id));
+            const deletedTransaction = payload.old as TransactionWithCategory;
+            setTransactions(prev => prev.filter(transaction => transaction.id !== deletedTransaction.id));
           }
         }
       )
