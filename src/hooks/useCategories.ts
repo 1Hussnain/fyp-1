@@ -166,21 +166,36 @@ export const useCategories = () => {
   useEffect(() => {
     if (!user) return;
 
-    const channel = supabase
-      .channel(`categories_${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'categories'
-        },
-        handleCategoryUpdate
-      )
-      .subscribe();
+    let channel: any = null;
+
+    const setupChannel = () => {
+      try {
+        channel = supabase
+          .channel(`categories_realtime_${user.id}_${Date.now()}`)
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'categories'
+            },
+            handleCategoryUpdate
+          )
+          .subscribe((status) => {
+            console.log('[useCategories] Subscription status:', status);
+          });
+      } catch (error) {
+        console.error('[useCategories] Subscription error:', error);
+      }
+    };
+
+    setupChannel();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) {
+        console.log('[useCategories] Cleaning up channel');
+        supabase.removeChannel(channel);
+      }
     };
   }, [user?.id]);
 

@@ -41,49 +41,6 @@ export const useTransactions = () => {
     }
   }, [user]);
 
-  // Direct real-time subscription
-  useEffect(() => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel(`transactions_${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'transactions',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          const { eventType, new: newRecord, old: oldRecord } = payload;
-          
-          setTransactions(prev => {
-            switch (eventType) {
-              case 'INSERT':
-                const newTransaction = newRecord as TransactionWithCategory;
-                return [newTransaction, ...prev];
-              case 'UPDATE':
-                const updatedTransaction = newRecord as TransactionWithCategory;
-                return prev.map(transaction => 
-                  transaction.id === updatedTransaction.id ? updatedTransaction : transaction
-                );
-              case 'DELETE':
-                const deletedTransaction = oldRecord as TransactionWithCategory;
-                return prev.filter(transaction => transaction.id !== deletedTransaction.id);
-              default:
-                return prev;
-            }
-          });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id]);
-
   // CRUD operations
   const addTransaction = async (transactionData: Omit<TransactionInsert, 'user_id'>) => {
     if (!user) return { success: false, error: 'User not authenticated' };
@@ -128,6 +85,10 @@ export const useTransactions = () => {
           title: "Success",
           description: "Transaction updated successfully",
         });
+        // Update local state immediately
+        setTransactions(prev => prev.map(transaction => 
+          transaction.id === id ? { ...transaction, ...updates } : transaction
+        ));
       } else {
         toast({
           title: "Error",
@@ -157,6 +118,8 @@ export const useTransactions = () => {
           title: "Success",
           description: "Transaction deleted successfully",
         });
+        // Update local state immediately
+        setTransactions(prev => prev.filter(transaction => transaction.id !== id));
       } else {
         toast({
           title: "Error",
@@ -183,6 +146,65 @@ export const useTransactions = () => {
   useEffect(() => {
     fetchTransactions();
   }, [fetchTransactions]);
+
+  // Simple real-time subscription
+  useEffect(() => {
+    if (!user) return;
+
+    let channel: any = null;
+
+    const setupChannel = () => {
+      try {
+        channel = supabase
+          .channel(`transactions_realtime_${user.id}_${Date.now()}`)
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'transactions',
+              filter: `user_id=eq.${user.id}`
+            },
+            (payload) => {
+              console.log('[useTransactions] Real-time update:', payload.eventType);
+              
+              setTransactions(prev => {
+                switch (payload.eventType) {
+                  case 'INSERT':
+                    const newTransaction = payload.new as TransactionWithCategory;
+                    if (prev.some(t => t.id === newTransaction.id)) return prev;
+                    return [newTransaction, ...prev];
+                  case 'UPDATE':
+                    const updatedTransaction = payload.new as TransactionWithCategory;
+                    return prev.map(transaction => 
+                      transaction.id === updatedTransaction.id ? updatedTransaction : transaction
+                    );
+                  case 'DELETE':
+                    const deletedTransaction = payload.old as TransactionWithCategory;
+                    return prev.filter(transaction => transaction.id !== deletedTransaction.id);
+                  default:
+                    return prev;
+                }
+              });
+            }
+          )
+          .subscribe((status) => {
+            console.log('[useTransactions] Subscription status:', status);
+          });
+      } catch (error) {
+        console.error('[useTransactions] Subscription error:', error);
+      }
+    };
+
+    setupChannel();
+
+    return () => {
+      if (channel) {
+        console.log('[useTransactions] Cleaning up channel');
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [user?.id]);
 
   return {
     transactions,
