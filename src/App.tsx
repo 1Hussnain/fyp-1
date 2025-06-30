@@ -109,7 +109,7 @@ function App() {
                     <AppLayout>
                       <UserManagement />
                     </AppLayout>
-                  </ProtectedRoute>
+                  </AdminRoute>
                 } />
                 
                 {/* 404 route */}
