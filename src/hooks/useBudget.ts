@@ -151,11 +151,38 @@ export const useBudget = () => {
     fetchCurrentBudget();
   }, [user]);
 
-  // Real-time subscription temporarily disabled to fix crashes
-  // useEffect(() => {
-  //   if (!user?.id) return;
-  //   console.log('[useBudget] Real-time disabled');
-  // }, [user?.id]);
+  // Setup real-time subscription for budgets using Supabase channels directly
+  useEffect(() => {
+    if (!user?.id) return;
+
+    console.log('[useBudget] Setting up realtime subscription for budgets');
+
+    const channel = supabase
+      .channel(`budgets_${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'budgets',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('[useBudget] Budget realtime update:', payload);
+          
+          // Refetch budget data to ensure consistency
+          fetchCurrentBudget();
+        }
+      )
+      .subscribe((status) => {
+        console.log('[useBudget] Subscription status:', status);
+      });
+
+    return () => {
+      console.log('[useBudget] Cleaning up budget subscription');
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
 
   const remaining = budgetLimit - currentSpent;
   const overBudget = currentSpent > budgetLimit && budgetLimit > 0;
