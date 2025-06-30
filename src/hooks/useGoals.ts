@@ -1,204 +1,122 @@
 
-/**
- * Optimized Goals Hook
- * 
- * Provides goal management with:
- * - Real-time updates with proper subscription handling
- * - Error recovery and retry logic
- * - Performance optimizations
- * - Proper loading states
- */
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import { goalService } from '@/services/supabase/goals';
-import { FinancialGoal, FinancialGoalInsert, FinancialGoalUpdate } from '@/types/database';
 import { useRealtime } from './useRealtime';
-import { useErrorRecovery } from './useErrorRecovery';
+import { supabase } from '@/integrations/supabase/client';
+import { FinancialGoal } from '@/types/database';
+import { useToast } from '@/hooks/use-toast';
 
 export const useGoals = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { executeWithRetry } = useErrorRecovery();
-  
   const [goals, setGoals] = useState<FinancialGoal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  /**
-   * Fetch goals with error recovery
-   */
-  const fetchGoals = async () => {
+  const fetchGoals = useCallback(async () => {
     if (!user) {
       setLoading(false);
       return;
     }
 
     try {
-      setLoading(true);
+      console.log('[useGoals] Fetching goals for user:', user.id);
+      
+      const { data, error } = await supabase
+        .from('financial_goals')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setGoals(data || []);
       setError(null);
-
-      const result = await executeWithRetry(
-        () => goalService.getAll(user.id),
-        'Loading goals'
-      );
-
-      if (result.success) {
-        setGoals(result.data || []);
-      } else {
-        setError(result.error || 'Failed to load goals');
-        toast({
-          title: "Error",
-          description: "Failed to load goals",
-          variant: "destructive",
-        });
-      }
+      console.log('[useGoals] Successfully loaded', data?.length || 0, 'goals');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load goals';
+      console.error('[useGoals] Error fetching goals:', err);
       setError(errorMessage);
-      console.error('Error fetching goals:', err);
+      toast({
+        title: "Error",
+        description: "Failed to load goals",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, toast]);
 
-  /**
-   * Add new goal with optimistic updates
-   */
-  const addGoal = async (goalData: Omit<FinancialGoalInsert, 'user_id'>) => {
-    if (!user) return { success: false, error: 'User not authenticated' };
+  const handleRealtimeUpdate = useCallback((payload: any) => {
+    console.log('[useGoals] Realtime update:', payload);
+    
+    if (payload.eventType === 'INSERT') {
+      setGoals(prev => [payload.new, ...prev]);
+    } else if (payload.eventType === 'UPDATE') {
+      setGoals(prev => prev.map(goal => 
+        goal.id === payload.new.id ? payload.new : goal
+      ));
+    } else if (payload.eventType === 'DELETE') {
+      setGoals(prev => prev.filter(goal => goal.id !== payload.old.id));
+    }
+  }, []);
 
+  const updateGoal = async (id: string, updates: Partial<FinancialGoal>) => {
     try {
-      const result = await executeWithRetry(
-        () => goalService.create({
-          ...goalData,
-          user_id: user.id
-        }),
-        'Adding goal'
-      );
+      const { error } = await supabase
+        .from('financial_goals')
+        .update(updates)
+        .eq('id', id);
 
-      if (result.success) {
-        toast({
-          title: "Success",
-          description: "Goal added successfully",
-        });
-        // Real-time will handle the state update
-      } else {
-        toast({
-          title: "Error",
-          description: result.error || "Failed to add goal",
-          variant: "destructive",
-        });
-      }
-      
-      return result;
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Goal updated successfully",
+      });
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to add goal';
+      console.error('[useGoals] Error updating goal:', err);
       toast({
         title: "Error",
-        description: errorMessage,
+        description: "Failed to update goal",
         variant: "destructive",
       });
-      return { success: false, error: errorMessage };
     }
   };
 
-  /**
-   * Update goal with optimistic updates
-   */
-  const updateGoal = async (id: string, updates: FinancialGoalUpdate) => {
-    try {
-      const result = await executeWithRetry(
-        () => goalService.update(id, updates),
-        'Updating goal'
-      );
-
-      if (result.success) {
-        toast({
-          title: "Success",
-          description: "Goal updated successfully",
-        });
-        // Real-time will handle the state update
-      } else {
-        toast({
-          title: "Error",
-          description: result.error || "Failed to update goal",
-          variant: "destructive",
-        });
-      }
-      
-      return result;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update goal';
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
-      return { success: false, error: errorMessage };
-    }
-  };
-
-  /**
-   * Delete goal with optimistic updates
-   */
   const deleteGoal = async (id: string) => {
     try {
-      const result = await executeWithRetry(
-        () => goalService.delete(id),
-        'Deleting goal'
-      );
+      const { error } = await supabase
+        .from('financial_goals')
+        .delete()
+        .eq('id', id);
 
-      if (result.success) {
-        toast({
-          title: "Success",
-          description: "Goal deleted successfully",
-        });
-        // Real-time will handle the state update
-      } else {
-        toast({
-          title: "Error",
-          description: result.error || "Failed to delete goal",
-          variant: "destructive",
-        });
-      }
-      
-      return result;
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Goal deleted successfully",
+      });
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to delete goal';
+      console.error('[useGoals] Error deleting goal:', err);
       toast({
         title: "Error",
-        description: errorMessage,
+        description: "Failed to delete goal",
         variant: "destructive",
       });
-      return { success: false, error: errorMessage };
     }
   };
 
-  // Initial data fetch
   useEffect(() => {
     fetchGoals();
-  }, [user]);
+  }, [fetchGoals]);
 
-  // Setup real-time updates with optimized subscription
-  useRealtime<FinancialGoal>(
-    "financial_goals", 
-    user?.id || null, 
-    setGoals,
-    {
-      enableDebounce: true,
-      debounceMs: 200,
-      enableRetry: true,
-      maxRetries: 3
-    }
-  );
+  useRealtime('financial_goals', user?.id || null, handleRealtimeUpdate);
 
   return {
     goals,
     loading,
     error,
-    addGoal,
     updateGoal,
     deleteGoal,
     refetch: fetchGoals

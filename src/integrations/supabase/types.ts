@@ -453,7 +453,7 @@ export type Database = {
           amount: number
           category_id: string | null
           created_at: string | null
-          date: string
+          date: string | null
           description: string | null
           id: string
           type: string
@@ -464,7 +464,7 @@ export type Database = {
           amount: number
           category_id?: string | null
           created_at?: string | null
-          date?: string
+          date?: string | null
           description?: string | null
           id?: string
           type: string
@@ -475,7 +475,7 @@ export type Database = {
           amount?: number
           category_id?: string | null
           created_at?: string | null
-          date?: string
+          date?: string | null
           description?: string | null
           id?: string
           type?: string
@@ -518,38 +518,11 @@ export type Database = {
       }
     }
     Views: {
-      user_analytics: {
-        Row: {
-          completed_goals: number | null
-          email: string | null
-          first_name: string | null
-          id: string | null
-          last_name: string | null
-          last_transaction_date: string | null
-          total_expenses: number | null
-          total_goals: number | null
-          total_income: number | null
-          total_transactions: number | null
-          user_created_at: string | null
-        }
-        Relationships: []
-      }
-      user_financial_summary: {
-        Row: {
-          month: string | null
-          total_expenses: number | null
-          total_income: number | null
-          transaction_count: number | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       has_role: {
-        Args:
-          | Record<PropertyKey, never>
-          | { _user_id: string; _role: Database["public"]["Enums"]["app_role"] }
+        Args: Record<PropertyKey, never>
         Returns: boolean
       }
       is_admin: {
