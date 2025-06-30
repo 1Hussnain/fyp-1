@@ -58,9 +58,8 @@ const OptimizedGoalsTracker = () => {
     <div className="min-h-screen p-6 space-y-6">
       {/* Header */}
       <OptimizedGoalsHeader 
-        activeGoalsCount={activeGoals.length}
-        completedGoalsCount={completedGoals.length}
-        totalGoals={goals.length}
+        activeCount={activeGoals.length}
+        completedCount={completedGoals.length}
       />
       
       {/* Goals Content */}
