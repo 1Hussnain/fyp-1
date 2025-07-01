@@ -1,36 +1,44 @@
 
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import LandingPage from './LandingPage';
+import React, { useEffect } from "react";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import LoginForm from "../components/LoginForm";
 
 const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && user) {
-      // Redirect authenticated users to dashboard
-      navigate('/dashboard', { replace: true });
+    if (user && !loading) {
+      navigate("/dashboard");
     }
   }, [user, loading, navigate]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-green-50">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-blue-600"></div>
-          <p className="text-sm sm:text-base text-gray-600">Loading...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   if (user) {
-    return null; // Will redirect in useEffect
+    return null; // Will redirect to dashboard
   }
 
-  return <LandingPage />;
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <motion.div 
+        className="w-full max-w-md shadow-xl rounded-2xl p-8 bg-white"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <LoginForm />
+      </motion.div>
+    </div>
+  );
 };
 
 export default Index;

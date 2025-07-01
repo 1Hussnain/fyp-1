@@ -3,6 +3,7 @@
  * Dashboard Summary Cards Component
  * 
  * Displays key financial metrics with:
+ * - Error boundary integration
  * - Loading states and skeletons
  * - Responsive design
  * - Performance optimizations
@@ -15,6 +16,7 @@ import { useFinancialSummary } from "@/hooks/useFinancialSummary";
 import { useBudget } from "@/hooks/useBudget";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import ComponentErrorBoundary from "@/components/ui/ComponentErrorBoundary";
 
 /** Animation variants for staggered card entrance */
 const cardVariants = {
@@ -171,4 +173,16 @@ const SummaryCards: React.FC = () => {
   );
 };
 
-export default SummaryCards;
+/**
+ * Wrapped component with error boundary
+ */
+const SummaryCardsWithErrorBoundary: React.FC = () => (
+  <ComponentErrorBoundary 
+    componentName="Summary Cards" 
+    showRetry={true}
+  >
+    <SummaryCards />
+  </ComponentErrorBoundary>
+);
+
+export default SummaryCardsWithErrorBoundary;

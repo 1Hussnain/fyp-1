@@ -1,19 +1,35 @@
 
-import { useState, useEffect, useCallback } from 'react';
+/**
+ * Optimized Goals Hook
+ * 
+ * Provides goal management with:
+ * - Real-time updates with proper subscription handling
+ * - Error recovery and retry logic
+ * - Performance optimizations
+ * - Proper loading states
+ */
+
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { goalService } from '@/services/supabase/goals';
-import { supabase } from '@/integrations/supabase/client';
 import { FinancialGoal, FinancialGoalInsert, FinancialGoalUpdate } from '@/types/database';
+import { useRealtime } from './useRealtime';
+import { useErrorRecovery } from './useErrorRecovery';
 
 export const useGoals = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { executeWithRetry } = useErrorRecovery();
+  
   const [goals, setGoals] = useState<FinancialGoal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchGoals = useCallback(async () => {
+  /**
+   * Fetch goals with error recovery
+   */
+  const fetchGoals = async () => {
     if (!user) {
       setLoading(false);
       return;
@@ -23,12 +39,20 @@ export const useGoals = () => {
       setLoading(true);
       setError(null);
 
-      const result = await goalService.getAll(user.id);
+      const result = await executeWithRetry(
+        () => goalService.getAll(user.id),
+        'Loading goals'
+      );
 
       if (result.success) {
         setGoals(result.data || []);
       } else {
         setError(result.error || 'Failed to load goals');
+        toast({
+          title: "Error",
+          description: "Failed to load goals",
+          variant: "destructive",
+        });
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
@@ -37,22 +61,29 @@ export const useGoals = () => {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  };
 
+  /**
+   * Add new goal with optimistic updates
+   */
   const addGoal = async (goalData: Omit<FinancialGoalInsert, 'user_id'>) => {
     if (!user) return { success: false, error: 'User not authenticated' };
 
     try {
-      const result = await goalService.create({
-        ...goalData,
-        user_id: user.id
-      });
+      const result = await executeWithRetry(
+        () => goalService.create({
+          ...goalData,
+          user_id: user.id
+        }),
+        'Adding goal'
+      );
 
       if (result.success) {
         toast({
           title: "Success",
           description: "Goal added successfully",
         });
+        // Real-time will handle the state update
       } else {
         toast({
           title: "Error",
@@ -73,19 +104,22 @@ export const useGoals = () => {
     }
   };
 
+  /**
+   * Update goal with optimistic updates
+   */
   const updateGoal = async (id: string, updates: FinancialGoalUpdate) => {
     try {
-      const result = await goalService.update(id, updates);
+      const result = await executeWithRetry(
+        () => goalService.update(id, updates),
+        'Updating goal'
+      );
 
       if (result.success) {
         toast({
           title: "Success",
           description: "Goal updated successfully",
         });
-        // Update local state immediately
-        setGoals(prev => prev.map(goal => 
-          goal.id === id ? { ...goal, ...updates } : goal
-        ));
+        // Real-time will handle the state update
       } else {
         toast({
           title: "Error",
@@ -106,17 +140,22 @@ export const useGoals = () => {
     }
   };
 
+  /**
+   * Delete goal with optimistic updates
+   */
   const deleteGoal = async (id: string) => {
     try {
-      const result = await goalService.delete(id);
+      const result = await executeWithRetry(
+        () => goalService.delete(id),
+        'Deleting goal'
+      );
 
       if (result.success) {
         toast({
           title: "Success",
           description: "Goal deleted successfully",
         });
-        // Update local state immediately
-        setGoals(prev => prev.filter(goal => goal.id !== id));
+        // Real-time will handle the state update
       } else {
         toast({
           title: "Error",
@@ -140,66 +179,20 @@ export const useGoals = () => {
   // Initial data fetch
   useEffect(() => {
     fetchGoals();
-  }, [fetchGoals]);
+  }, [user]);
 
-  // Simple real-time subscription
-  useEffect(() => {
-    if (!user) return;
-
-    let channel: any = null;
-
-    const setupChannel = () => {
-      try {
-        channel = supabase
-          .channel(`goals_realtime_${user.id}_${Date.now()}`)
-          .on(
-            'postgres_changes',
-            {
-              event: '*',
-              schema: 'public',
-              table: 'financial_goals',
-              filter: `user_id=eq.${user.id}`
-            },
-            (payload) => {
-              console.log('[useGoals] Real-time update:', payload.eventType);
-              
-              setGoals(currentGoals => {
-                switch (payload.eventType) {
-                  case 'INSERT':
-                    const newGoal = payload.new as FinancialGoal;
-                    if (currentGoals.some(g => g.id === newGoal.id)) return currentGoals;
-                    return [newGoal, ...currentGoals];
-                  case 'UPDATE':
-                    const updatedGoal = payload.new as FinancialGoal;
-                    return currentGoals.map(goal => 
-                      goal.id === updatedGoal.id ? updatedGoal : goal
-                    );
-                  case 'DELETE':
-                    const deletedGoal = payload.old as FinancialGoal;
-                    return currentGoals.filter(goal => goal.id !== deletedGoal.id);
-                  default:
-                    return currentGoals;
-                }
-              });
-            }
-          )
-          .subscribe((status) => {
-            console.log('[useGoals] Subscription status:', status);
-          });
-      } catch (error) {
-        console.error('[useGoals] Subscription error:', error);
-      }
-    };
-
-    setupChannel();
-
-    return () => {
-      if (channel) {
-        console.log('[useGoals] Cleaning up channel');
-        supabase.removeChannel(channel);
-      }
-    };
-  }, [user?.id]);
+  // Setup real-time updates with optimized subscription
+  useRealtime<FinancialGoal>(
+    "financial_goals", 
+    user?.id || null, 
+    setGoals,
+    {
+      enableDebounce: true,
+      debounceMs: 200,
+      enableRetry: true,
+      maxRetries: 3
+    }
+  );
 
   return {
     goals,

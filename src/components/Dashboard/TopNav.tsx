@@ -6,7 +6,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/ui/sonner";
 import { useNavigate } from "react-router-dom";
-import AdminRoleToggle from "../AdminRoleToggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const TopNav = () => {
-  const { user, signOut, isAdmin } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -52,18 +51,13 @@ const TopNav = () => {
       className="h-16 px-6 py-2 bg-white shadow-sm flex justify-between items-center"
     >
       <h2 className="text-xl font-semibold">Dashboard</h2>
-      
       <div className="flex items-center gap-4">
-        {/* Admin Role Toggle */}
-        <AdminRoleToggle />
-        
         <div className="relative cursor-pointer">
           <Bell size={20} />
           <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
             3
           </span>
         </div>
-        
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <div className="flex items-center gap-2 cursor-pointer">
@@ -73,14 +67,9 @@ const TopNav = () => {
                   {user?.email ? getInitials(user.email) : "U"}
                 </AvatarFallback>
               </Avatar>
-              <div className="hidden sm:flex flex-col items-start">
-                <span className="text-sm font-medium">
-                  {getUserDisplayName()}
-                </span>
-                {isAdmin && (
-                  <span className="text-xs text-gray-500">Administrator</span>
-                )}
-              </div>
+              <span className="hidden sm:inline-block">
+                {getUserDisplayName()}
+              </span>
               <ChevronDown size={16} />
             </div>
           </DropdownMenuTrigger>

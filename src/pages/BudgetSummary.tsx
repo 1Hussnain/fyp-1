@@ -19,6 +19,7 @@ import { TrendingUp, TrendingDown, Target, DollarSign, AlertTriangle } from "luc
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import ComponentErrorBoundary from "@/components/ui/ComponentErrorBoundary";
 
 /**
  * Loading skeleton for the budget summary page
@@ -198,85 +199,101 @@ const BudgetSummary: React.FC = () => {
         {/* Charts */}
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Top Spending Categories */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Top Spending Categories</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {chartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={chartData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Amount']} />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <p>No spending data available</p>
-                  <p className="text-sm mt-2">Add some expense transactions to see your spending breakdown</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Monthly Overview */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Monthly Overview</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Income vs Expenses</span>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Income</span>
-                    <span className="font-medium text-green-600">${(monthlyIncome || 0).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Expenses</span>
-                    <span className="font-medium text-red-600">${(monthlyExpenses || 0).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between border-t pt-2">
-                    <span className="text-sm font-medium">Net</span>
-                    <span className={`font-bold ${
-                      (monthlyIncome || 0) - (monthlyExpenses || 0) >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      ${((monthlyIncome || 0) - (monthlyExpenses || 0)).toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-
-                {monthlyIncome && monthlyIncome > 0 && (
-                  <div className="mt-4">
-                    <div className="text-sm text-gray-600 mb-2">Savings Rate</div>
-                    <div className="text-lg font-bold text-blue-600">
-                      {savingsRate.toFixed(1)}%
-                    </div>
+          <ComponentErrorBoundary componentName="Spending Chart" minimal>
+            <Card>
+              <CardHeader>
+                <CardTitle>Top Spending Categories</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {chartData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={chartData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {chartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Amount']} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>No spending data available</p>
+                    <p className="text-sm mt-2">Add some expense transactions to see your spending breakdown</p>
                   </div>
                 )}
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </ComponentErrorBoundary>
+
+          {/* Monthly Overview */}
+          <ComponentErrorBoundary componentName="Monthly Overview" minimal>
+            <Card>
+              <CardHeader>
+                <CardTitle>Monthly Overview</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Income vs Expenses</span>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Income</span>
+                      <span className="font-medium text-green-600">${(monthlyIncome || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Expenses</span>
+                      <span className="font-medium text-red-600">${(monthlyExpenses || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between border-t pt-2">
+                      <span className="text-sm font-medium">Net</span>
+                      <span className={`font-bold ${
+                        (monthlyIncome || 0) - (monthlyExpenses || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        ${((monthlyIncome || 0) - (monthlyExpenses || 0)).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {monthlyIncome && monthlyIncome > 0 && (
+                    <div className="mt-4">
+                      <div className="text-sm text-gray-600 mb-2">Savings Rate</div>
+                      <div className="text-lg font-bold text-blue-600">
+                        {savingsRate.toFixed(1)}%
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </ComponentErrorBoundary>
         </div>
       </motion.div>
     </div>
   );
 };
 
-export default BudgetSummary;
+/**
+ * Wrapped component with error boundary
+ */
+const BudgetSummaryWithErrorBoundary: React.FC = () => (
+  <ComponentErrorBoundary 
+    componentName="Budget Summary Page" 
+    showRetry={true}
+  >
+    <BudgetSummary />
+  </ComponentErrorBoundary>
+);
+
+export default BudgetSummaryWithErrorBoundary;

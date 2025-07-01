@@ -23,13 +23,6 @@ export type DocumentInsert = Database['public']['Tables']['documents']['Insert']
 export type Folder = Database['public']['Tables']['folders']['Row'];
 export type FolderInsert = Database['public']['Tables']['folders']['Insert'];
 
-// Admin-related types
-export type UserRole = Database['public']['Tables']['user_roles']['Row'];
-export type UserRoleInsert = Database['public']['Tables']['user_roles']['Insert'];
-
-export type AdminActivity = Database['public']['Tables']['admin_activities']['Row'];
-export type AdminActivityInsert = Database['public']['Tables']['admin_activities']['Insert'];
-
 // Extended types with relationships
 export type TransactionWithCategory = Transaction & {
   categories?: Category | null;
@@ -53,11 +46,4 @@ export type ServiceResponse<T> = {
   success: boolean;
   data?: T;
   error?: string;
-};
-
-// Admin specific types
-export type AppRole = 'admin' | 'moderator' | 'user';
-
-export type UserWithRoles = Database['public']['Tables']['profiles']['Row'] & {
-  user_roles?: UserRole[];
 };

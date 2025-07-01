@@ -1,90 +1,60 @@
 
 import React from "react";
-import { usePerformanceOptimized } from "@/hooks/usePerformanceOptimized";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Plus, Target, AlertCircle } from "lucide-react";
 import { useGoals } from "@/hooks/useGoals";
-import OptimizedGoalsTabs from "@/components/goals/OptimizedGoalsTabs";
+import { Loader2 } from "lucide-react";
+import OptimizedGoalForm from "@/components/goals/OptimizedGoalForm";
 import OptimizedGoalsHeader from "@/components/goals/OptimizedGoalsHeader";
-import FastLoadingSpinner from "@/components/ui/FastLoadingSpinner";
+import OptimizedGoalsTabs from "@/components/goals/OptimizedGoalsTabs";
 
 const OptimizedGoalsTracker = () => {
-  usePerformanceOptimized('OptimizedGoalsTracker');
+  const {
+    goals,
+    loading,
+    addGoal,
+    updateGoal,
+    deleteGoal
+  } = useGoals();
 
-  const { goals, loading, error, updateGoal, deleteGoal } = useGoals();
+  // Calculate active and completed goals from the goals array
+  const activeGoals = goals.filter(goal => !goal.is_completed && (Number(goal.saved_amount ?? 0) / Number(goal.target_amount ?? 1)) * 100 < 100);
+  const completedGoals = goals.filter(goal => goal.is_completed || (Number(goal.saved_amount ?? 0) / Number(goal.target_amount ?? 1)) * 100 >= 100);
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <FastLoadingSpinner size="lg" text="Loading your goals..." />
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-400">Loading your goals...</p>
+        </div>
       </div>
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-600">
-              <AlertCircle className="h-5 w-5" />
-              Error Loading Goals
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-600 mb-4">{error}</p>
-            <Button onClick={() => window.location.reload()}>
-              Try Again
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Separate active and completed goals
-  const activeGoals = goals.filter(goal => 
-    !goal.is_completed && 
-    (Number(goal.saved_amount) / Number(goal.target_amount)) * 100 < 100
-  );
-  
-  const completedGoals = goals.filter(goal => 
-    goal.is_completed || 
-    (Number(goal.saved_amount) / Number(goal.target_amount)) * 100 >= 100
-  );
+  // PATCH: onAddGoal must have right return type { success: boolean; error?: string }
+  const handleAddGoalWrapper = async (data: Omit<any, "user_id">) => {
+    return await addGoal(data);
+  };
 
   return (
-    <div className="min-h-screen p-6 space-y-6">
-      {/* Header */}
+    <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
       <OptimizedGoalsHeader 
         activeCount={activeGoals.length}
         completedCount={completedGoals.length}
       />
-      
-      {/* Goals Content */}
-      {goals.length === 0 ? (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <Target className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No Goals Yet</h3>
-            <p className="text-gray-600 mb-6">
-              Start your financial journey by creating your first goal!
-            </p>
-            <Button className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Create Your First Goal
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <OptimizedGoalsTabs
-          activeGoals={activeGoals}
-          completedGoals={completedGoals}
-          onUpdateGoal={updateGoal}
-          onDeleteGoal={deleteGoal}
-        />
-      )}
+
+      <div className="grid lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1">
+          <OptimizedGoalForm onAddGoal={handleAddGoalWrapper} />
+        </div>
+        <div className="lg:col-span-2">
+          <OptimizedGoalsTabs
+            activeGoals={activeGoals}
+            completedGoals={completedGoals}
+            onUpdateGoal={updateGoal}
+            onDeleteGoal={deleteGoal}
+          />
+        </div>
+      </div>
     </div>
   );
 };

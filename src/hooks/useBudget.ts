@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Budget } from "@/types/database";
+import { useRealtime } from './useRealtime';
 import { useErrorRecovery } from './useErrorRecovery';
 
 export const useBudget = () => {
@@ -151,38 +152,30 @@ export const useBudget = () => {
     fetchCurrentBudget();
   }, [user]);
 
-  // Setup real-time subscription for budgets using Supabase channels directly
-  useEffect(() => {
-    if (!user?.id) return;
-
-    console.log('[useBudget] Setting up realtime subscription for budgets');
-
-    const channel = supabase
-      .channel(`budgets_${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'budgets',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('[useBudget] Budget realtime update:', payload);
-          
-          // Refetch budget data to ensure consistency
-          fetchCurrentBudget();
-        }
-      )
-      .subscribe((status) => {
-        console.log('[useBudget] Subscription status:', status);
-      });
-
-    return () => {
-      console.log('[useBudget] Cleaning up budget subscription');
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id]);
+  // Setup real-time updates for budgets
+  useRealtime<Budget>("budgets", user?.id || null, (allBudgets: Budget[]) => {
+    // Filter for current month/year
+    const currentDate = new Date();
+    const filtered = allBudgets.filter(
+      (b) =>
+        b.month === currentDate.getMonth() + 1 &&
+        b.year === currentDate.getFullYear()
+    );
+    
+    setBudgets(filtered);
+    
+    if (filtered.length > 0) {
+      setBudgetLimit(Number(filtered[0].monthly_limit || 0));
+      setCurrentSpent(Number(filtered[0].current_spent || 0));
+    } else {
+      setBudgetLimit(0);
+      setCurrentSpent(0);
+    }
+  }, {
+    enableDebounce: true,
+    debounceMs: 300,
+    enableRetry: true
+  });
 
   const remaining = budgetLimit - currentSpent;
   const overBudget = currentSpent > budgetLimit && budgetLimit > 0;
