@@ -6,7 +6,7 @@
  * with advanced features like debouncing, retry logic, and connection management.
  */
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { realtimeManager } from '@/services/realtime';
 
 type Table = "transactions" | "financial_goals" | "budgets" | "categories";

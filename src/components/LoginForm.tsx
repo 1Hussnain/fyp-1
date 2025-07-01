@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -62,15 +63,15 @@ const LoginForm = () => {
 
     try {
       if (isLogin) {
-        const { data, error } = await signIn(email, password);
+        const { error } = await signIn(email, password);
         if (error) {
           toast.error(error.message);
-        } else if (data.user) {
+        } else {
           toast.success("Login successful!");
           navigate("/dashboard");
         }
       } else {
-        const { data, error, needsConfirmation, message } = await signUp(email, password, {
+        const { error } = await signUp(email, password, {
           first_name: firstName,
           last_name: lastName,
           full_name: `${firstName} ${lastName}`
@@ -84,12 +85,9 @@ const LoginForm = () => {
           } else {
             toast.error(error.message);
           }
-        } else if (needsConfirmation) {
-          setConfirmationSent(true);
-          toast.success(message || "Please check your email for verification.");
         } else {
-          toast.success("Account created successfully!");
-          navigate("/dashboard");
+          setConfirmationSent(true);
+          toast.success("Please check your email for verification.");
         }
       }
     } catch (error) {

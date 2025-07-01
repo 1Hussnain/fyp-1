@@ -2,22 +2,16 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/ui/sonner";
 
 const GoogleButton = () => {
   const [loading, setLoading] = useState(false);
-  const { signInWithGoogle } = useAuth();
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
-      const { error } = await signInWithGoogle();
-      if (error) {
-        toast.error(error.message);
-      } else {
-        toast.success("Redirecting to Google...");
-      }
+      // Google Sign In would need to be implemented in AuthContext first
+      toast.error("Google Sign In not yet implemented");
     } catch (error) {
       toast.error("Failed to sign in with Google");
     } finally {
