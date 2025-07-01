@@ -9,6 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_activities: {
+        Row: {
+          action_type: string
+          admin_id: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          ip_address: unknown | null
+          target_id: string | null
+          target_type: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action_type: string
+          admin_id: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          target_id?: string | null
+          target_type?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action_type?: string
+          admin_id?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          target_id?: string | null
+          target_type?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -417,7 +453,7 @@ export type Database = {
           amount: number
           category_id: string | null
           created_at: string | null
-          date: string
+          date: string | null
           description: string | null
           id: string
           type: string
@@ -428,7 +464,7 @@ export type Database = {
           amount: number
           category_id?: string | null
           created_at?: string | null
-          date?: string
+          date?: string | null
           description?: string | null
           id?: string
           type: string
@@ -439,7 +475,7 @@ export type Database = {
           amount?: number
           category_id?: string | null
           created_at?: string | null
-          date?: string
+          date?: string | null
           description?: string | null
           id?: string
           type?: string
@@ -456,24 +492,69 @@ export type Database = {
           },
         ]
       }
-    }
-    Views: {
-      user_financial_summary: {
+      user_roles: {
         Row: {
-          month: string | null
-          total_expenses: number | null
-          total_income: number | null
-          transaction_count: number | null
-          user_id: string | null
+          assigned_at: string | null
+          assigned_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
         }
         Relationships: []
       }
     }
-    Functions: {
+    Views: {
       [_ in never]: never
     }
+    Functions: {
+      assign_admin_role: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
+      has_role: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_admin: {
+        Args: { user_id?: string }
+        Returns: boolean
+      }
+      log_admin_activity: {
+        Args:
+          | Record<PropertyKey, never>
+          | {
+              action_type: string
+              target_type?: string
+              target_id?: string
+              details?: Json
+            }
+        Returns: string
+      }
+      refresh_user_analytics: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      remove_admin_role: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
+    }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -588,6 +669,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
