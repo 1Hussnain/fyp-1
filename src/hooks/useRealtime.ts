@@ -1,66 +1,155 @@
 
 /**
- * Legacy Realtime Hook - DEPRECATED
+ * Enhanced Realtime Hook with Advanced Configuration
  * 
- * This hook is kept for backward compatibility but is now deprecated.
- * New code should use useSharedRealtime instead.
- * 
- * The centralized realtime manager (realtimeManager) handles all subscriptions
- * to prevent duplicate subscription errors and improve performance.
- * 
- * @deprecated Use useSharedRealtime instead
+ * This hook provides a comprehensive interface to the centralized realtime subscription manager
+ * with advanced features like debouncing, retry logic, and connection management.
  */
 
-import { useCallback } from "react";
-import { useSharedRealtime } from './useSharedRealtime';
+import { useEffect, useRef, useCallback } from 'react';
+import { realtimeManager } from '@/services/realtime';
 
-type EventType = "INSERT" | "UPDATE" | "DELETE";
 type Table = "transactions" | "financial_goals" | "budgets" | "categories";
-type UpdateFn<T> = React.Dispatch<React.SetStateAction<T[]>>;
+type UpdateHandler<T> = (payload: any) => void;
 
-interface RealtimeConfig {
+interface RealtimeOptions {
   enableDebounce?: boolean;
   debounceMs?: number;
   enableRetry?: boolean;
   maxRetries?: number;
+  onConnectionChange?: (connected: boolean) => void;
+  onError?: (error: Error) => void;
 }
 
 /**
- * Legacy realtime hook that now uses the centralized manager
- * @deprecated Use useSharedRealtime directly for new code
+ * Enhanced hook for real-time subscriptions with advanced features
+ * @param table - Database table to subscribe to
+ * @param userId - User ID for filtering (null = no subscription)
+ * @param handler - Function to handle realtime updates
+ * @param options - Advanced configuration options
  */
-export function useRealtime<T extends { id: string; user_id?: string }>(
+export function useRealtime<T>(
   table: Table,
   userId: string | null,
-  setState: UpdateFn<T>,
-  config: RealtimeConfig = {}
+  handler: UpdateHandler<T>,
+  options: RealtimeOptions = {}
 ) {
-  /**
-   * Handle real-time payload updates with state management
-   * Processes INSERT, UPDATE, and DELETE events from Supabase
-   */
-  const handleRealtimeUpdate = useCallback((payload: any) => {
-    console.log(`[useRealtime] ${table} update:`, payload.eventType, payload.new?.id);
+  const cleanupRef = useRef<(() => void) | null>(null);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const retryCountRef = useRef(0);
+  
+  const {
+    enableDebounce = false,
+    debounceMs = 300,
+    enableRetry = false,
+    maxRetries = 3,
+    onConnectionChange,
+    onError
+  } = options;
 
-    // Process different event types
-    if (payload.eventType === "INSERT" && payload.new) {
-      setState(prev => {
-        // Prevent duplicates by checking if item already exists
-        const exists = prev.some(item => item.id === payload.new.id);
-        if (exists) return prev;
-        return [payload.new, ...prev];
-      });
-    } else if (payload.eventType === "UPDATE" && payload.new) {
-      setState(prev => 
-        prev.map(item => 
-          item.id === payload.new.id ? { ...item, ...payload.new } : item
-        )
-      );
-    } else if (payload.eventType === "DELETE" && payload.old) {
-      setState(prev => prev.filter(item => item.id !== payload.old.id));
+  // Debounced handler wrapper
+  const debouncedHandler = useCallback((payload: any) => {
+    if (enableDebounce) {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+      
+      debounceRef.current = setTimeout(() => {
+        handler(payload);
+      }, debounceMs);
+    } else {
+      handler(payload);
     }
-  }, [table, setState]);
+  }, [handler, enableDebounce, debounceMs]);
 
-  // Use the shared realtime system
-  useSharedRealtime(table, userId, handleRealtimeUpdate);
+  // Enhanced handler with retry logic
+  const enhancedHandler = useCallback((payload: any) => {
+    try {
+      debouncedHandler(payload);
+      retryCountRef.current = 0; // Reset retry count on success
+      onConnectionChange?.(true);
+    } catch (error) {
+      console.error(`[useRealtime] Error handling ${table} update:`, error);
+      onError?.(error as Error);
+      
+      if (enableRetry && retryCountRef.current < maxRetries) {
+        retryCountRef.current++;
+        setTimeout(() => {
+          console.log(`[useRealtime] Retrying ${table} update (attempt ${retryCountRef.current})`);
+          try {
+            debouncedHandler(payload);
+          } catch (retryError) {
+            console.error(`[useRealtime] Retry failed for ${table}:`, retryError);
+          }
+        }, 1000 * retryCountRef.current); // Exponential backoff
+      } else {
+        onConnectionChange?.(false);
+      }
+    }
+  }, [debouncedHandler, table, enableRetry, maxRetries, onConnectionChange, onError]);
+
+  useEffect(() => {
+    // Don't subscribe if no user ID
+    if (!userId) {
+      onConnectionChange?.(false);
+      return;
+    }
+
+    console.log(`[useRealtime] Setting up enhanced subscription for ${table} with options:`, options);
+
+    try {
+      // Subscribe through the centralized manager
+      cleanupRef.current = realtimeManager.subscribe(table, userId, enhancedHandler);
+      onConnectionChange?.(true);
+    } catch (error) {
+      console.error(`[useRealtime] Failed to set up subscription for ${table}:`, error);
+      onError?.(error as Error);
+      onConnectionChange?.(false);
+    }
+
+    // Cleanup function
+    return () => {
+      if (cleanupRef.current) {
+        console.log(`[useRealtime] Cleaning up enhanced subscription for ${table}`);
+        cleanupRef.current();
+        cleanupRef.current = null;
+      }
+      
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+        debounceRef.current = null;
+      }
+      
+      onConnectionChange?.(false);
+    };
+  }, [table, userId, enhancedHandler, onConnectionChange, onError]);
+
+  // Additional cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (cleanupRef.current) {
+        cleanupRef.current();
+      }
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, []);
+}
+
+/**
+ * Hook to get realtime connection debug information
+ */
+export function useRealtimeDebugInfo() {
+  const [debugInfo, setDebugInfo] = useState(null);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDebugInfo(realtimeManager.getDebugInfo());
+    }, 5000); // Update every 5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return debugInfo;
 }
