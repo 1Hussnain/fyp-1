@@ -1,33 +1,30 @@
 
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { ThemeProvider } from '@/contexts/ThemeContext';
-import { Toaster } from '@/components/ui/toaster';
-import { Toaster as Sonner } from '@/components/ui/sonner';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import AppLayout from '@/components/layout/AppLayout';
-
-// Pages
-import Index from '@/pages/Index';
-import Login from '@/pages/Login';
-import ForgotPassword from '@/pages/ForgotPassword';
-import UpdatePassword from '@/pages/UpdatePassword';
-import Dashboard from '@/pages/Dashboard';
-import FinancialManagement from '@/pages/FinancialManagement';
-import GoalsTracker from '@/pages/GoalsTracker';
-import BudgetSummary from '@/pages/BudgetSummary';
-import DocumentViewer from '@/pages/DocumentViewer';
-import FinanceChat from '@/pages/FinanceChat';
-import Settings from '@/pages/Settings';
-import NotFound from '@/pages/NotFound';
+import React from "react";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import Index from "@/pages/Index";
+import Login from "@/pages/Login";
+import Dashboard from "@/pages/Dashboard";
+import ImprovedFinancialManagement from "@/pages/ImprovedFinancialManagement";
+import ImprovedGoalsTracker from "@/pages/ImprovedGoalsTracker";
+import BudgetSummary from "@/pages/BudgetSummary";
+import DocumentViewer from "@/pages/DocumentViewer";
+import FinanceChat from "@/pages/FinanceChat";
+import Settings from "@/pages/Settings";
+import ForgotPassword from "@/pages/ForgotPassword";
+import UpdatePassword from "@/pages/UpdatePassword";
+import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
+      staleTime: 60 * 1000,
       retry: 1,
-      refetchOnWindowFocus: false,
     },
   },
 });
@@ -37,94 +34,78 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
-          <Router>
-            <Routes>
-              {/* Public routes */}
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/update-password" element={<UpdatePassword />} />
-              
-              {/* Protected routes with layout */}
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout pageTitle="Dashboard">
-                      <Dashboard />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/financial-management"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout pageTitle="Financial Management">
-                      <FinancialManagement />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/goals-tracker"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout pageTitle="Goals Tracker">
-                      <GoalsTracker />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/budget-summary"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout pageTitle="Budget Summary">
-                      <BudgetSummary />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/document-viewer"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout pageTitle="Document Viewer">
-                      <DocumentViewer />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/finance-chat"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout pageTitle="Finance Chat">
-                      <FinanceChat />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/settings"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout pageTitle="Settings">
-                      <Settings />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              
-              {/* 404 route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Router>
-          <Toaster />
-          <Sonner />
+          <TooltipProvider>
+            <BrowserRouter>
+              <div className="min-h-screen">
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/update-password" element={<UpdatePassword />} />
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/financial-management"
+                    element={
+                      <ProtectedRoute>
+                        <ImprovedFinancialManagement />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/goals-tracker"
+                    element={
+                      <ProtectedRoute>
+                        <ImprovedGoalsTracker />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/budget-summary"
+                    element={
+                      <ProtectedRoute>
+                        <BudgetSummary />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/document-viewer"
+                    element={
+                      <ProtectedRoute>
+                        <DocumentViewer />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/finance-chat"
+                    element={
+                      <ProtectedRoute>
+                        <FinanceChat />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/settings"
+                    element={
+                      <ProtectedRoute>
+                        <Settings />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </div>
+            </BrowserRouter>
+          </TooltipProvider>
         </AuthProvider>
       </ThemeProvider>
+      <Toaster />
     </QueryClientProvider>
   );
 }

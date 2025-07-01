@@ -1,24 +1,13 @@
 
-/**
- * Main Transactions Hook
- * 
- * Combines transaction data management and operations with real-time updates.
- * This is the main hook that components should use for transaction functionality.
- */
-
 import { useAuth } from '@/contexts/AuthContext';
-import { useRealtime } from './useRealtime';
 import { useTransactionData } from './useTransactionData';
 import { useTransactionOperations } from './useTransactionOperations';
+import { dataSyncService } from '@/services/realtime/dataSyncService';
+import { useEffect } from 'react';
 
-/**
- * Main transactions hook providing CRUD operations and real-time updates
- * @returns Object with transactions data, loading states, and CRUD functions
- */
 export const useTransactions = () => {
   const { user } = useAuth();
   
-  // Get data management functionality
   const {
     transactions,
     setTransactions,
@@ -27,33 +16,63 @@ export const useTransactions = () => {
     refetch
   } = useTransactionData();
 
-  // Get CRUD operations
   const {
     addTransaction,
     updateTransaction,
     deleteTransaction
   } = useTransactionOperations();
 
-  // Setup real-time updates using centralized subscription manager
-  useRealtime(
-    "transactions", 
-    user?.id || null, 
-    setTransactions,
-    {
-      enableDebounce: true,
-      debounceMs: 200,
-      enableRetry: true,
-      maxRetries: 3
+  // Setup centralized real-time synchronization
+  useEffect(() => {
+    if (!user?.id) return;
+
+    console.log('[useTransactions] Setting up data sync for user:', user.id);
+
+    const unsubscribe = dataSyncService.subscribe(
+      'transactions',
+      (payload) => {
+        console.log('[useTransactions] Received synced transaction data:', payload);
+        setTransactions(payload);
+      },
+      user.id
+    );
+
+    return unsubscribe;
+  }, [user?.id, setTransactions]);
+
+  // Enhanced CRUD operations with sync
+  const handleAddTransaction = async (data: any) => {
+    const result = await addTransaction(data);
+    if (result && user?.id) {
+      // Trigger refetch to get latest data
+      await refetch();
     }
-  );
+    return result;
+  };
+
+  const handleUpdateTransaction = async (id: string, updates: any) => {
+    const result = await updateTransaction(id, updates);
+    if (result && user?.id) {
+      await refetch();
+    }
+    return result;
+  };
+
+  const handleDeleteTransaction = async (id: string) => {
+    const result = await deleteTransaction(id);
+    if (result && user?.id) {
+      await refetch();
+    }
+    return result;
+  };
 
   return {
     transactions,
     loading,
     error,
-    addTransaction,
-    updateTransaction,
-    deleteTransaction,
+    addTransaction: handleAddTransaction,
+    updateTransaction: handleUpdateTransaction,
+    deleteTransaction: handleDeleteTransaction,
     refetch
   };
 };

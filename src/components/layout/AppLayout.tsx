@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useLocation } from "react-router-dom";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import AppSidebar from "./AppSidebar";
 import EnhancedTopNav from "../Dashboard/EnhancedTopNav";
 
@@ -26,12 +26,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({
       <div className="min-h-screen flex w-full bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
         <AppSidebar />
         <SidebarInset className="flex-1">
-          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-            <SidebarTrigger className="-ml-1" />
-            <div className="flex-1">
-              <EnhancedTopNav />
-            </div>
-          </header>
+          <EnhancedTopNav />
           <main className="flex-1 overflow-y-auto p-4 sm:p-6">
             {pageTitle && (
               <div className="mb-6">
