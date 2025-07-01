@@ -8,8 +8,52 @@ import OptimizedTransactionForm from "../components/financial/OptimizedTransacti
 import OptimizedTransactionList from "../components/financial/OptimizedTransactionList";
 import OptimizedCategoryList from "../components/financial/OptimizedCategoryList";
 import FinancialInsightsCard from "../components/financial/FinancialInsightsCard";
+import { useOptimizedFinancial } from "@/hooks/useOptimizedFinancial";
+import { Loader2 } from "lucide-react";
 
 const ImprovedFinancialManagement = () => {
+  const {
+    transactions,
+    categories,
+    summary,
+    loading,
+    addTransaction,
+    updateTransaction,
+    deleteTransaction,
+    addCategory
+  } = useOptimizedFinancial();
+
+  // Loading state
+  if (loading) {
+    return (
+      <AppLayout pageTitle="Financial Management">
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-400">Loading financial data...</p>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  // Mock handlers for category operations (to be implemented)
+  const handleRefreshCategories = () => {
+    // Refresh categories logic
+  };
+
+  const handleEditCategory = (category: any) => {
+    // Edit category logic
+  };
+
+  const handleDeleteCategory = async (category: any) => {
+    // Delete category logic
+  };
+
+  const handleBudgetChange = async (category: any, value: string) => {
+    // Budget change logic
+  };
+
   return (
     <AppLayout pageTitle="Financial Management">
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
@@ -59,21 +103,36 @@ const ImprovedFinancialManagement = () => {
 
                   <TabsContent value="transactions" className="space-y-6">
                     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200/50 dark:border-gray-700/50">
-                      <OptimizedTransactionList />
+                      <OptimizedTransactionList 
+                        transactions={transactions}
+                        categories={categories}
+                        onUpdateTransaction={updateTransaction}
+                        onDeleteTransaction={deleteTransaction}
+                      />
                     </div>
                   </TabsContent>
 
                   <TabsContent value="add-transaction" className="space-y-6">
                     <div className="max-w-2xl mx-auto">
                       <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm border border-gray-200/50 dark:border-gray-700/50">
-                        <OptimizedTransactionForm />
+                        <OptimizedTransactionForm 
+                          categories={categories}
+                          onAddTransaction={addTransaction}
+                          onAddCategory={addCategory}
+                        />
                       </div>
                     </div>
                   </TabsContent>
 
                   <TabsContent value="categories" className="space-y-6">
                     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200/50 dark:border-gray-700/50">
-                      <OptimizedCategoryList />
+                      <OptimizedCategoryList 
+                        categories={categories}
+                        onRefresh={handleRefreshCategories}
+                        onEdit={handleEditCategory}
+                        onDelete={handleDeleteCategory}
+                        onBudgetChange={handleBudgetChange}
+                      />
                     </div>
                   </TabsContent>
                 </Tabs>
