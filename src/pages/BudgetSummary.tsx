@@ -8,12 +8,14 @@ import CategoryBreakdown from "../components/budget-tracker/CategoryBreakdown";
 import TransactionList from "../components/budget-tracker/TransactionList";
 import BudgetLimit from "../components/budget-tracker/BudgetLimit";
 import { useBudget } from "@/hooks/useBudget";
+import { useTransactions } from "@/hooks/useTransactions";
 import { Loader2 } from "lucide-react";
 
 const BudgetSummary = () => {
-  const { budgetData, loading, error } = useBudget();
+  const { budgetLimit, currentSpent, remaining, overBudget, loading, error, updateBudgetLimit } = useBudget();
+  const { transactions, loading: transactionsLoading } = useTransactions();
 
-  if (loading) {
+  if (loading || transactionsLoading) {
     return (
       <AppLayout pageTitle="Budget Summary">
         <div className="min-h-screen flex items-center justify-center">
@@ -38,6 +40,32 @@ const BudgetSummary = () => {
     );
   }
 
+  // Calculate category breakdown from transactions
+  const categoryTotals = transactions
+    .filter(t => t.type === 'expense')
+    .reduce((acc, transaction) => {
+      const category = transaction.categories?.name || 'Uncategorized';
+      acc[category] = (acc[category] || 0) + Number(transaction.amount);
+      return acc;
+    }, {} as Record<string, number>);
+
+  const categoryTotalsArray = Object.entries(categoryTotals).map(([category, amount]) => ({
+    category,
+    amount
+  }));
+
+  const totalExpenses = Object.values(categoryTotals).reduce((sum, amount) => sum + amount, 0);
+  const totalIncome = transactions
+    .filter(t => t.type === 'income')
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+
+  const closeToLimit = budgetLimit > 0 && (currentSpent / budgetLimit) >= 0.8 && !overBudget;
+
+  const handleBudgetLimitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newLimit = Number(e.target.value);
+    updateBudgetLimit(newLimit);
+  };
+
   return (
     <AppLayout pageTitle="Budget Summary">
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-100 dark:from-gray-900 dark:to-green-900">
@@ -61,7 +89,13 @@ const BudgetSummary = () => {
             {/* Summary Cards */}
             <Card className="shadow-xl border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
               <CardContent className="p-6">
-                <SummaryCards />
+                <SummaryCards
+                  income={totalIncome}
+                  expenses={totalExpenses}
+                  remaining={remaining}
+                  overBudget={overBudget}
+                  closeToLimit={closeToLimit}
+                />
               </CardContent>
             </Card>
 
@@ -75,7 +109,10 @@ const BudgetSummary = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <CategoryBreakdown />
+                  <CategoryBreakdown
+                    categoryTotalsArray={categoryTotalsArray}
+                    expenses={totalExpenses}
+                  />
                 </CardContent>
               </Card>
 
@@ -87,7 +124,10 @@ const BudgetSummary = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <BudgetLimit />
+                  <BudgetLimit
+                    budgetLimit={budgetLimit}
+                    onBudgetLimitChange={handleBudgetLimitChange}
+                  />
                 </CardContent>
               </Card>
             </div>
@@ -100,7 +140,7 @@ const BudgetSummary = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <TransactionList />
+                <TransactionList transactions={transactions.slice(0, 10)} />
               </CardContent>
             </Card>
           </motion.div>

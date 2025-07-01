@@ -125,7 +125,7 @@ const DocumentViewer = () => {
                         </h4>
                         
                         <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                          {new Date(document.created_at).toLocaleDateString()}
+                          {new Date(document.uploaded_at).toLocaleDateString()}
                         </p>
                         
                         <div className="flex gap-2">

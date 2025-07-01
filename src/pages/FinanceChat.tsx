@@ -9,11 +9,15 @@ import SuggestedPrompts from "../components/chat/SuggestedPrompts";
 import DocumentList from "../components/chat/DocumentList";
 import HelpSection from "../components/chat/HelpSection";
 import { useChatWithDatabase } from "@/hooks/useChatWithDatabase";
+import { useDocuments } from "@/hooks/useDocuments";
 import { Loader2, MessageCircle } from "lucide-react";
 
 const FinanceChat = () => {
   const { messages, loading, sendMessage } = useChatWithDatabase();
+  const { documents } = useDocuments();
   const [input, setInput] = useState("");
+  const [showDocuments, setShowDocuments] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   const handleSendMessage = async () => {
     if (input.trim()) {
@@ -22,8 +26,21 @@ const FinanceChat = () => {
     }
   };
 
+  const handleSend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await handleSendMessage();
+  };
+
   const handleSuggestedPrompt = (prompt: string) => {
     setInput(prompt);
+  };
+
+  const handleDocumentPreview = (document: any) => {
+    console.log('Preview document:', document);
+  };
+
+  const handleDocumentDelete = (id: string) => {
+    console.log('Delete document:', id);
   };
 
   return (
@@ -71,7 +88,14 @@ const FinanceChat = () => {
                         </div>
                       ) : (
                         messages.map((message, index) => (
-                          <ChatBubble key={index} message={message} />
+                          <ChatBubble 
+                            key={index} 
+                            msg={{
+                              sender: message.sender,
+                              text: message.message,
+                              messageType: message.metadata?.messageType
+                            }} 
+                          />
                         ))
                       )}
                       {loading && (
@@ -84,10 +108,10 @@ const FinanceChat = () => {
                     {/* Chat Input */}
                     <div className="border-t dark:border-gray-700 p-4">
                       <ChatInput
-                        value={input}
-                        onChange={setInput}
-                        onSend={handleSendMessage}
-                        loading={loading}
+                        input={input}
+                        setInput={setInput}
+                        handleSend={handleSend}
+                        isTyping={loading}
                       />
                     </div>
                   </CardContent>
@@ -104,7 +128,7 @@ const FinanceChat = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <SuggestedPrompts onSelect={handleSuggestedPrompt} />
+                    <SuggestedPrompts onSelectPrompt={handleSuggestedPrompt} />
                   </CardContent>
                 </Card>
 
@@ -116,7 +140,12 @@ const FinanceChat = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <DocumentList />
+                    <DocumentList
+                      documents={documents.slice(0, 5)}
+                      onClose={() => setShowDocuments(false)}
+                      onPreview={handleDocumentPreview}
+                      onDelete={handleDocumentDelete}
+                    />
                   </CardContent>
                 </Card>
 
@@ -128,7 +157,7 @@ const FinanceChat = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <HelpSection />
+                    <HelpSection isVisible={true} />
                   </CardContent>
                 </Card>
               </div>
