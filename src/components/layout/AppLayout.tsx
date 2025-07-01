@@ -17,7 +17,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({
   const location = useLocation();
 
   // Don't show layout on the index/login page
-  if (location.pathname === "/") {
+  if (location.pathname === "/" || location.pathname === "/login" || location.pathname === "/forgot-password" || location.pathname === "/update-password") {
     return <>{children}</>;
   }
 
