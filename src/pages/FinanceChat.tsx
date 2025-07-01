@@ -16,8 +16,6 @@ const FinanceChat = () => {
   const { messages, loading, sendMessage } = useChatWithDatabase();
   const { documents } = useDocuments();
   const [input, setInput] = useState("");
-  const [showDocuments, setShowDocuments] = useState(false);
-  const [showHelp, setShowHelp] = useState(false);
 
   const handleSendMessage = async () => {
     if (input.trim()) {
@@ -142,7 +140,7 @@ const FinanceChat = () => {
                   <CardContent>
                     <DocumentList
                       documents={documents.slice(0, 5)}
-                      onClose={() => setShowDocuments(false)}
+                      onClose={() => {}}
                       onPreview={handleDocumentPreview}
                       onDelete={handleDocumentDelete}
                     />

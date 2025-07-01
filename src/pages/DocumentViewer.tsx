@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import AppLayout from "../components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useDocuments } from "@/hooks/useDocuments";
@@ -19,6 +18,19 @@ const DocumentViewer = () => {
     doc.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
     (!selectedFolder || doc.folder_id === selectedFolder)
   );
+
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      await uploadDocument(file);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm("Are you sure you want to delete this document?")) {
+      await deleteDocument(id);
+    }
+  };
 
   return (
     <AppLayout pageTitle="Document Viewer">
@@ -53,10 +65,22 @@ const DocumentViewer = () => {
                       className="pl-10 bg-white/70 dark:bg-gray-800/70 border-gray-200/50 dark:border-gray-600/50"
                     />
                   </div>
-                  <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
-                    <Upload className="mr-2 h-4 w-4" />
-                    Upload Document
-                  </Button>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      id="file-upload"
+                      className="hidden"
+                      onChange={handleUpload}
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif"
+                    />
+                    <Button 
+                      className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                      onClick={() => document.getElementById('file-upload')?.click()}
+                    >
+                      <Upload className="mr-2 h-4 w-4" />
+                      Upload Document
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Folder Filter */}
@@ -116,7 +140,7 @@ const DocumentViewer = () => {
                         <div className="flex items-start justify-between mb-3">
                           <FileText className="h-8 w-8 text-purple-500" />
                           <Badge variant="outline" className="text-xs">
-                            {document.file_type}
+                            {document.file_type || 'Unknown'}
                           </Badge>
                         </div>
                         
@@ -133,10 +157,19 @@ const DocumentViewer = () => {
                             <Eye className="h-3 w-3 mr-1" />
                             View
                           </Button>
-                          <Button size="sm" variant="outline">
-                            <Download className="h-3 w-3" />
-                          </Button>
-                          <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
+                          {document.file_url && (
+                            <Button size="sm" variant="outline" asChild>
+                              <a href={document.file_url} download={document.name}>
+                                <Download className="h-3 w-3" />
+                              </a>
+                            </Button>
+                          )}
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="text-red-600 hover:text-red-700"
+                            onClick={() => handleDelete(document.id)}
+                          >
                             <Trash2 className="h-3 w-3" />
                           </Button>
                         </div>

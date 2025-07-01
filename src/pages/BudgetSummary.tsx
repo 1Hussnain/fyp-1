@@ -9,7 +9,8 @@ import TransactionList from "../components/budget-tracker/TransactionList";
 import BudgetLimit from "../components/budget-tracker/BudgetLimit";
 import { useBudget } from "@/hooks/useBudget";
 import { useTransactions } from "@/hooks/useTransactions";
-import { Loader2 } from "lucide-react";
+import { Loader2, TrendingUp, DollarSign, AlertTriangle } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, BarChart, Bar } from 'recharts';
 
 const BudgetSummary = () => {
   const { budgetLimit, currentSpent, remaining, overBudget, loading, error, updateBudgetLimit } = useBudget();
@@ -51,7 +52,9 @@ const BudgetSummary = () => {
 
   const categoryTotalsArray = Object.entries(categoryTotals).map(([category, amount]) => ({
     category,
-    amount
+    amount,
+    name: category,
+    value: amount
   }));
 
   const totalExpenses = Object.values(categoryTotals).reduce((sum, amount) => sum + amount, 0);
@@ -65,6 +68,23 @@ const BudgetSummary = () => {
     const newLimit = Number(e.target.value);
     updateBudgetLimit(newLimit);
   };
+
+  // Prepare data for charts
+  const pieData = categoryTotalsArray.slice(0, 5);
+  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+
+  // Monthly spending trend (last 6 months)
+  const last6Months = Array.from({ length: 6 }, (_, i) => {
+    const date = new Date();
+    date.setMonth(date.getMonth() - i);
+    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  }).reverse();
+
+  const monthlyData = last6Months.map(month => ({
+    month,
+    expenses: Math.random() * 2000 + 500, // Mock data - replace with real data
+    income: Math.random() * 3000 + 1000
+  }));
 
   return (
     <AppLayout pageTitle="Budget Summary">
@@ -98,6 +118,65 @@ const BudgetSummary = () => {
                 />
               </CardContent>
             </Card>
+
+            {/* Charts Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Category Pie Chart */}
+              <Card className="shadow-xl border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5" />
+                    Spending by Category
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={pieData}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        >
+                          {pieData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Amount']} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Monthly Trend Chart */}
+              <Card className="shadow-xl border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" />
+                    Monthly Trend
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={monthlyData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <Tooltip formatter={(value) => `$${Number(value).toFixed(2)}`} />
+                        <Line type="monotone" dataKey="income" stroke="#10B981" strokeWidth={2} />
+                        <Line type="monotone" dataKey="expenses" stroke="#EF4444" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
             {/* Main Content */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
